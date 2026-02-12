@@ -9,7 +9,11 @@
       "Bash(npx expo install:*)",
       "Bash(npx tsc:*)",
       "Bash(npx expo start:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nPhase 1: Scaffold Expo project with navigation and models\n\nSet up Expo \\(SDK 54\\) with TypeScript and Expo Router file-based routing.\nIncludes 4-tab layout \\(Weekly Plan, Quadrant, Calendar, Settings\\),\nmodal screens for goal/role/event CRUD, TypeScript models matching the\nGoogle Sheets schema, theme constants, and date/uuid utilities.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(test:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)"
     ]
   }
 }
