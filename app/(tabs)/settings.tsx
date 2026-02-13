@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { View, Text, Pressable, ScrollView, StyleSheet, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -11,6 +12,8 @@ export default function SettingsScreen() {
   const { logout } = useAuth();
   const { roles, isLoading } = useRoles();
   const activeRoles = roles.filter((r) => r.active);
+  const inactiveRoles = roles.filter((r) => !r.active);
+  const [inactiveExpanded, setInactiveExpanded] = useState(false);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -39,6 +42,37 @@ export default function SettingsScreen() {
         <Ionicons name="add-circle-outline" size={20} color={colors.primary} />
         <Text style={styles.addButtonText}>Add Role</Text>
       </Pressable>
+
+      {inactiveRoles.length > 0 && (
+        <View style={styles.inactiveSection}>
+          <Pressable
+            onPress={() => setInactiveExpanded((prev) => !prev)}
+            style={styles.inactiveHeader}
+          >
+            <Text style={styles.inactiveHeaderText}>
+              Inactive Roles ({inactiveRoles.length})
+            </Text>
+            <Ionicons
+              name={inactiveExpanded ? "chevron-up" : "chevron-down"}
+              size={18}
+              color={colors.textMuted}
+            />
+          </Pressable>
+          {inactiveExpanded && (
+            <View style={styles.roleList}>
+              {inactiveRoles.map((role) => (
+                <Pressable
+                  key={role.id}
+                  onPress={() => router.push(`/role/${role.id}`)}
+                  style={{ opacity: 0.5 }}
+                >
+                  <RoleCard role={role} onPress={() => router.push(`/role/${role.id}`)} />
+                </Pressable>
+              ))}
+            </View>
+          )}
+        </View>
+      )}
 
       <View style={styles.divider} />
 
@@ -92,6 +126,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.primary,
     fontWeight: "600",
+  },
+  inactiveSection: {
+    marginTop: spacing.md,
+  },
+  inactiveHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: spacing.sm,
+  },
+  inactiveHeaderText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.textMuted,
   },
   divider: {
     height: 1,

@@ -60,6 +60,43 @@ export default function EditRoleScreen() {
     }
   };
 
+  const handleDeactivate = () => {
+    const doDeactivate = async () => {
+      setSaving(true);
+      try {
+        await updateRole({ ...role, active: false });
+        router.back();
+      } catch {
+        setSaving(false);
+      }
+    };
+
+    if (Platform.OS === "web") {
+      if (window.confirm(`Deactivate "${role.name}"? Goals assigned to this role will appear as Unassigned.`)) {
+        doDeactivate();
+      }
+    } else {
+      Alert.alert(
+        "Deactivate Role",
+        `Deactivate "${role.name}"? Goals assigned to this role will appear as Unassigned.`,
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Deactivate", onPress: doDeactivate },
+        ]
+      );
+    }
+  };
+
+  const handleReactivate = async () => {
+    setSaving(true);
+    try {
+      await updateRole({ ...role, active: true });
+      router.back();
+    } catch {
+      setSaving(false);
+    }
+  };
+
   const handleDelete = () => {
     const doDelete = async () => {
       setSaving(true);
@@ -72,13 +109,13 @@ export default function EditRoleScreen() {
     };
 
     if (Platform.OS === "web") {
-      if (window.confirm(`Delete role "${role.name}"? Goals assigned to it will become unassigned.`)) {
+      if (window.confirm(`Permanently delete "${role.name}"? This cannot be undone. Goals will become unassigned.`)) {
         doDelete();
       }
     } else {
       Alert.alert(
-        "Delete Role",
-        `Delete "${role.name}"? Goals assigned to it will become unassigned.`,
+        "Delete Permanently",
+        `Delete "${role.name}"? This cannot be undone. Goals will become unassigned.`,
         [
           { text: "Cancel", style: "cancel" },
           { text: "Delete", style: "destructive", onPress: doDelete },
@@ -93,6 +130,12 @@ export default function EditRoleScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <View style={styles.form}>
+        {!role.active && (
+          <View style={styles.inactiveBanner}>
+            <Text style={styles.inactiveBannerText}>This role is inactive</Text>
+          </View>
+        )}
+
         <Text style={styles.label}>Role Name</Text>
         <TextInput
           style={styles.input}
@@ -129,13 +172,32 @@ export default function EditRoleScreen() {
           )}
         </Pressable>
 
-        <Pressable
-          onPress={handleDelete}
-          disabled={saving}
-          style={({ pressed }) => [styles.deleteButton, pressed && { opacity: 0.8 }]}
-        >
-          <Text style={styles.deleteText}>Delete Role</Text>
-        </Pressable>
+        {role.active ? (
+          <Pressable
+            onPress={handleDeactivate}
+            disabled={saving}
+            style={({ pressed }) => [styles.deactivateButton, pressed && { opacity: 0.8 }]}
+          >
+            <Text style={styles.deactivateText}>Deactivate Role</Text>
+          </Pressable>
+        ) : (
+          <>
+            <Pressable
+              onPress={handleReactivate}
+              disabled={saving}
+              style={({ pressed }) => [styles.reactivateButton, pressed && { opacity: 0.8 }]}
+            >
+              <Text style={styles.reactivateText}>Reactivate Role</Text>
+            </Pressable>
+            <Pressable
+              onPress={handleDelete}
+              disabled={saving}
+              style={({ pressed }) => [styles.deleteButton, pressed && { opacity: 0.8 }]}
+            >
+              <Text style={styles.deleteText}>Delete Permanently</Text>
+            </Pressable>
+          </>
+        )}
       </View>
     </KeyboardAvoidingView>
   );
@@ -193,15 +255,51 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  deleteButton: {
+  inactiveBanner: {
+    backgroundColor: "#fef3c7",
+    padding: spacing.sm,
+    borderRadius: borderRadius.md,
+    alignItems: "center",
+    marginBottom: spacing.sm,
+  },
+  inactiveBannerText: {
+    color: "#92400e",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  deactivateButton: {
     padding: spacing.md,
     borderRadius: borderRadius.md,
     alignItems: "center",
     marginTop: spacing.md,
+    backgroundColor: "#fef3c7",
+  },
+  deactivateText: {
+    color: "#92400e",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  reactivateButton: {
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
+    alignItems: "center",
+    marginTop: spacing.md,
+    backgroundColor: "#dcfce7",
+  },
+  reactivateText: {
+    color: "#16a34a",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  deleteButton: {
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
+    alignItems: "center",
+    marginTop: spacing.sm,
   },
   deleteText: {
     color: "#dc2626",
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 14,
+    fontWeight: "500",
   },
 });
