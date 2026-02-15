@@ -110,7 +110,7 @@ export default function EditGoalScreen() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <ScrollView contentContainerStyle={styles.form}>
+      <ScrollView contentContainerStyle={styles.form} showsVerticalScrollIndicator>
         <Text style={styles.label}>Role</Text>
         <View style={styles.chipRow}>
           {activeRoles.map((r) => (

@@ -56,7 +56,7 @@ export default function WeeklyPlanScreen() {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
-        <ScrollView style={styles.scroll}>
+        <ScrollView style={styles.scroll} showsVerticalScrollIndicator>
           <GoalsByRole
             goals={goals}
             roles={roles}

@@ -36,7 +36,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator>
       <Text style={styles.sectionTitle}>Roles</Text>
       {isLoading ? (
         <ActivityIndicator color={colors.primary} style={styles.loader} />

@@ -8,6 +8,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Switch,
+  Alert,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
@@ -20,6 +21,11 @@ import {
 } from "../../src/api/googleSheets";
 import { EventTransparency } from "../../src/models/CalendarEvent";
 import { useSettings } from "../../src/contexts/SettingsContext";
+import {
+  WebDateTimePicker,
+  dateTimeToPickerValues,
+  pickerValuesToDateTimeString,
+} from "../../src/components/WebDateTimePicker";
 import { colors } from "../../src/theme/colors";
 import { spacing, borderRadius } from "../../src/theme/spacing";
 
@@ -71,12 +77,14 @@ export default function NewEventScreen() {
   const [transparency, setTransparency] = useState<EventTransparency>("opaque");
   const [attendeesStr, setAttendeesStr] = useState(defaultAttendees);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const canSave = title.trim().length > 0;
 
   const handleSave = async () => {
     if (!canSave || saving) return;
     setSaving(true);
+    setError(null);
     try {
       let startTime: string;
       let endTime: string;
@@ -129,7 +137,14 @@ export default function NewEventScreen() {
       }
 
       router.back();
-    } catch {
+    } catch (err: any) {
+      const msg = err?.message || "Failed to create event";
+      setError(msg);
+      if (Platform.OS === "web") {
+        window.alert(msg);
+      } else {
+        Alert.alert("Error", msg);
+      }
       setSaving(false);
     }
   };
@@ -139,7 +154,7 @@ export default function NewEventScreen() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <ScrollView contentContainerStyle={styles.form}>
+      <ScrollView contentContainerStyle={styles.form} showsVerticalScrollIndicator>
         <Text style={styles.label}>Title</Text>
         <TextInput
           style={styles.input}
@@ -237,12 +252,19 @@ export default function NewEventScreen() {
           <>
             <Text style={styles.label}>Start</Text>
             {Platform.OS === "web" ? (
-              <input
-                type="datetime-local"
-                value={startStr}
-                onChange={(e) => setStartStr(e.target.value)}
-                style={webInputStyle}
-              />
+              (() => {
+                const v = dateTimeToPickerValues(startStr);
+                return (
+                  <WebDateTimePicker
+                    dateValue={v.date}
+                    hourValue={v.hour}
+                    minuteValue={v.minute}
+                    onDateChange={(d) => setStartStr(pickerValuesToDateTimeString(d, v.hour, v.minute))}
+                    onHourChange={(h) => setStartStr(pickerValuesToDateTimeString(v.date, h, v.minute))}
+                    onMinuteChange={(m) => setStartStr(pickerValuesToDateTimeString(v.date, v.hour, m))}
+                  />
+                );
+              })()
             ) : (
               <TextInput
                 style={styles.input}
@@ -255,12 +277,19 @@ export default function NewEventScreen() {
 
             <Text style={styles.label}>End</Text>
             {Platform.OS === "web" ? (
-              <input
-                type="datetime-local"
-                value={endStr}
-                onChange={(e) => setEndStr(e.target.value)}
-                style={webInputStyle}
-              />
+              (() => {
+                const v = dateTimeToPickerValues(endStr);
+                return (
+                  <WebDateTimePicker
+                    dateValue={v.date}
+                    hourValue={v.hour}
+                    minuteValue={v.minute}
+                    onDateChange={(d) => setEndStr(pickerValuesToDateTimeString(d, v.hour, v.minute))}
+                    onHourChange={(h) => setEndStr(pickerValuesToDateTimeString(v.date, h, v.minute))}
+                    onMinuteChange={(m) => setEndStr(pickerValuesToDateTimeString(v.date, v.hour, m))}
+                  />
+                );
+              })()
             ) : (
               <TextInput
                 style={styles.input}
@@ -299,6 +328,10 @@ export default function NewEventScreen() {
           <Text style={styles.hint}>
             Linked to goal: {params.goalText}
           </Text>
+        )}
+
+        {error && (
+          <Text style={styles.errorText}>{error}</Text>
         )}
 
         <Pressable
@@ -399,6 +432,11 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     marginTop: spacing.md,
     fontStyle: "italic",
+  },
+  errorText: {
+    fontSize: 13,
+    color: "#dc2626",
+    marginTop: spacing.md,
   },
   button: {
     backgroundColor: colors.primary,

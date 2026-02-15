@@ -15,6 +15,11 @@ import {
 import { router, useLocalSearchParams } from "expo-router";
 import { useCalendarEvents } from "../../src/hooks/useCalendarEvents";
 import { EventTransparency } from "../../src/models/CalendarEvent";
+import {
+  WebDateTimePicker,
+  dateTimeToPickerValues,
+  pickerValuesToDateTimeString,
+} from "../../src/components/WebDateTimePicker";
 import { colors } from "../../src/theme/colors";
 import { spacing, borderRadius } from "../../src/theme/spacing";
 
@@ -160,7 +165,7 @@ export default function EditEventScreen() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <ScrollView contentContainerStyle={styles.form}>
+      <ScrollView contentContainerStyle={styles.form} showsVerticalScrollIndicator>
         <Text style={styles.label}>Title</Text>
         <TextInput
           style={styles.input}
@@ -257,12 +262,19 @@ export default function EditEventScreen() {
           <>
             <Text style={styles.label}>Start</Text>
             {Platform.OS === "web" ? (
-              <input
-                type="datetime-local"
-                value={startStr}
-                onChange={(e) => setStartStr(e.target.value)}
-                style={webInputStyle}
-              />
+              (() => {
+                const v = dateTimeToPickerValues(startStr);
+                return (
+                  <WebDateTimePicker
+                    dateValue={v.date}
+                    hourValue={v.hour}
+                    minuteValue={v.minute}
+                    onDateChange={(d) => setStartStr(pickerValuesToDateTimeString(d, v.hour, v.minute))}
+                    onHourChange={(h) => setStartStr(pickerValuesToDateTimeString(v.date, h, v.minute))}
+                    onMinuteChange={(m) => setStartStr(pickerValuesToDateTimeString(v.date, v.hour, m))}
+                  />
+                );
+              })()
             ) : (
               <TextInput
                 style={styles.input}
@@ -275,12 +287,19 @@ export default function EditEventScreen() {
 
             <Text style={styles.label}>End</Text>
             {Platform.OS === "web" ? (
-              <input
-                type="datetime-local"
-                value={endStr}
-                onChange={(e) => setEndStr(e.target.value)}
-                style={webInputStyle}
-              />
+              (() => {
+                const v = dateTimeToPickerValues(endStr);
+                return (
+                  <WebDateTimePicker
+                    dateValue={v.date}
+                    hourValue={v.hour}
+                    minuteValue={v.minute}
+                    onDateChange={(d) => setEndStr(pickerValuesToDateTimeString(d, v.hour, v.minute))}
+                    onHourChange={(h) => setEndStr(pickerValuesToDateTimeString(v.date, h, v.minute))}
+                    onMinuteChange={(m) => setEndStr(pickerValuesToDateTimeString(v.date, v.hour, m))}
+                  />
+                );
+              })()
             ) : (
               <TextInput
                 style={styles.input}

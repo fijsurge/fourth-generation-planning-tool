@@ -101,6 +101,20 @@ export default function CalendarScreen() {
     setCurrentDate(new Date());
   };
 
+  const navigateDate = (direction: 1 | -1) => {
+    setCurrentDate((prev) => {
+      const d = new Date(prev);
+      if (mode === "day") {
+        d.setDate(d.getDate() + direction);
+      } else if (mode === "week") {
+        d.setDate(d.getDate() + 7 * direction);
+      } else {
+        d.setMonth(d.getMonth() + direction);
+      }
+      return d;
+    });
+  };
+
   // Calculate calendar height: full height minus tabs, header, mode bar
   const calendarHeight = height - 180;
 
@@ -126,9 +140,17 @@ export default function CalendarScreen() {
             </Pressable>
           ))}
         </View>
-        <Pressable onPress={goToToday} style={styles.todayButton}>
-          <Text style={styles.todayText}>Today</Text>
-        </Pressable>
+        <View style={styles.navRow}>
+          <Pressable onPress={() => navigateDate(-1)} style={styles.navButton}>
+            <Ionicons name="chevron-back" size={20} color={colors.primary} />
+          </Pressable>
+          <Pressable onPress={goToToday} style={styles.todayButton}>
+            <Text style={styles.todayText}>Today</Text>
+          </Pressable>
+          <Pressable onPress={() => navigateDate(1)} style={styles.navButton}>
+            <Ionicons name="chevron-forward" size={20} color={colors.primary} />
+          </Pressable>
+        </View>
       </View>
 
       {isLoading && (
@@ -148,6 +170,8 @@ export default function CalendarScreen() {
         onPressCell={handlePressCell}
         onSwipeEnd={handleSwipeEnd}
         renderEvent={EventCard}
+        scrollOffsetMinutes={Math.max(0, new Date().getHours() * 60 - 60)}
+        showVerticalScrollIndicator
         swipeEnabled
         weekStartsOn={0}
         showAdjacentMonths
@@ -200,6 +224,15 @@ const styles = StyleSheet.create({
   },
   modeTextActive: {
     color: "#fff",
+  },
+  navRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  navButton: {
+    padding: spacing.sm,
+    borderRadius: borderRadius.md,
   },
   todayButton: {
     paddingHorizontal: spacing.md,
