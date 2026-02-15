@@ -1,5 +1,12 @@
 import { CalendarSource } from "./WeeklyGoal";
 
+export interface EventAttendee {
+  email: string;
+  responseStatus?: "needsAction" | "declined" | "tentative" | "accepted";
+}
+
+export type EventTransparency = "opaque" | "transparent";
+
 export interface CalendarEvent {
   id: string;
   source: CalendarSource;
@@ -9,4 +16,6 @@ export interface CalendarEvent {
   endTime: string; // ISO datetime
   allDay: boolean;
   linkedGoalId?: string;
+  attendees?: EventAttendee[];
+  transparency?: EventTransparency;
 }

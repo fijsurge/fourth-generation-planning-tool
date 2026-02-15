@@ -1,74 +1,70 @@
-# Session Context - February 12, 2026
+# Session Context - February 13, 2026
 
 ## Project Status
 - **Phase 1**: COMPLETE - `f996829`
-- **Phase 2**: COMPLETE - `b11aa99` (auth fixes included in Phase 3 commit)
-- **Phase 3**: COMPLETE - `137fc29` — all pushed to remote
-- **Phase 4**: NOT STARTED — Quadrant Matrix view
-- **Phase 5**: NOT STARTED — Google Calendar integration
+- **Phase 2**: COMPLETE - `b11aa99`
+- **Phase 3**: COMPLETE - `137fc29`
+- **Phase 4**: COMPLETE - `1d2fcb5`
+- **Phase 5**: CODE COMPLETE, NOT YET COMMITTED — Google Calendar integration
 - **Phase 6** (Microsoft/Outlook): DEFERRED (company policy unclear)
 
-## What's Built So Far
+## Phase 5 — What Was Built
 
-### Data Layer (Phase 2)
-- Google OAuth with PKCE (redirect flow on web, popup on mobile)
-- Token storage (SecureStore native, localStorage web) with auto-refresh
-- Google Sheets CRUD: `src/api/googleSheets.ts` — auto-creates spreadsheet with Roles, WeeklyGoals, Settings sheets
-- `useRoles()` and `useWeeklyGoals(weekKey)` hooks with optimistic updates
-- Models: Role, WeeklyGoal, CalendarEvent, Settings in `src/models/`
-- Theme: `src/theme/colors.ts`, `src/theme/spacing.ts`
-- Utils: `src/utils/dates.ts` (week math), `src/utils/constants.ts` (quadrant/status labels+colors), `src/utils/uuid.ts`
+### New Files (5)
+- `src/api/googleCalendar.ts` — Google Calendar REST API v3 client (list, create, update, delete)
+- `src/contexts/CalendarEventsContext.tsx` — Shared context for calendar events state (follows RolesContext pattern)
+- `src/hooks/useCalendarEvents.ts` — Thin hook consuming CalendarEventsContext
+- `src/components/EventCard.tsx` — Custom event renderer for react-native-big-calendar grid
+- `app/event/[id].tsx` — Event edit/delete screen (edit title, dates, description; delete with confirm)
 
-### UI Layer (Phase 3)
-7 components in `src/components/`:
-- **StatusBadge** — Pressable pill, cycles not_started → in_progress → complete
-- **QuadrantBadge** — Non-interactive colored pill (Q1-Q4)
-- **WeekSelector** — Prev/next arrows + "Feb 10 - Feb 16, 2026" + "Today" link
-- **RoleCard** — Pressable card with role name/description + chevron
-- **GoalItem** — Row: goal text + QuadrantBadge + StatusBadge (tappable)
-- **GoalsByRole** — Groups goals by role headers; deleted roles → "Unassigned"
-- **WeeklySummary** — Stats bar: "4/6 complete — 3 Q2, 1 Q1"
+### Edited Files (6)
+- `package.json` — Added `react-native-big-calendar`, `babel-preset-expo` (devDep)
+- `babel.config.js` — Created (was missing); `babel-preset-expo` + `react-native-reanimated/plugin`
+- `app/(tabs)/calendar.tsx` — Full calendar with Day/Week/Month toggle, Today button, FAB, swipe navigation
+- `app/event/new.tsx` — Event creation form (title, all-day toggle, start/end with native `<input type="datetime-local">` on web, description); accepts `?goalId=&goalText=&weekStartDate=` to link from goals
+- `app/event/[id].tsx` — Event edit/delete screen
+- `app/_layout.tsx` — Added `<CalendarEventsProvider>` + `<Stack.Screen name="event/[id]">`
+- `app/goal/[id].tsx` — Added "Schedule to Calendar" / "View Calendar Event" button with Ionicons
 
-6 screens rewritten:
-- `app/(tabs)/weekly-plan.tsx` — WeekSelector (sticky), GoalsByRole (scroll), FAB (+)
-- `app/(tabs)/settings.tsx` — Roles list, Add Role, Sign Out
-- `app/goal/new.tsx` — Role chips, goal text, quadrant selector (default Q2), notes
-- `app/goal/[id].tsx` — Same pre-filled + Delete
-- `app/role/new.tsx` — Name + description
-- `app/role/[id].tsx` — Same pre-filled + Delete
+### Dependencies Added
+- `react-native-big-calendar` (installed via `npx expo install`)
+- `react-native-gesture-handler` + `react-native-reanimated` (were already transitive deps of expo-router, now explicit)
+- `babel-preset-expo` (devDep — needed once babel.config.js exists)
 
-### Navigation Flow
-```
-weekly-plan → FAB → /goal/new?weekStartDate=YYYY-MM-DD
-weekly-plan → goal tap → /goal/[id]?weekStartDate=YYYY-MM-DD
-settings → role tap → /role/[id]
-settings → Add Role → /role/new
-All modals → Save/Delete → router.back()
-```
+### Verification Status
+- `tsc --noEmit` — CLEAN
+- Metro web bundle — SUCCEEDED (14s, 1212 modules)
+- **NOT yet manually tested** in browser (user deferred to tomorrow)
 
-## Not Yet Tested by User
-Phase 3 UI compiles (tsc clean, Metro bundles) but hasn't been manually tested end-to-end yet. Verification checklist:
-1. Create a role in Settings, verify it appears + persists in Google Sheet
-2. Create a goal via FAB, verify it groups under the correct role
-3. Cycle status badge (gray → amber → green), verify in Sheet
-4. Edit/delete goal and role, verify CRUD
-5. Navigate weeks, verify goals are week-scoped
-6. Sign out and back in, verify data persists
+## Manual Test Checklist for Phase 5
+1. Navigate to Calendar tab → should show current week in week view
+2. Toggle between Day, Week, Month views
+3. Tap FAB (+) → event creation form opens
+4. Create event with title + date/time → event appears in calendar AND in real Google Calendar
+5. Tap event in calendar → edit screen opens, can modify and save
+6. Delete an event → removed from local calendar and Google Calendar
+7. Go to Weekly Plan → edit a goal → tap "Schedule to Calendar" → creates event linked to goal
+8. Goal edit screen now shows "View Calendar Event" link
+9. Month view shows events as labels in day cells
+
+## Architecture Notes
+- CalendarEventsContext follows the same pattern as RolesContext (optimistic updates with rollback)
+- `react-native-big-calendar` expects `ICalendarEventBase` with `start: Date`, `end: Date`, `title: string` — the calendar screen maps our `CalendarEvent` model to this format
+- Event creation form uses native `<input type="datetime-local">` on web, plain TextInput on native
+- Goal→Calendar linking: event/new receives goalId params, after creating event it directly calls `updateWeeklyGoal` to set `calendarEventId` and `calendarSource: "google"` on the goal
 
 ## Key Decisions
 - Google Sheets as sole data store (no backend)
 - Client-side OAuth with PKCE
 - Optimistic updates with rollback on error
-- Week state owned by weekly-plan screen, passed as route param
 - Default quadrant = Q2 (Covey's emphasis on "important but not urgent")
-- useRoles called independently per screen (no shared context)
-- useFocusEffect refreshes data when returning from modals
+- RolesContext shared; useWeeklyGoals is per-screen (takes weekStartDate param)
+- CalendarEventsContext shared (like RolesContext)
 - Alert.alert for native, window.confirm for web delete confirmations
-
-## Next Up: Phase 4 — Quadrant Matrix View
-Per `.claude/plan.md`, Phase 4 builds a 2x2 grid view showing goals organized by quadrant. The `app/(tabs)/quadrant.tsx` screen is currently a placeholder.
 
 ## Environment Notes
 - Windows (MINGW64), Node 24.13.0, npm 11.6.2
 - CRLF warnings on git commits (cosmetic, not a problem)
-- Port 8081 default; use `--port 8082` if occupied by lingering Expo process
+- Port 8081 default; kill lingering Expo via `netstat -ano | grep 8081` + `taskkill`
+- npm cache was cleaned during this session (freed ~400MB)
+- `game-over-workout-tracker/node_modules` was removed (run `npm install` if you need to work on that repo again)

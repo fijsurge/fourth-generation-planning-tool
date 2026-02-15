@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { View, Text, Pressable, ScrollView, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, Pressable, ScrollView, StyleSheet, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../src/auth/AuthContext";
 import { useRoles } from "../../src/hooks/useRoles";
+import { useSettings } from "../../src/contexts/SettingsContext";
 import { RoleCard } from "../../src/components/RoleCard";
 import { colors } from "../../src/theme/colors";
 import { spacing, borderRadius } from "../../src/theme/spacing";
@@ -11,9 +12,28 @@ import { spacing, borderRadius } from "../../src/theme/spacing";
 export default function SettingsScreen() {
   const { logout } = useAuth();
   const { roles, isLoading } = useRoles();
+  const { defaultAttendees, setDefaultAttendees } = useSettings();
   const activeRoles = roles.filter((r) => r.active);
   const inactiveRoles = roles.filter((r) => !r.active);
   const [inactiveExpanded, setInactiveExpanded] = useState(false);
+  const [attendeesInput, setAttendeesInput] = useState<string | null>(null);
+  const [savingAttendees, setSavingAttendees] = useState(false);
+
+  // Use local input if user has edited, otherwise show saved value
+  const attendeesValue = attendeesInput !== null ? attendeesInput : defaultAttendees;
+
+  const handleSaveAttendees = async () => {
+    if (attendeesInput === null) return;
+    setSavingAttendees(true);
+    try {
+      await setDefaultAttendees(attendeesInput.trim());
+      setAttendeesInput(null);
+    } catch {
+      // keep local state so user can retry
+    } finally {
+      setSavingAttendees(false);
+    }
+  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -72,6 +92,39 @@ export default function SettingsScreen() {
             </View>
           )}
         </View>
+      )}
+
+      <View style={styles.divider} />
+
+      <Text style={styles.sectionTitle}>Calendar</Text>
+      <Text style={styles.fieldLabel}>Default Attendees</Text>
+      <Text style={styles.fieldHint}>
+        Comma-separated emails pre-filled when creating events
+      </Text>
+      <TextInput
+        style={styles.input}
+        value={attendeesValue}
+        onChangeText={setAttendeesInput}
+        placeholder="e.g. work@example.com, personal@example.com"
+        placeholderTextColor={colors.textMuted}
+        keyboardType="email-address"
+        autoCapitalize="none"
+      />
+      {attendeesInput !== null && attendeesInput.trim() !== defaultAttendees && (
+        <Pressable
+          onPress={handleSaveAttendees}
+          disabled={savingAttendees}
+          style={({ pressed }) => [
+            styles.saveButton,
+            pressed && { opacity: 0.8 },
+          ]}
+        >
+          {savingAttendees ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <Text style={styles.saveButtonText}>Save</Text>
+          )}
+        </Pressable>
       )}
 
       <View style={styles.divider} />
@@ -140,6 +193,40 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     color: colors.textMuted,
+  },
+  fieldLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.text,
+    marginBottom: 2,
+  },
+  fieldHint: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginBottom: spacing.sm,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    fontSize: 14,
+    color: colors.text,
+    backgroundColor: colors.surface,
+  },
+  saveButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.md,
+    alignItems: "center",
+    alignSelf: "flex-start",
+    marginTop: spacing.sm,
+  },
+  saveButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
   },
   divider: {
     height: 1,

@@ -2,11 +2,15 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { AuthProvider } from "../src/auth/AuthContext";
 import { RolesProvider } from "../src/contexts/RolesContext";
+import { CalendarEventsProvider } from "../src/contexts/CalendarEventsContext";
+import { SettingsProvider } from "../src/contexts/SettingsContext";
 
 export default function RootLayout() {
   return (
     <AuthProvider>
+      <SettingsProvider>
       <RolesProvider>
+      <CalendarEventsProvider>
       <StatusBar style="auto" />
       <Stack>
         <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -32,8 +36,14 @@ export default function RootLayout() {
           name="event/new"
           options={{ title: "New Event", presentation: "modal" }}
         />
+        <Stack.Screen
+          name="event/[id]"
+          options={{ title: "Edit Event", presentation: "modal" }}
+        />
       </Stack>
+      </CalendarEventsProvider>
       </RolesProvider>
+      </SettingsProvider>
     </AuthProvider>
   );
 }

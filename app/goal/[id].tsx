@@ -16,6 +16,7 @@ import { useWeeklyGoals } from "../../src/hooks/useWeeklyGoals";
 import { useRoles } from "../../src/hooks/useRoles";
 import { Quadrant } from "../../src/models/WeeklyGoal";
 import { QUADRANT_LABELS, QUADRANT_COLORS } from "../../src/utils/constants";
+import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../src/theme/colors";
 import { spacing, borderRadius } from "../../src/theme/spacing";
 
@@ -173,6 +174,37 @@ export default function EditGoalScreen() {
           numberOfLines={3}
         />
 
+        {/* Calendar link */}
+        {goal.calendarEventId ? (
+          <Pressable
+            onPress={() => router.push(`/event/${goal.calendarEventId}`)}
+            style={({ pressed }) => [
+              styles.calendarButton,
+              pressed && { opacity: 0.8 },
+            ]}
+          >
+            <Ionicons name="calendar" size={18} color={colors.primary} />
+            <Text style={styles.calendarButtonText}>View Calendar Event</Text>
+          </Pressable>
+        ) : (
+          <Pressable
+            onPress={() =>
+              router.push(
+                `/event/new?goalId=${goal.id}&goalText=${encodeURIComponent(
+                  goal.goalText
+                )}&weekStartDate=${goal.weekStartDate}`
+              )
+            }
+            style={({ pressed }) => [
+              styles.calendarButton,
+              pressed && { opacity: 0.8 },
+            ]}
+          >
+            <Ionicons name="calendar-outline" size={18} color={colors.primary} />
+            <Text style={styles.calendarButtonText}>Schedule to Calendar</Text>
+          </Pressable>
+        )}
+
         <Pressable
           onPress={handleSave}
           disabled={!canSave || saving}
@@ -274,6 +306,22 @@ const styles = StyleSheet.create({
   quadrantLabel: {
     fontSize: 14,
     fontWeight: "500",
+  },
+  calendarButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    marginTop: spacing.lg,
+    justifyContent: "center",
+  },
+  calendarButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.primary,
   },
   button: {
     backgroundColor: colors.primary,
