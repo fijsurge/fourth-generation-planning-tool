@@ -60,6 +60,30 @@ export default function EditEventScreen() {
   const [transparency, setTransparency] = useState<EventTransparency>("opaque");
   const [attendeesStr, setAttendeesStr] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // When start changes, shift end to preserve duration
+  const updateStart = (newStartStr: string) => {
+    const oldStart = new Date(startStr).getTime();
+    const oldEnd = new Date(endStr).getTime();
+    const duration = oldEnd - oldStart;
+    const newStart = new Date(newStartStr).getTime();
+    if (!isNaN(newStart) && !isNaN(duration)) {
+      setEndStr(toLocalDateTimeString(new Date(newStart + duration)));
+    }
+    setStartStr(newStartStr);
+  };
+
+  const updateStartDate = (newDateStr: string) => {
+    const oldStart = new Date(startDateStr).getTime();
+    const oldEnd = new Date(endDateStr).getTime();
+    const duration = oldEnd - oldStart;
+    const newStart = new Date(newDateStr).getTime();
+    if (!isNaN(newStart) && !isNaN(duration)) {
+      setEndDateStr(toLocalDateString(new Date(newStart + duration)));
+    }
+    setStartDateStr(newDateStr);
+  };
 
   useEffect(() => {
     if (event) {
@@ -98,6 +122,7 @@ export default function EditEventScreen() {
   const handleSave = async () => {
     if (!canSave || saving) return;
     setSaving(true);
+    setError(null);
     try {
       let startTime: string;
       let endTime: string;
@@ -128,7 +153,14 @@ export default function EditEventScreen() {
         transparency,
       });
       router.back();
-    } catch {
+    } catch (err: any) {
+      const msg = err?.message || "Failed to save event";
+      setError(msg);
+      if (Platform.OS === "web") {
+        window.alert(msg);
+      } else {
+        Alert.alert("Error", msg);
+      }
       setSaving(false);
     }
   };
@@ -227,14 +259,14 @@ export default function EditEventScreen() {
               <input
                 type="date"
                 value={startDateStr}
-                onChange={(e) => setStartDateStr(e.target.value)}
+                onChange={(e) => updateStartDate(e.target.value)}
                 style={webInputStyle}
               />
             ) : (
               <TextInput
                 style={styles.input}
                 value={startDateStr}
-                onChangeText={setStartDateStr}
+                onChangeText={updateStartDate}
                 placeholder="YYYY-MM-DD"
                 placeholderTextColor={colors.textMuted}
               />
@@ -269,9 +301,9 @@ export default function EditEventScreen() {
                     dateValue={v.date}
                     hourValue={v.hour}
                     minuteValue={v.minute}
-                    onDateChange={(d) => setStartStr(pickerValuesToDateTimeString(d, v.hour, v.minute))}
-                    onHourChange={(h) => setStartStr(pickerValuesToDateTimeString(v.date, h, v.minute))}
-                    onMinuteChange={(m) => setStartStr(pickerValuesToDateTimeString(v.date, v.hour, m))}
+                    onDateChange={(d) => updateStart(pickerValuesToDateTimeString(d, v.hour, v.minute))}
+                    onHourChange={(h) => updateStart(pickerValuesToDateTimeString(v.date, h, v.minute))}
+                    onMinuteChange={(m) => updateStart(pickerValuesToDateTimeString(v.date, v.hour, m))}
                   />
                 );
               })()
@@ -279,7 +311,7 @@ export default function EditEventScreen() {
               <TextInput
                 style={styles.input}
                 value={startStr}
-                onChangeText={setStartStr}
+                onChangeText={updateStart}
                 placeholder="YYYY-MM-DDTHH:MM"
                 placeholderTextColor={colors.textMuted}
               />
@@ -360,6 +392,10 @@ export default function EditEventScreen() {
           <Text style={styles.linkedGoal}>
             Linked to a weekly goal
           </Text>
+        )}
+
+        {error && (
+          <Text style={styles.saveErrorText}>{error}</Text>
         )}
 
         <Pressable
@@ -509,6 +545,11 @@ const styles = StyleSheet.create({
     color: colors.primary,
     marginTop: spacing.md,
     fontStyle: "italic",
+  },
+  saveErrorText: {
+    fontSize: 13,
+    color: "#dc2626",
+    marginTop: spacing.md,
   },
   button: {
     backgroundColor: colors.primary,

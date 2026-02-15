@@ -79,6 +79,29 @@ export default function NewEventScreen() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // When start changes, shift end to preserve duration
+  const updateStart = (newStartStr: string) => {
+    const oldStart = new Date(startStr).getTime();
+    const oldEnd = new Date(endStr).getTime();
+    const duration = oldEnd - oldStart;
+    const newStart = new Date(newStartStr).getTime();
+    if (!isNaN(newStart) && !isNaN(duration)) {
+      setEndStr(toLocalDateTimeString(new Date(newStart + duration)));
+    }
+    setStartStr(newStartStr);
+  };
+
+  const updateStartDate = (newDateStr: string) => {
+    const oldStart = new Date(startDateStr).getTime();
+    const oldEnd = new Date(endDateStr).getTime();
+    const duration = oldEnd - oldStart;
+    const newStart = new Date(newDateStr).getTime();
+    if (!isNaN(newStart) && !isNaN(duration)) {
+      setEndDateStr(toLocalDateString(new Date(newStart + duration)));
+    }
+    setStartDateStr(newDateStr);
+  };
+
   const canSave = title.trim().length > 0;
 
   const handleSave = async () => {
@@ -217,14 +240,14 @@ export default function NewEventScreen() {
               <input
                 type="date"
                 value={startDateStr}
-                onChange={(e) => setStartDateStr(e.target.value)}
+                onChange={(e) => updateStartDate(e.target.value)}
                 style={webInputStyle}
               />
             ) : (
               <TextInput
                 style={styles.input}
                 value={startDateStr}
-                onChangeText={setStartDateStr}
+                onChangeText={updateStartDate}
                 placeholder="YYYY-MM-DD"
                 placeholderTextColor={colors.textMuted}
               />
@@ -259,9 +282,9 @@ export default function NewEventScreen() {
                     dateValue={v.date}
                     hourValue={v.hour}
                     minuteValue={v.minute}
-                    onDateChange={(d) => setStartStr(pickerValuesToDateTimeString(d, v.hour, v.minute))}
-                    onHourChange={(h) => setStartStr(pickerValuesToDateTimeString(v.date, h, v.minute))}
-                    onMinuteChange={(m) => setStartStr(pickerValuesToDateTimeString(v.date, v.hour, m))}
+                    onDateChange={(d) => updateStart(pickerValuesToDateTimeString(d, v.hour, v.minute))}
+                    onHourChange={(h) => updateStart(pickerValuesToDateTimeString(v.date, h, v.minute))}
+                    onMinuteChange={(m) => updateStart(pickerValuesToDateTimeString(v.date, v.hour, m))}
                   />
                 );
               })()
@@ -269,7 +292,7 @@ export default function NewEventScreen() {
               <TextInput
                 style={styles.input}
                 value={startStr}
-                onChangeText={setStartStr}
+                onChangeText={updateStart}
                 placeholder="YYYY-MM-DDTHH:MM"
                 placeholderTextColor={colors.textMuted}
               />
