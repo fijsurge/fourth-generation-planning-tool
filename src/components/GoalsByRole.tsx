@@ -10,9 +10,10 @@ interface GoalsByRoleProps {
   roles: Role[];
   onGoalPress: (goal: WeeklyGoal) => void;
   onCycleStatus: (goalId: string) => void;
+  onCalendarPress?: (goal: WeeklyGoal) => void;
 }
 
-export function GoalsByRole({ goals, roles, onGoalPress, onCycleStatus }: GoalsByRoleProps) {
+export function GoalsByRole({ goals, roles, onGoalPress, onCycleStatus, onCalendarPress }: GoalsByRoleProps) {
   const roleMap = new Map(roles.filter((r) => r.active).map((r) => [r.id, r]));
 
   // Group goals by role
@@ -60,6 +61,7 @@ export function GoalsByRole({ goals, roles, onGoalPress, onCycleStatus }: GoalsB
               goal={goal}
               onPress={() => onGoalPress(goal)}
               onCycleStatus={() => onCycleStatus(goal.id)}
+              onCalendarPress={onCalendarPress ? () => onCalendarPress(goal) : undefined}
             />
           ))}
         </View>

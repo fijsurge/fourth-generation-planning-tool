@@ -1,4 +1,5 @@
 import { Pressable, Text, View, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { WeeklyGoal } from "../models/WeeklyGoal";
 import { QuadrantBadge } from "./QuadrantBadge";
 import { StatusBadge } from "./StatusBadge";
@@ -9,9 +10,12 @@ interface GoalItemProps {
   goal: WeeklyGoal;
   onPress: () => void;
   onCycleStatus: () => void;
+  onCalendarPress?: () => void;
 }
 
-export function GoalItem({ goal, onPress, onCycleStatus }: GoalItemProps) {
+export function GoalItem({ goal, onPress, onCycleStatus, onCalendarPress }: GoalItemProps) {
+  const hasEvent = !!goal.calendarEventId;
+
   return (
     <Pressable
       onPress={onPress}
@@ -24,6 +28,25 @@ export function GoalItem({ goal, onPress, onCycleStatus }: GoalItemProps) {
         {goal.goalText}
       </Text>
       <View style={styles.badges}>
+        {onCalendarPress && (
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation();
+              onCalendarPress();
+            }}
+            hitSlop={8}
+            style={({ pressed }) => [
+              styles.calendarButton,
+              pressed && { opacity: 0.6 },
+            ]}
+          >
+            <Ionicons
+              name={hasEvent ? "calendar" : "calendar-outline"}
+              size={18}
+              color={hasEvent ? colors.primary : colors.textMuted}
+            />
+          </Pressable>
+        )}
         <QuadrantBadge quadrant={goal.quadrant} />
         <StatusBadge status={goal.status} onPress={onCycleStatus} />
       </View>
@@ -55,5 +78,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.xs,
+  },
+  calendarButton: {
+    padding: 2,
   },
 });

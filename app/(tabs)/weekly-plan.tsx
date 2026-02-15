@@ -39,6 +39,16 @@ export default function WeeklyPlanScreen() {
     router.push(`/goal/new?weekStartDate=${weekKey}`);
   };
 
+  const handleCalendarPress = (goal: WeeklyGoal) => {
+    if (goal.calendarEventId) {
+      router.push(`/event/${goal.calendarEventId}`);
+    } else {
+      router.push(
+        `/event/new?goalId=${goal.id}&goalText=${encodeURIComponent(goal.goalText)}&weekStartDate=${weekKey}`
+      );
+    }
+  };
+
   const isLoading = goalsLoading || rolesLoading;
 
   return (
@@ -62,6 +72,7 @@ export default function WeeklyPlanScreen() {
             roles={roles}
             onGoalPress={handleGoalPress}
             onCycleStatus={cycleStatus}
+            onCalendarPress={handleCalendarPress}
           />
         </ScrollView>
       )}
