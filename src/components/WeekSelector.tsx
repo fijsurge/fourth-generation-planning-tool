@@ -1,7 +1,8 @@
+import { useMemo } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { formatWeekRange } from "../utils/dates";
-import { colors } from "../theme/colors";
+import { useThemeColors } from "../theme/useThemeColors";
 import { spacing, borderRadius } from "../theme/spacing";
 
 interface WeekSelectorProps {
@@ -12,6 +13,39 @@ interface WeekSelectorProps {
 }
 
 export function WeekSelector({ weekStart, onPrevWeek, onNextWeek, onToday }: WeekSelectorProps) {
+  const colors = useThemeColors();
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      alignItems: "center",
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      backgroundColor: colors.background,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    row: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.md,
+    },
+    arrow: {
+      padding: spacing.xs,
+      borderRadius: borderRadius.md,
+    },
+    range: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: colors.text,
+    },
+    todayLink: {
+      fontSize: 13,
+      color: colors.primary,
+      fontWeight: "500",
+      marginTop: spacing.xs,
+    },
+  }), [colors]);
+
   return (
     <View style={styles.container}>
       <View style={styles.row}>
@@ -29,34 +63,3 @@ export function WeekSelector({ weekStart, onPrevWeek, onNextWeek, onToday }: Wee
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    alignItems: "center",
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    backgroundColor: colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-  },
-  arrow: {
-    padding: spacing.xs,
-    borderRadius: borderRadius.md,
-  },
-  range: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  todayLink: {
-    fontSize: 13,
-    color: colors.primary,
-    fontWeight: "500",
-    marginTop: spacing.xs,
-  },
-});

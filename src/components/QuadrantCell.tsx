@@ -1,9 +1,10 @@
+import { useMemo } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet } from "react-native";
 import { WeeklyGoal, Quadrant } from "../models/WeeklyGoal";
 import { Role } from "../models/Role";
 import { StatusBadge } from "./StatusBadge";
-import { QUADRANT_LABELS, QUADRANT_COLORS } from "../utils/constants";
-import { colors } from "../theme/colors";
+import { QUADRANT_LABELS, getQuadrantColors } from "../utils/constants";
+import { useThemeColors } from "../theme/useThemeColors";
 import { spacing, borderRadius } from "../theme/spacing";
 
 interface QuadrantCellProps {
@@ -23,8 +24,81 @@ export function QuadrantCell({
   onGoalPress,
   onCycleStatus,
 }: QuadrantCellProps) {
+  const colors = useThemeColors();
+  const QUADRANT_COLORS = getQuadrantColors(colors);
   const qColor = QUADRANT_COLORS[quadrant];
   const roleMap = new Map(roles.map((r) => [r.id, r.name]));
+
+  const styles = useMemo(() => StyleSheet.create({
+    cell: {
+      flex: 1,
+      backgroundColor: colors.background,
+      borderRadius: borderRadius.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      overflow: "hidden",
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs + 2,
+    },
+    headerText: {
+      fontSize: 12,
+      fontWeight: "700",
+      flex: 1,
+    },
+    countBadge: {
+      minWidth: 20,
+      height: 20,
+      borderRadius: 10,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 4,
+      marginLeft: spacing.xs,
+    },
+    countText: {
+      fontSize: 11,
+      fontWeight: "700",
+    },
+    list: {
+      flex: 1,
+    },
+    empty: {
+      padding: spacing.md,
+      fontSize: 13,
+      color: colors.textMuted,
+      textAlign: "center",
+      fontStyle: "italic",
+    },
+    goalRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: spacing.xs + 2,
+      paddingHorizontal: spacing.sm,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border,
+    },
+    goalInfo: {
+      flex: 1,
+      marginRight: spacing.xs,
+    },
+    goalText: {
+      fontSize: 13,
+      color: colors.text,
+    },
+    goalTextComplete: {
+      textDecorationLine: "line-through",
+      color: colors.textMuted,
+    },
+    roleName: {
+      fontSize: 11,
+      color: colors.textMuted,
+      marginTop: 1,
+    },
+  }), [colors]);
 
   return (
     <View
@@ -75,74 +149,3 @@ export function QuadrantCell({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  cell: {
-    flex: 1,
-    backgroundColor: colors.background,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: "hidden",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs + 2,
-  },
-  headerText: {
-    fontSize: 12,
-    fontWeight: "700",
-    flex: 1,
-  },
-  countBadge: {
-    minWidth: 20,
-    height: 20,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 4,
-    marginLeft: spacing.xs,
-  },
-  countText: {
-    fontSize: 11,
-    fontWeight: "700",
-  },
-  list: {
-    flex: 1,
-  },
-  empty: {
-    padding: spacing.md,
-    fontSize: 13,
-    color: colors.textMuted,
-    textAlign: "center",
-    fontStyle: "italic",
-  },
-  goalRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: spacing.xs + 2,
-    paddingHorizontal: spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-  },
-  goalInfo: {
-    flex: 1,
-    marginRight: spacing.xs,
-  },
-  goalText: {
-    fontSize: 13,
-    color: colors.text,
-  },
-  goalTextComplete: {
-    textDecorationLine: "line-through",
-    color: colors.textMuted,
-  },
-  roleName: {
-    fontSize: 11,
-    color: colors.textMuted,
-    marginTop: 1,
-  },
-});

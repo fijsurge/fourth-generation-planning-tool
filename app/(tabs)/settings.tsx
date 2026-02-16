@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, StyleSheet, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -6,20 +6,21 @@ import { useAuth } from "../../src/auth/AuthContext";
 import { useRoles } from "../../src/hooks/useRoles";
 import { useSettings } from "../../src/contexts/SettingsContext";
 import { RoleCard } from "../../src/components/RoleCard";
-import { colors } from "../../src/theme/colors";
+import { useThemeColors } from "../../src/theme/useThemeColors";
+import { ThemeMode } from "../../src/theme/colors";
 import { spacing, borderRadius } from "../../src/theme/spacing";
 
 export default function SettingsScreen() {
+  const colors = useThemeColors();
   const { logout } = useAuth();
   const { roles, isLoading } = useRoles();
-  const { defaultAttendees, setDefaultAttendees } = useSettings();
+  const { defaultAttendees, setDefaultAttendees, theme, setTheme } = useSettings();
   const activeRoles = roles.filter((r) => r.active);
   const inactiveRoles = roles.filter((r) => !r.active);
   const [inactiveExpanded, setInactiveExpanded] = useState(false);
   const [attendeesInput, setAttendeesInput] = useState<string | null>(null);
   const [savingAttendees, setSavingAttendees] = useState(false);
 
-  // Use local input if user has edited, otherwise show saved value
   const attendeesValue = attendeesInput !== null ? attendeesInput : defaultAttendees;
 
   const handleSaveAttendees = async () => {
@@ -34,6 +35,146 @@ export default function SettingsScreen() {
       setSavingAttendees(false);
     }
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      padding: spacing.lg,
+    },
+    sectionTitle: {
+      fontSize: 13,
+      fontWeight: "700",
+      color: colors.textSecondary,
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+      marginBottom: spacing.sm,
+    },
+    roleList: {
+      gap: spacing.sm,
+    },
+    emptyText: {
+      fontSize: 14,
+      color: colors.textMuted,
+      paddingVertical: spacing.md,
+    },
+    loader: {
+      paddingVertical: spacing.lg,
+    },
+    addButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.sm,
+      paddingVertical: spacing.md,
+      marginTop: spacing.sm,
+    },
+    addButtonText: {
+      fontSize: 16,
+      color: colors.primary,
+      fontWeight: "600",
+    },
+    inactiveSection: {
+      marginTop: spacing.md,
+    },
+    inactiveHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingVertical: spacing.sm,
+    },
+    inactiveHeaderText: {
+      fontSize: 13,
+      fontWeight: "600",
+      color: colors.textMuted,
+    },
+    fieldLabel: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: colors.text,
+      marginBottom: 2,
+    },
+    fieldHint: {
+      fontSize: 12,
+      color: colors.textMuted,
+      marginBottom: spacing.sm,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: borderRadius.md,
+      padding: spacing.md,
+      fontSize: 14,
+      color: colors.text,
+      backgroundColor: colors.surface,
+    },
+    saveButton: {
+      backgroundColor: colors.primary,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      borderRadius: borderRadius.md,
+      alignItems: "center",
+      alignSelf: "flex-start",
+      marginTop: spacing.sm,
+    },
+    saveButtonText: {
+      color: colors.onPrimary,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    divider: {
+      height: 1,
+      backgroundColor: colors.border,
+      marginVertical: spacing.lg,
+    },
+    segmentedControl: {
+      flexDirection: "row",
+      backgroundColor: colors.surface,
+      borderRadius: borderRadius.md,
+      padding: 2,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    segmentButton: {
+      flex: 1,
+      paddingVertical: spacing.sm,
+      alignItems: "center",
+      borderRadius: borderRadius.sm,
+    },
+    segmentButtonActive: {
+      backgroundColor: colors.primary,
+    },
+    segmentText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: colors.textSecondary,
+    },
+    segmentTextActive: {
+      color: colors.onPrimary,
+    },
+    signOutButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.sm,
+      paddingVertical: spacing.md,
+      backgroundColor: colors.surface,
+      paddingHorizontal: spacing.md,
+      borderRadius: borderRadius.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    signOutText: {
+      fontSize: 16,
+      color: colors.danger,
+      fontWeight: "600",
+    },
+  }), [colors]);
+
+  const THEME_OPTIONS: { label: string; value: ThemeMode }[] = [
+    { label: "Light", value: "light" },
+    { label: "Dark", value: "dark" },
+  ];
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator>
@@ -96,6 +237,31 @@ export default function SettingsScreen() {
 
       <View style={styles.divider} />
 
+      <Text style={styles.sectionTitle}>Theme</Text>
+      <View style={styles.segmentedControl}>
+        {THEME_OPTIONS.map((opt) => (
+          <Pressable
+            key={opt.value}
+            onPress={() => setTheme(opt.value)}
+            style={[
+              styles.segmentButton,
+              theme === opt.value && styles.segmentButtonActive,
+            ]}
+          >
+            <Text
+              style={[
+                styles.segmentText,
+                theme === opt.value && styles.segmentTextActive,
+              ]}
+            >
+              {opt.label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      <View style={styles.divider} />
+
       <Text style={styles.sectionTitle}>Calendar</Text>
       <Text style={styles.fieldLabel}>Default Attendees</Text>
       <Text style={styles.fieldHint}>
@@ -120,7 +286,7 @@ export default function SettingsScreen() {
           ]}
         >
           {savingAttendees ? (
-            <ActivityIndicator color="#fff" size="small" />
+            <ActivityIndicator color={colors.onPrimary} size="small" />
           ) : (
             <Text style={styles.saveButtonText}>Save</Text>
           )}
@@ -134,119 +300,9 @@ export default function SettingsScreen() {
         onPress={logout}
         style={({ pressed }) => [styles.signOutButton, pressed && { opacity: 0.8 }]}
       >
-        <Ionicons name="log-out-outline" size={20} color="#dc2626" />
+        <Ionicons name="log-out-outline" size={20} color={colors.danger} />
         <Text style={styles.signOutText}>Sign Out</Text>
       </Pressable>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    padding: spacing.lg,
-  },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: colors.textSecondary,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: spacing.sm,
-  },
-  roleList: {
-    gap: spacing.sm,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: colors.textMuted,
-    paddingVertical: spacing.md,
-  },
-  loader: {
-    paddingVertical: spacing.lg,
-  },
-  addButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    paddingVertical: spacing.md,
-    marginTop: spacing.sm,
-  },
-  addButtonText: {
-    fontSize: 16,
-    color: colors.primary,
-    fontWeight: "600",
-  },
-  inactiveSection: {
-    marginTop: spacing.md,
-  },
-  inactiveHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: spacing.sm,
-  },
-  inactiveHeaderText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: colors.textMuted,
-  },
-  fieldLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.text,
-    marginBottom: 2,
-  },
-  fieldHint: {
-    fontSize: 12,
-    color: colors.textMuted,
-    marginBottom: spacing.sm,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    fontSize: 14,
-    color: colors.text,
-    backgroundColor: colors.surface,
-  },
-  saveButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.md,
-    alignItems: "center",
-    alignSelf: "flex-start",
-    marginTop: spacing.sm,
-  },
-  saveButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.border,
-    marginVertical: spacing.lg,
-  },
-  signOutButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    paddingVertical: spacing.md,
-    backgroundColor: colors.surface,
-    paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  signOutText: {
-    fontSize: 16,
-    color: "#dc2626",
-    fontWeight: "600",
-  },
-});

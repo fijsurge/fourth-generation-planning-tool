@@ -1,7 +1,8 @@
+import { useMemo } from "react";
 import { Pressable, View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Role } from "../models/Role";
-import { colors } from "../theme/colors";
+import { useThemeColors } from "../theme/useThemeColors";
 import { spacing, borderRadius } from "../theme/spacing";
 
 interface RoleCardProps {
@@ -10,6 +11,33 @@ interface RoleCardProps {
 }
 
 export function RoleCard({ role, onPress }: RoleCardProps) {
+  const colors = useThemeColors();
+
+  const styles = useMemo(() => StyleSheet.create({
+    card: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.surface,
+      borderRadius: borderRadius.md,
+      padding: spacing.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    content: {
+      flex: 1,
+    },
+    name: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: colors.text,
+    },
+    description: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
+  }), [colors]);
+
   return (
     <Pressable
       onPress={onPress}
@@ -27,28 +55,3 @@ export function RoleCard({ role, onPress }: RoleCardProps) {
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  content: {
-    flex: 1,
-  },
-  name: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  description: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-});

@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet } from "react-native";
 import { Quadrant } from "../models/WeeklyGoal";
-import { QUADRANT_COLORS, QUADRANT_SHORT_LABELS } from "../utils/constants";
+import { getQuadrantColors, QUADRANT_SHORT_LABELS } from "../utils/constants";
+import { useThemeColors } from "../theme/useThemeColors";
 import { borderRadius, spacing } from "../theme/spacing";
 
 interface QuadrantBadgeProps {
@@ -8,6 +9,9 @@ interface QuadrantBadgeProps {
 }
 
 export function QuadrantBadge({ quadrant }: QuadrantBadgeProps) {
+  const colors = useThemeColors();
+  const QUADRANT_COLORS = getQuadrantColors(colors);
+
   return (
     <View style={[styles.badge, { backgroundColor: QUADRANT_COLORS[quadrant] + "20" }]}>
       <Text style={[styles.label, { color: QUADRANT_COLORS[quadrant] }]}>

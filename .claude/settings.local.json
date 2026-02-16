@@ -15,7 +15,12 @@
       "Bash(netstat:*)",
       "Bash(findstr:*)",
       "Bash(git push:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(git commit:*)",
+      "Bash(npm ls:*)",
+      "Bash(npm info:*)",
+      "Bash(node -e:*)",
+      "Bash(EXPO_DOCTOR_SKIP_DEPENDENCY_VERSION_CHECK=1 npx expo start:*)"
     ]
   }
 }

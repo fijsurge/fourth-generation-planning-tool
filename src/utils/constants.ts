@@ -1,5 +1,5 @@
 import { Quadrant, GoalStatus } from "../models/WeeklyGoal";
-import { colors } from "../theme/colors";
+import { ColorPalette } from "../theme/colors";
 
 export const QUADRANT_LABELS: Record<Quadrant, string> = {
   1: "Q1: Urgent & Important",
@@ -15,12 +15,14 @@ export const QUADRANT_SHORT_LABELS: Record<Quadrant, string> = {
   4: "Q4",
 };
 
-export const QUADRANT_COLORS: Record<Quadrant, string> = {
-  1: colors.quadrant.q1,
-  2: colors.quadrant.q2,
-  3: colors.quadrant.q3,
-  4: colors.quadrant.q4,
-};
+export function getQuadrantColors(colors: ColorPalette): Record<Quadrant, string> {
+  return {
+    1: colors.quadrant.q1,
+    2: colors.quadrant.q2,
+    3: colors.quadrant.q3,
+    4: colors.quadrant.q4,
+  };
+}
 
 export const STATUS_LABELS: Record<GoalStatus, string> = {
   not_started: "Not Started",
@@ -28,11 +30,13 @@ export const STATUS_LABELS: Record<GoalStatus, string> = {
   complete: "Complete",
 };
 
-export const STATUS_COLORS: Record<GoalStatus, string> = {
-  not_started: colors.status.not_started,
-  in_progress: colors.status.in_progress,
-  complete: colors.status.complete,
-};
+export function getStatusColors(colors: ColorPalette): Record<GoalStatus, string> {
+  return {
+    not_started: colors.status.not_started,
+    in_progress: colors.status.in_progress,
+    complete: colors.status.complete,
+  };
+}
 
 // Cycle order for tapping status badge
 export const STATUS_CYCLE: GoalStatus[] = [

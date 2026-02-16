@@ -1,6 +1,7 @@
 import { Pressable, Text, StyleSheet } from "react-native";
 import { GoalStatus } from "../models/WeeklyGoal";
-import { STATUS_COLORS, STATUS_LABELS } from "../utils/constants";
+import { getStatusColors, STATUS_LABELS } from "../utils/constants";
+import { useThemeColors } from "../theme/useThemeColors";
 import { borderRadius, spacing } from "../theme/spacing";
 
 interface StatusBadgeProps {
@@ -9,6 +10,9 @@ interface StatusBadgeProps {
 }
 
 export function StatusBadge({ status, onPress }: StatusBadgeProps) {
+  const colors = useThemeColors();
+  const STATUS_COLORS = getStatusColors(colors);
+
   return (
     <Pressable
       onPress={onPress}

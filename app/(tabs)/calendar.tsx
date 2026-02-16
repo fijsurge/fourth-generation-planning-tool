@@ -12,7 +12,7 @@ import { router, useFocusEffect } from "expo-router";
 import { useCalendarEvents } from "../../src/hooks/useCalendarEvents";
 import { EventCard } from "../../src/components/EventCard";
 import { EventTransparency } from "../../src/models/CalendarEvent";
-import { colors } from "../../src/theme/colors";
+import { useThemeColors } from "../../src/theme/useThemeColors";
 import { spacing, borderRadius } from "../../src/theme/spacing";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -41,7 +41,6 @@ function getDateRange(date: Date, mode: Mode): { timeMin: string; timeMax: strin
     start = new Date(d.getFullYear(), d.getMonth(), d.getDate() - day);
     end = new Date(d.getFullYear(), d.getMonth(), d.getDate() + (7 - day));
   } else {
-    // month: load a bit extra to cover partial weeks
     start = new Date(d.getFullYear(), d.getMonth(), -6);
     end = new Date(d.getFullYear(), d.getMonth() + 1, 7);
   }
@@ -50,6 +49,7 @@ function getDateRange(date: Date, mode: Mode): { timeMin: string; timeMax: strin
 }
 
 export default function CalendarScreen() {
+  const colors = useThemeColors();
   const { height } = useWindowDimensions();
   const { events, isLoading, loadEvents } = useCalendarEvents();
   const [mode, setMode] = useState<Mode>("week");
@@ -79,7 +79,7 @@ export default function CalendarScreen() {
         color: colors.calendarSource.google,
         transparency: e.transparency,
       })),
-    [events]
+    [events, colors]
   );
 
   const handlePressEvent = (event: BigCalendarEvent) => {
@@ -115,12 +115,92 @@ export default function CalendarScreen() {
     });
   };
 
-  // Calculate calendar height: full height minus tabs, header, mode bar
   const calendarHeight = height - 180;
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    toolbar: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    modeRow: {
+      flexDirection: "row",
+      gap: 4,
+      backgroundColor: colors.surface,
+      borderRadius: borderRadius.md,
+      padding: 2,
+    },
+    modeButton: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.sm,
+    },
+    modeButtonActive: {
+      backgroundColor: colors.primary,
+    },
+    modeText: {
+      fontSize: 13,
+      fontWeight: "600",
+      color: colors.textSecondary,
+    },
+    modeTextActive: {
+      color: colors.onPrimary,
+    },
+    navRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+    },
+    navButton: {
+      padding: spacing.sm,
+      borderRadius: borderRadius.md,
+    },
+    todayButton: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.md,
+      borderWidth: 1,
+      borderColor: colors.primary,
+    },
+    todayText: {
+      fontSize: 13,
+      fontWeight: "600",
+      color: colors.primary,
+    },
+    loader: {
+      position: "absolute",
+      top: 60,
+      right: spacing.md,
+      zIndex: 10,
+    },
+    fab: {
+      position: "absolute",
+      bottom: 24,
+      right: 24,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: colors.primary,
+      justifyContent: "center",
+      alignItems: "center",
+      elevation: 4,
+      shadowColor: colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+    },
+  }), [colors]);
 
   return (
     <View style={styles.container}>
-      {/* Mode selector + Today button */}
       <View style={styles.toolbar}>
         <View style={styles.modeRow}>
           {MODES.map((m) => (
@@ -177,95 +257,12 @@ export default function CalendarScreen() {
         showAdjacentMonths
       />
 
-      {/* FAB */}
       <Pressable
         onPress={() => router.push("/event/new")}
         style={({ pressed }) => [styles.fab, pressed && { opacity: 0.8 }]}
       >
-        <Ionicons name="add" size={28} color="#fff" />
+        <Ionicons name="add" size={28} color={colors.onPrimary} />
       </Pressable>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  toolbar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  modeRow: {
-    flexDirection: "row",
-    gap: 4,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    padding: 2,
-  },
-  modeButton: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.sm,
-  },
-  modeButtonActive: {
-    backgroundColor: colors.primary,
-  },
-  modeText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: colors.textSecondary,
-  },
-  modeTextActive: {
-    color: "#fff",
-  },
-  navRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  navButton: {
-    padding: spacing.sm,
-    borderRadius: borderRadius.md,
-  },
-  todayButton: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.primary,
-  },
-  todayText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: colors.primary,
-  },
-  loader: {
-    position: "absolute",
-    top: 60,
-    right: spacing.md,
-    zIndex: 10,
-  },
-  fab: {
-    position: "absolute",
-    bottom: 24,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.primary,
-    justifyContent: "center",
-    alignItems: "center",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-  },
-});

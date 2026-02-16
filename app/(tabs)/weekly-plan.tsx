@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { View, ScrollView, Pressable, StyleSheet, ActivityIndicator } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,17 +9,17 @@ import { WeeklySummary } from "../../src/components/WeeklySummary";
 import { GoalsByRole } from "../../src/components/GoalsByRole";
 import { WeeklyGoal } from "../../src/models/WeeklyGoal";
 import { getWeekStart, shiftWeek, formatWeekKey } from "../../src/utils/dates";
-import { colors } from "../../src/theme/colors";
-import { spacing, borderRadius } from "../../src/theme/spacing";
+import { useThemeColors } from "../../src/theme/useThemeColors";
+import { spacing } from "../../src/theme/spacing";
 
 export default function WeeklyPlanScreen() {
+  const colors = useThemeColors();
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()));
   const weekKey = formatWeekKey(weekStart);
 
   const { goals, isLoading: goalsLoading, cycleStatus, refresh: refreshGoals } = useWeeklyGoals(weekKey);
   const { roles, isLoading: rolesLoading, refresh: refreshRoles } = useRoles();
 
-  // Refresh data when screen comes into focus (e.g. returning from a modal)
   useFocusEffect(
     useCallback(() => {
       refreshGoals();
@@ -51,6 +51,37 @@ export default function WeeklyPlanScreen() {
 
   const isLoading = goalsLoading || rolesLoading;
 
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    scroll: {
+      flex: 1,
+    },
+    loader: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    fab: {
+      position: "absolute",
+      bottom: spacing.lg,
+      right: spacing.lg,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: colors.primary,
+      justifyContent: "center",
+      alignItems: "center",
+      elevation: 4,
+      shadowColor: colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+    },
+  }), [colors]);
+
   return (
     <View style={styles.container}>
       <WeekSelector
@@ -81,39 +112,8 @@ export default function WeeklyPlanScreen() {
         onPress={handleAddGoal}
         style={({ pressed }) => [styles.fab, pressed && { opacity: 0.8 }]}
       >
-        <Ionicons name="add" size={28} color="#fff" />
+        <Ionicons name="add" size={28} color={colors.onPrimary} />
       </Pressable>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  scroll: {
-    flex: 1,
-  },
-  loader: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  fab: {
-    position: "absolute",
-    bottom: spacing.lg,
-    right: spacing.lg,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.primary,
-    justifyContent: "center",
-    alignItems: "center",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-  },
-});

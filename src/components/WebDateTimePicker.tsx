@@ -1,5 +1,5 @@
 import React from "react";
-import { colors } from "../theme/colors";
+import { useThemeColors } from "../theme/useThemeColors";
 import { spacing, borderRadius } from "../theme/spacing";
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -24,6 +24,38 @@ export function WebDateTimePicker({
   onHourChange,
   onMinuteChange,
 }: WebDateTimePickerProps) {
+  const colors = useThemeColors();
+
+  const baseStyle: React.CSSProperties = {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderStyle: "solid",
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    fontSize: 16,
+    color: colors.text,
+    backgroundColor: colors.surface,
+    fontFamily: "inherit",
+    boxSizing: "border-box",
+  };
+
+  const dateInputStyle: React.CSSProperties = {
+    ...baseStyle,
+    width: 170,
+  };
+
+  const selectStyle: React.CSSProperties = {
+    ...baseStyle,
+    width: 70,
+    cursor: "pointer",
+  };
+
+  const colonStyle: React.CSSProperties = {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: colors.text,
+  };
+
   return (
     <div style={containerStyle}>
       <select
@@ -84,34 +116,4 @@ const containerStyle: React.CSSProperties = {
   justifyContent: "flex-start",
   gap: 8,
   width: "100%",
-};
-
-const baseStyle: React.CSSProperties = {
-  borderWidth: 1,
-  borderColor: colors.border,
-  borderStyle: "solid",
-  borderRadius: borderRadius.md,
-  padding: spacing.md,
-  fontSize: 16,
-  color: colors.text,
-  backgroundColor: colors.surface,
-  fontFamily: "inherit",
-  boxSizing: "border-box",
-};
-
-const dateInputStyle: React.CSSProperties = {
-  ...baseStyle,
-  width: 170,
-};
-
-const selectStyle: React.CSSProperties = {
-  ...baseStyle,
-  width: 70,
-  cursor: "pointer",
-};
-
-const colonStyle: React.CSSProperties = {
-  fontSize: 18,
-  fontWeight: "bold",
-  color: colors.text,
 };

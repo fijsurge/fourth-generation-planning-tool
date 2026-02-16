@@ -6,16 +6,20 @@ import { AuthProvider } from "../src/auth/AuthContext";
 import { RolesProvider } from "../src/contexts/RolesContext";
 import { CalendarEventsProvider } from "../src/contexts/CalendarEventsContext";
 import { SettingsProvider } from "../src/contexts/SettingsContext";
+import { useThemeColors } from "../src/theme/useThemeColors";
+import { useSettings } from "../src/contexts/SettingsContext";
 
-export default function RootLayout() {
-  // Show scrollbars on web (RN Web hides them by default)
+function InnerLayout() {
+  const colors = useThemeColors();
+  const { theme } = useSettings();
+
   useEffect(() => {
     if (Platform.OS !== "web") return;
     const style = document.createElement("style");
     style.textContent = `
       * {
         scrollbar-width: thin;
-        scrollbar-color: rgba(0,0,0,0.3) transparent;
+        scrollbar-color: ${colors.scrollbarThumb} transparent;
       }
       *::-webkit-scrollbar {
         width: 8px;
@@ -25,24 +29,27 @@ export default function RootLayout() {
         background: transparent;
       }
       *::-webkit-scrollbar-thumb {
-        background: rgba(0,0,0,0.3);
+        background: ${colors.scrollbarThumb};
         border-radius: 4px;
       }
       *::-webkit-scrollbar-thumb:hover {
-        background: rgba(0,0,0,0.5);
+        background: ${colors.scrollbarThumbHover};
       }
     `;
     document.head.appendChild(style);
     return () => { document.head.removeChild(style); };
-  }, []);
+  }, [colors]);
 
   return (
-    <AuthProvider>
-      <SettingsProvider>
-      <RolesProvider>
-      <CalendarEventsProvider>
-      <StatusBar style="auto" />
-      <Stack>
+    <>
+      <StatusBar style={theme === "dark" ? "light" : "auto"} />
+      <Stack
+        screenOptions={{
+          headerStyle: { backgroundColor: colors.background },
+          headerTintColor: colors.text,
+          contentStyle: { backgroundColor: colors.background },
+        }}
+      >
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ title: "Sign In", headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -71,6 +78,17 @@ export default function RootLayout() {
           options={{ title: "Edit Event", presentation: "modal" }}
         />
       </Stack>
+    </>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <SettingsProvider>
+      <RolesProvider>
+      <CalendarEventsProvider>
+      <InnerLayout />
       </CalendarEventsProvider>
       </RolesProvider>
       </SettingsProvider>

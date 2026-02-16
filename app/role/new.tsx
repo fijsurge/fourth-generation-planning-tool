@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -11,10 +11,11 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { useRoles } from "../../src/hooks/useRoles";
-import { colors } from "../../src/theme/colors";
+import { useThemeColors } from "../../src/theme/useThemeColors";
 import { spacing, borderRadius } from "../../src/theme/spacing";
 
 export default function NewRoleScreen() {
+  const colors = useThemeColors();
   const { addRole } = useRoles();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -32,6 +33,51 @@ export default function NewRoleScreen() {
       setSaving(false);
     }
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    form: {
+      padding: spacing.lg,
+    },
+    label: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: colors.textSecondary,
+      marginBottom: spacing.xs,
+      marginTop: spacing.md,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: borderRadius.md,
+      padding: spacing.md,
+      fontSize: 16,
+      color: colors.text,
+      backgroundColor: colors.surface,
+    },
+    multiline: {
+      minHeight: 80,
+      textAlignVertical: "top",
+    },
+    button: {
+      backgroundColor: colors.primary,
+      padding: spacing.md,
+      borderRadius: borderRadius.md,
+      alignItems: "center",
+      marginTop: spacing.lg,
+    },
+    buttonDisabled: {
+      opacity: 0.5,
+    },
+    buttonText: {
+      color: colors.onPrimary,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+  }), [colors]);
 
   return (
     <KeyboardAvoidingView
@@ -70,7 +116,7 @@ export default function NewRoleScreen() {
           ]}
         >
           {saving ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={colors.onPrimary} />
           ) : (
             <Text style={styles.buttonText}>Save Role</Text>
           )}
@@ -79,48 +125,3 @@ export default function NewRoleScreen() {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  form: {
-    padding: spacing.lg,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.textSecondary,
-    marginBottom: spacing.xs,
-    marginTop: spacing.md,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    fontSize: 16,
-    color: colors.text,
-    backgroundColor: colors.surface,
-  },
-  multiline: {
-    minHeight: 80,
-    textAlignVertical: "top",
-  },
-  button: {
-    backgroundColor: colors.primary,
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    alignItems: "center",
-    marginTop: spacing.lg,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-});

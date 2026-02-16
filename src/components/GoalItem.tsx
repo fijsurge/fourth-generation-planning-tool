@@ -1,9 +1,10 @@
+import { useMemo } from "react";
 import { Pressable, Text, View, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { WeeklyGoal } from "../models/WeeklyGoal";
 import { QuadrantBadge } from "./QuadrantBadge";
 import { StatusBadge } from "./StatusBadge";
-import { colors } from "../theme/colors";
+import { useThemeColors } from "../theme/useThemeColors";
 import { spacing, borderRadius } from "../theme/spacing";
 
 interface GoalItemProps {
@@ -14,7 +15,38 @@ interface GoalItemProps {
 }
 
 export function GoalItem({ goal, onPress, onCycleStatus, onCalendarPress }: GoalItemProps) {
+  const colors = useThemeColors();
   const hasEvent = !!goal.calendarEventId;
+
+  const styles = useMemo(() => StyleSheet.create({
+    row: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      backgroundColor: colors.background,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    text: {
+      flex: 1,
+      fontSize: 15,
+      color: colors.text,
+      marginRight: spacing.sm,
+    },
+    textComplete: {
+      textDecorationLine: "line-through",
+      color: colors.textMuted,
+    },
+    badges: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xs,
+    },
+    calendarButton: {
+      padding: 2,
+    },
+  }), [colors]);
 
   return (
     <Pressable
@@ -53,33 +85,3 @@ export function GoalItem({ goal, onPress, onCycleStatus, onCalendarPress }: Goal
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    backgroundColor: colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  text: {
-    flex: 1,
-    fontSize: 15,
-    color: colors.text,
-    marginRight: spacing.sm,
-  },
-  textComplete: {
-    textDecorationLine: "line-through",
-    color: colors.textMuted,
-  },
-  badges: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-  },
-  calendarButton: {
-    padding: 2,
-  },
-});

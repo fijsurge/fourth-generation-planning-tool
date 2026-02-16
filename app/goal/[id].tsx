@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -15,12 +15,14 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useWeeklyGoals } from "../../src/hooks/useWeeklyGoals";
 import { useRoles } from "../../src/hooks/useRoles";
 import { Quadrant } from "../../src/models/WeeklyGoal";
-import { QUADRANT_LABELS, QUADRANT_COLORS } from "../../src/utils/constants";
+import { QUADRANT_LABELS, getQuadrantColors } from "../../src/utils/constants";
 import { Ionicons } from "@expo/vector-icons";
-import { colors } from "../../src/theme/colors";
+import { useThemeColors } from "../../src/theme/useThemeColors";
 import { spacing, borderRadius } from "../../src/theme/spacing";
 
 export default function EditGoalScreen() {
+  const colors = useThemeColors();
+  const QUADRANT_COLORS = getQuadrantColors(colors);
   const { id, weekStartDate } = useLocalSearchParams<{
     id: string;
     weekStartDate: string;
@@ -46,6 +48,124 @@ export default function EditGoalScreen() {
       setNotes(goal.notes);
     }
   }, [goal?.id]);
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    centered: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    errorText: {
+      fontSize: 16,
+      color: colors.textSecondary,
+    },
+    form: {
+      padding: spacing.lg,
+    },
+    label: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: colors.textSecondary,
+      marginBottom: spacing.xs,
+      marginTop: spacing.md,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: borderRadius.md,
+      padding: spacing.md,
+      fontSize: 16,
+      color: colors.text,
+      backgroundColor: colors.surface,
+    },
+    multiline: {
+      minHeight: 80,
+      textAlignVertical: "top",
+    },
+    chipRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: spacing.sm,
+    },
+    chip: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.full,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    chipSelected: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primaryLight,
+    },
+    chipText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    chipTextSelected: {
+      color: colors.primary,
+      fontWeight: "600",
+    },
+    quadrantGrid: {
+      gap: spacing.sm,
+    },
+    quadrantButton: {
+      padding: spacing.md,
+      borderRadius: borderRadius.md,
+      borderWidth: 1,
+    },
+    quadrantLabel: {
+      fontSize: 14,
+      fontWeight: "500",
+    },
+    calendarButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.sm,
+      padding: spacing.md,
+      borderRadius: borderRadius.md,
+      borderWidth: 1,
+      borderColor: colors.primary,
+      marginTop: spacing.lg,
+      justifyContent: "center",
+    },
+    calendarButtonText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: colors.primary,
+    },
+    button: {
+      backgroundColor: colors.primary,
+      padding: spacing.md,
+      borderRadius: borderRadius.md,
+      alignItems: "center",
+      marginTop: spacing.lg,
+    },
+    buttonDisabled: {
+      opacity: 0.5,
+    },
+    buttonText: {
+      color: colors.onPrimary,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    deleteButton: {
+      padding: spacing.md,
+      borderRadius: borderRadius.md,
+      alignItems: "center",
+      marginTop: spacing.md,
+    },
+    deleteText: {
+      color: colors.danger,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+  }), [colors]);
 
   if (isLoading) {
     return (
@@ -174,7 +294,6 @@ export default function EditGoalScreen() {
           numberOfLines={3}
         />
 
-        {/* Calendar link */}
         {goal.calendarEventId ? (
           <Pressable
             onPress={() => router.push(`/event/${goal.calendarEventId}`)}
@@ -215,7 +334,7 @@ export default function EditGoalScreen() {
           ]}
         >
           {saving ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={colors.onPrimary} />
           ) : (
             <Text style={styles.buttonText}>Save Changes</Text>
           )}
@@ -232,121 +351,3 @@ export default function EditGoalScreen() {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  errorText: {
-    fontSize: 16,
-    color: colors.textSecondary,
-  },
-  form: {
-    padding: spacing.lg,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.textSecondary,
-    marginBottom: spacing.xs,
-    marginTop: spacing.md,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    fontSize: 16,
-    color: colors.text,
-    backgroundColor: colors.surface,
-  },
-  multiline: {
-    minHeight: 80,
-    textAlignVertical: "top",
-  },
-  chipRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  chip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  chipSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryLight,
-  },
-  chipText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  chipTextSelected: {
-    color: colors.primary,
-    fontWeight: "600",
-  },
-  quadrantGrid: {
-    gap: spacing.sm,
-  },
-  quadrantButton: {
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-  },
-  quadrantLabel: {
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  calendarButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    marginTop: spacing.lg,
-    justifyContent: "center",
-  },
-  calendarButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.primary,
-  },
-  button: {
-    backgroundColor: colors.primary,
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    alignItems: "center",
-    marginTop: spacing.lg,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  deleteButton: {
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    alignItems: "center",
-    marginTop: spacing.md,
-  },
-  deleteText: {
-    color: "#dc2626",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-});

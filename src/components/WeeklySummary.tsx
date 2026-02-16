@@ -1,7 +1,8 @@
+import { useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { WeeklyGoal, Quadrant } from "../models/WeeklyGoal";
-import { QUADRANT_SHORT_LABELS, QUADRANT_COLORS } from "../utils/constants";
-import { colors } from "../theme/colors";
+import { QUADRANT_SHORT_LABELS, getQuadrantColors } from "../utils/constants";
+import { useThemeColors } from "../theme/useThemeColors";
 import { spacing } from "../theme/spacing";
 
 interface WeeklySummaryProps {
@@ -9,12 +10,40 @@ interface WeeklySummaryProps {
 }
 
 export function WeeklySummary({ goals }: WeeklySummaryProps) {
+  const colors = useThemeColors();
+  const QUADRANT_COLORS = getQuadrantColors(colors);
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      alignItems: "center",
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    progressText: {
+      fontSize: 13,
+      fontWeight: "600",
+      color: colors.textSecondary,
+    },
+    separator: {
+      fontSize: 13,
+      color: colors.textMuted,
+    },
+    quadrantText: {
+      fontSize: 13,
+      fontWeight: "500",
+    },
+  }), [colors]);
+
   if (goals.length === 0) return null;
 
   const complete = goals.filter((g) => g.status === "complete").length;
   const total = goals.length;
 
-  // Count goals per quadrant (only those that exist)
   const quadrantCounts = new Map<Quadrant, number>();
   for (const goal of goals) {
     quadrantCounts.set(goal.quadrant, (quadrantCounts.get(goal.quadrant) || 0) + 1);
@@ -43,29 +72,3 @@ export function WeeklySummary({ goals }: WeeklySummaryProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    alignItems: "center",
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  progressText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: colors.textSecondary,
-  },
-  separator: {
-    fontSize: 13,
-    color: colors.textMuted,
-  },
-  quadrantText: {
-    fontSize: 13,
-    fontWeight: "500",
-  },
-});

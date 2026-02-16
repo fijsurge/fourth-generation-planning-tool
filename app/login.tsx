@@ -1,11 +1,62 @@
+import { useMemo } from "react";
 import { View, Text, Pressable, StyleSheet, ActivityIndicator } from "react-native";
 import { Redirect } from "expo-router";
 import { useAuth } from "../src/auth/AuthContext";
-import { colors } from "../src/theme/colors";
+import { useThemeColors } from "../src/theme/useThemeColors";
 import { spacing } from "../src/theme/spacing";
 
 export default function LoginScreen() {
+  const colors = useThemeColors();
   const { isLoggedIn, isLoading, login } = useAuth();
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      padding: spacing.lg,
+      backgroundColor: colors.background,
+    },
+    content: {
+      width: "100%",
+      maxWidth: 400,
+      alignItems: "center",
+    },
+    title: {
+      fontSize: 32,
+      fontWeight: "bold",
+      color: colors.text,
+      marginBottom: spacing.sm,
+    },
+    subtitle: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      marginBottom: spacing.xxl,
+      textAlign: "center",
+    },
+    signInButton: {
+      backgroundColor: colors.primary,
+      paddingVertical: 14,
+      paddingHorizontal: spacing.xl,
+      borderRadius: 8,
+      width: "100%",
+      alignItems: "center",
+    },
+    signInButtonPressed: {
+      opacity: 0.85,
+    },
+    signInText: {
+      color: colors.onPrimary,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    hint: {
+      fontSize: 13,
+      color: colors.textMuted,
+      marginTop: spacing.md,
+      textAlign: "center",
+    },
+  }), [colors]);
 
   if (isLoggedIn) {
     return <Redirect href="/(tabs)/weekly-plan" />;
@@ -28,7 +79,7 @@ export default function LoginScreen() {
           disabled={isLoading}
         >
           {isLoading ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={colors.onPrimary} />
           ) : (
             <Text style={styles.signInText}>Sign in with Google</Text>
           )}
@@ -41,52 +92,3 @@ export default function LoginScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: spacing.lg,
-    backgroundColor: colors.background,
-  },
-  content: {
-    width: "100%",
-    maxWidth: 400,
-    alignItems: "center",
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: colors.text,
-    marginBottom: spacing.sm,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    marginBottom: spacing.xxl,
-    textAlign: "center",
-  },
-  signInButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: 14,
-    paddingHorizontal: spacing.xl,
-    borderRadius: 8,
-    width: "100%",
-    alignItems: "center",
-  },
-  signInButtonPressed: {
-    opacity: 0.85,
-  },
-  signInText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  hint: {
-    fontSize: 13,
-    color: colors.textMuted,
-    marginTop: spacing.md,
-    textAlign: "center",
-  },
-});

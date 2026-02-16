@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -26,7 +26,7 @@ import {
   dateTimeToPickerValues,
   pickerValuesToDateTimeString,
 } from "../../src/components/WebDateTimePicker";
-import { colors } from "../../src/theme/colors";
+import { useThemeColors } from "../../src/theme/useThemeColors";
 import { spacing, borderRadius } from "../../src/theme/spacing";
 
 function toLocalDateTimeString(date: Date): string {
@@ -44,6 +44,7 @@ function toLocalDateString(date: Date): string {
 }
 
 export default function NewEventScreen() {
+  const colors = useThemeColors();
   const params = useLocalSearchParams<{
     date?: string;
     goalId?: string;
@@ -55,7 +56,6 @@ export default function NewEventScreen() {
   const { getValidAccessToken } = useAuth();
   const { defaultAttendees } = useSettings();
 
-  // Default start: either from params or next full hour
   const initialDate = params.date ? new Date(params.date) : new Date();
   if (!params.date) {
     initialDate.setMinutes(0, 0, 0);
@@ -79,7 +79,6 @@ export default function NewEventScreen() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // When start changes, shift end to preserve duration
   const updateStart = (newStartStr: string) => {
     const oldStart = new Date(startStr).getTime();
     const oldEnd = new Date(endStr).getTime();
@@ -114,7 +113,6 @@ export default function NewEventScreen() {
 
       if (allDay) {
         startTime = startDateStr;
-        // Google Calendar all-day end date is exclusive, so add one day
         const end = new Date(endDateStr);
         end.setDate(end.getDate() + 1);
         endTime = toLocalDateString(end);
@@ -140,7 +138,6 @@ export default function NewEventScreen() {
         transparency,
       });
 
-      // If creating from a goal, update the goal with the calendar event ID
       if (params.goalId && params.weekStartDate) {
         try {
           const token = await getValidAccessToken();
@@ -171,6 +168,107 @@ export default function NewEventScreen() {
       setSaving(false);
     }
   };
+
+  const webInputStyle: React.CSSProperties = {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderStyle: "solid",
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    fontSize: 16,
+    color: colors.text,
+    backgroundColor: colors.surface,
+    width: "100%",
+    boxSizing: "border-box",
+    fontFamily: "inherit",
+  };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    form: {
+      padding: spacing.lg,
+    },
+    label: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: colors.textSecondary,
+      marginBottom: spacing.xs,
+      marginTop: spacing.md,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: borderRadius.md,
+      padding: spacing.md,
+      fontSize: 16,
+      color: colors.text,
+      backgroundColor: colors.surface,
+    },
+    multiline: {
+      minHeight: 80,
+      textAlignVertical: "top",
+    },
+    switchRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginTop: spacing.md,
+    },
+    segmentedControl: {
+      flexDirection: "row",
+      backgroundColor: colors.surface,
+      borderRadius: borderRadius.md,
+      padding: 2,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    segmentButton: {
+      flex: 1,
+      paddingVertical: spacing.sm,
+      alignItems: "center",
+      borderRadius: borderRadius.sm,
+    },
+    segmentButtonActive: {
+      backgroundColor: colors.primary,
+    },
+    segmentText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: colors.textSecondary,
+    },
+    segmentTextActive: {
+      color: colors.onPrimary,
+    },
+    hint: {
+      fontSize: 13,
+      color: colors.textMuted,
+      marginTop: spacing.md,
+      fontStyle: "italic",
+    },
+    errorText: {
+      fontSize: 13,
+      color: colors.danger,
+      marginTop: spacing.md,
+    },
+    button: {
+      backgroundColor: colors.primary,
+      padding: spacing.md,
+      borderRadius: borderRadius.md,
+      alignItems: "center",
+      marginTop: spacing.lg,
+    },
+    buttonDisabled: {
+      opacity: 0.5,
+    },
+    buttonText: {
+      color: colors.onPrimary,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+  }), [colors]);
 
   return (
     <KeyboardAvoidingView
@@ -367,7 +465,7 @@ export default function NewEventScreen() {
           ]}
         >
           {saving ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={colors.onPrimary} />
           ) : (
             <Text style={styles.buttonText}>Save Event</Text>
           )}
@@ -376,104 +474,3 @@ export default function NewEventScreen() {
     </KeyboardAvoidingView>
   );
 }
-
-const webInputStyle: React.CSSProperties = {
-  borderWidth: 1,
-  borderColor: colors.border,
-  borderStyle: "solid",
-  borderRadius: borderRadius.md,
-  padding: spacing.md,
-  fontSize: 16,
-  color: colors.text,
-  backgroundColor: colors.surface,
-  width: "100%",
-  boxSizing: "border-box",
-  fontFamily: "inherit",
-};
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  form: {
-    padding: spacing.lg,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.textSecondary,
-    marginBottom: spacing.xs,
-    marginTop: spacing.md,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    fontSize: 16,
-    color: colors.text,
-    backgroundColor: colors.surface,
-  },
-  multiline: {
-    minHeight: 80,
-    textAlignVertical: "top",
-  },
-  switchRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: spacing.md,
-  },
-  segmentedControl: {
-    flexDirection: "row",
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    padding: 2,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  segmentButton: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-    alignItems: "center",
-    borderRadius: borderRadius.sm,
-  },
-  segmentButtonActive: {
-    backgroundColor: colors.primary,
-  },
-  segmentText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.textSecondary,
-  },
-  segmentTextActive: {
-    color: "#fff",
-  },
-  hint: {
-    fontSize: 13,
-    color: colors.textMuted,
-    marginTop: spacing.md,
-    fontStyle: "italic",
-  },
-  errorText: {
-    fontSize: 13,
-    color: "#dc2626",
-    marginTop: spacing.md,
-  },
-  button: {
-    backgroundColor: colors.primary,
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    alignItems: "center",
-    marginTop: spacing.lg,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-});

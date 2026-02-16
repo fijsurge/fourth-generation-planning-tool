@@ -1,8 +1,9 @@
+import { useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { WeeklyGoal } from "../models/WeeklyGoal";
 import { Role } from "../models/Role";
 import { GoalItem } from "./GoalItem";
-import { colors } from "../theme/colors";
+import { useThemeColors } from "../theme/useThemeColors";
 import { spacing } from "../theme/spacing";
 
 interface GoalsByRoleProps {
@@ -14,6 +15,7 @@ interface GoalsByRoleProps {
 }
 
 export function GoalsByRole({ goals, roles, onGoalPress, onCycleStatus, onCalendarPress }: GoalsByRoleProps) {
+  const colors = useThemeColors();
   const roleMap = new Map(roles.filter((r) => r.active).map((r) => [r.id, r]));
 
   // Group goals by role
@@ -40,6 +42,37 @@ export function GoalsByRole({ goals, roles, onGoalPress, onCycleStatus, onCalend
   if (unassigned?.length) {
     sections.push({ label: "Unassigned", goals: unassigned });
   }
+
+  const styles = useMemo(() => StyleSheet.create({
+    section: {
+      marginBottom: spacing.sm,
+    },
+    header: {
+      fontSize: 13,
+      fontWeight: "700",
+      color: colors.textSecondary,
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      backgroundColor: colors.surface,
+    },
+    empty: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      paddingVertical: spacing.xxl,
+    },
+    emptyText: {
+      fontSize: 16,
+      color: colors.textSecondary,
+    },
+    emptyHint: {
+      fontSize: 13,
+      color: colors.textMuted,
+      marginTop: spacing.xs,
+    },
+  }), [colors]);
 
   if (sections.length === 0) {
     return (
@@ -69,34 +102,3 @@ export function GoalsByRole({ goals, roles, onGoalPress, onCycleStatus, onCalend
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  section: {
-    marginBottom: spacing.sm,
-  },
-  header: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: colors.textSecondary,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    backgroundColor: colors.surface,
-  },
-  empty: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: spacing.xxl,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: colors.textSecondary,
-  },
-  emptyHint: {
-    fontSize: 13,
-    color: colors.textMuted,
-    marginTop: spacing.xs,
-  },
-});

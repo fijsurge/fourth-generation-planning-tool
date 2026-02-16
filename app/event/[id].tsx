@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -20,15 +20,8 @@ import {
   dateTimeToPickerValues,
   pickerValuesToDateTimeString,
 } from "../../src/components/WebDateTimePicker";
-import { colors } from "../../src/theme/colors";
+import { useThemeColors } from "../../src/theme/useThemeColors";
 import { spacing, borderRadius } from "../../src/theme/spacing";
-
-const STATUS_COLORS: Record<string, string> = {
-  accepted: "#16a34a",
-  declined: "#dc2626",
-  tentative: "#d97706",
-  needsAction: "#9ca3af",
-};
 
 function toLocalDateTimeString(date: Date): string {
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -45,6 +38,7 @@ function toLocalDateString(date: Date): string {
 }
 
 export default function EditEventScreen() {
+  const colors = useThemeColors();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { events, updateEvent, deleteEvent } = useCalendarEvents();
 
@@ -62,7 +56,6 @@ export default function EditEventScreen() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // When start changes, shift end to preserve duration
   const updateStart = (newStartStr: string) => {
     const oldStart = new Date(startStr).getTime();
     const oldEnd = new Date(endStr).getTime();
@@ -105,6 +98,156 @@ export default function EditEventScreen() {
       }
     }
   }, [event?.id]);
+
+  const webInputStyle: React.CSSProperties = {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderStyle: "solid",
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    fontSize: 16,
+    color: colors.text,
+    backgroundColor: colors.surface,
+    width: "100%",
+    boxSizing: "border-box",
+    fontFamily: "inherit",
+  };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    centered: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      padding: spacing.lg,
+    },
+    errorText: {
+      fontSize: 16,
+      color: colors.textSecondary,
+    },
+    hintText: {
+      fontSize: 13,
+      color: colors.textMuted,
+      marginTop: spacing.sm,
+    },
+    form: {
+      padding: spacing.lg,
+    },
+    label: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: colors.textSecondary,
+      marginBottom: spacing.xs,
+      marginTop: spacing.md,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: borderRadius.md,
+      padding: spacing.md,
+      fontSize: 16,
+      color: colors.text,
+      backgroundColor: colors.surface,
+    },
+    multiline: {
+      minHeight: 80,
+      textAlignVertical: "top",
+    },
+    switchRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginTop: spacing.md,
+    },
+    segmentedControl: {
+      flexDirection: "row",
+      backgroundColor: colors.surface,
+      borderRadius: borderRadius.md,
+      padding: 2,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    segmentButton: {
+      flex: 1,
+      paddingVertical: spacing.sm,
+      alignItems: "center",
+      borderRadius: borderRadius.sm,
+    },
+    segmentButtonActive: {
+      backgroundColor: colors.primary,
+    },
+    segmentText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: colors.textSecondary,
+    },
+    segmentTextActive: {
+      color: colors.onPrimary,
+    },
+    attendeeList: {
+      marginTop: spacing.sm,
+      gap: 6,
+    },
+    attendeeRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    statusDot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+    },
+    attendeeEmail: {
+      flex: 1,
+      fontSize: 13,
+      color: colors.text,
+    },
+    attendeeStatus: {
+      fontSize: 12,
+      color: colors.textMuted,
+    },
+    linkedGoal: {
+      fontSize: 13,
+      color: colors.primary,
+      marginTop: spacing.md,
+      fontStyle: "italic",
+    },
+    saveErrorText: {
+      fontSize: 13,
+      color: colors.danger,
+      marginTop: spacing.md,
+    },
+    button: {
+      backgroundColor: colors.primary,
+      padding: spacing.md,
+      borderRadius: borderRadius.md,
+      alignItems: "center",
+      marginTop: spacing.lg,
+    },
+    buttonDisabled: {
+      opacity: 0.5,
+    },
+    buttonText: {
+      color: colors.onPrimary,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    deleteButton: {
+      padding: spacing.md,
+      borderRadius: borderRadius.md,
+      alignItems: "center",
+      marginTop: spacing.md,
+    },
+    deleteText: {
+      color: colors.danger,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+  }), [colors]);
 
   if (!event) {
     return (
@@ -375,7 +518,9 @@ export default function EditEventScreen() {
                     styles.statusDot,
                     {
                       backgroundColor:
-                        STATUS_COLORS[a.responseStatus || "needsAction"],
+                        colors.attendeeStatus[
+                          (a.responseStatus as keyof typeof colors.attendeeStatus) || "needsAction"
+                        ],
                     },
                   ]}
                 />
@@ -408,7 +553,7 @@ export default function EditEventScreen() {
           ]}
         >
           {saving ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={colors.onPrimary} />
           ) : (
             <Text style={styles.buttonText}>Save Changes</Text>
           )}
@@ -428,153 +573,3 @@ export default function EditEventScreen() {
     </KeyboardAvoidingView>
   );
 }
-
-const webInputStyle: React.CSSProperties = {
-  borderWidth: 1,
-  borderColor: colors.border,
-  borderStyle: "solid",
-  borderRadius: borderRadius.md,
-  padding: spacing.md,
-  fontSize: 16,
-  color: colors.text,
-  backgroundColor: colors.surface,
-  width: "100%",
-  boxSizing: "border-box",
-  fontFamily: "inherit",
-};
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: spacing.lg,
-  },
-  errorText: {
-    fontSize: 16,
-    color: colors.textSecondary,
-  },
-  hintText: {
-    fontSize: 13,
-    color: colors.textMuted,
-    marginTop: spacing.sm,
-  },
-  form: {
-    padding: spacing.lg,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.textSecondary,
-    marginBottom: spacing.xs,
-    marginTop: spacing.md,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    fontSize: 16,
-    color: colors.text,
-    backgroundColor: colors.surface,
-  },
-  multiline: {
-    minHeight: 80,
-    textAlignVertical: "top",
-  },
-  switchRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: spacing.md,
-  },
-  segmentedControl: {
-    flexDirection: "row",
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    padding: 2,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  segmentButton: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-    alignItems: "center",
-    borderRadius: borderRadius.sm,
-  },
-  segmentButtonActive: {
-    backgroundColor: colors.primary,
-  },
-  segmentText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.textSecondary,
-  },
-  segmentTextActive: {
-    color: "#fff",
-  },
-  attendeeList: {
-    marginTop: spacing.sm,
-    gap: 6,
-  },
-  attendeeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  statusDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  attendeeEmail: {
-    flex: 1,
-    fontSize: 13,
-    color: colors.text,
-  },
-  attendeeStatus: {
-    fontSize: 12,
-    color: colors.textMuted,
-  },
-  linkedGoal: {
-    fontSize: 13,
-    color: colors.primary,
-    marginTop: spacing.md,
-    fontStyle: "italic",
-  },
-  saveErrorText: {
-    fontSize: 13,
-    color: "#dc2626",
-    marginTop: spacing.md,
-  },
-  button: {
-    backgroundColor: colors.primary,
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    alignItems: "center",
-    marginTop: spacing.lg,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  deleteButton: {
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    alignItems: "center",
-    marginTop: spacing.md,
-  },
-  deleteText: {
-    color: "#dc2626",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-});

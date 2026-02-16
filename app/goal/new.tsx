@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -14,11 +14,13 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useWeeklyGoals } from "../../src/hooks/useWeeklyGoals";
 import { useRoles } from "../../src/hooks/useRoles";
 import { Quadrant } from "../../src/models/WeeklyGoal";
-import { QUADRANT_LABELS, QUADRANT_COLORS } from "../../src/utils/constants";
-import { colors } from "../../src/theme/colors";
+import { QUADRANT_LABELS, getQuadrantColors } from "../../src/utils/constants";
+import { useThemeColors } from "../../src/theme/useThemeColors";
 import { spacing, borderRadius } from "../../src/theme/spacing";
 
 export default function NewGoalScreen() {
+  const colors = useThemeColors();
+  const QUADRANT_COLORS = getQuadrantColors(colors);
   const { weekStartDate, roleId: preselectedRoleId } = useLocalSearchParams<{
     weekStartDate: string;
     roleId?: string;
@@ -51,6 +53,93 @@ export default function NewGoalScreen() {
       setSaving(false);
     }
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    form: {
+      padding: spacing.lg,
+    },
+    label: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: colors.textSecondary,
+      marginBottom: spacing.xs,
+      marginTop: spacing.md,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: borderRadius.md,
+      padding: spacing.md,
+      fontSize: 16,
+      color: colors.text,
+      backgroundColor: colors.surface,
+    },
+    multiline: {
+      minHeight: 80,
+      textAlignVertical: "top",
+    },
+    chipRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: spacing.sm,
+    },
+    chip: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.full,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    chipSelected: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primaryLight,
+    },
+    chipText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    chipTextSelected: {
+      color: colors.primary,
+      fontWeight: "600",
+    },
+    hint: {
+      fontSize: 13,
+      color: colors.textMuted,
+      marginTop: spacing.xs,
+    },
+    quadrantGrid: {
+      gap: spacing.sm,
+    },
+    quadrantButton: {
+      padding: spacing.md,
+      borderRadius: borderRadius.md,
+      borderWidth: 1,
+    },
+    quadrantLabel: {
+      fontSize: 14,
+      fontWeight: "500",
+    },
+    button: {
+      backgroundColor: colors.primary,
+      padding: spacing.md,
+      borderRadius: borderRadius.md,
+      alignItems: "center",
+      marginTop: spacing.lg,
+    },
+    buttonDisabled: {
+      opacity: 0.5,
+    },
+    buttonText: {
+      color: colors.onPrimary,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+  }), [colors]);
 
   return (
     <KeyboardAvoidingView
@@ -135,7 +224,7 @@ export default function NewGoalScreen() {
           ]}
         >
           {saving ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={colors.onPrimary} />
           ) : (
             <Text style={styles.buttonText}>Save Goal</Text>
           )}
@@ -144,90 +233,3 @@ export default function NewGoalScreen() {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  form: {
-    padding: spacing.lg,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.textSecondary,
-    marginBottom: spacing.xs,
-    marginTop: spacing.md,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    fontSize: 16,
-    color: colors.text,
-    backgroundColor: colors.surface,
-  },
-  multiline: {
-    minHeight: 80,
-    textAlignVertical: "top",
-  },
-  chipRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  chip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  chipSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryLight,
-  },
-  chipText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  chipTextSelected: {
-    color: colors.primary,
-    fontWeight: "600",
-  },
-  hint: {
-    fontSize: 13,
-    color: colors.textMuted,
-    marginTop: spacing.xs,
-  },
-  quadrantGrid: {
-    gap: spacing.sm,
-  },
-  quadrantButton: {
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-  },
-  quadrantLabel: {
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  button: {
-    backgroundColor: colors.primary,
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    alignItems: "center",
-    marginTop: spacing.lg,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-});
