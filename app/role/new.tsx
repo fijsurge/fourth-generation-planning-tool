@@ -13,12 +13,14 @@ import { router } from "expo-router";
 import { useRoles } from "../../src/hooks/useRoles";
 import { useThemeColors } from "../../src/theme/useThemeColors";
 import { spacing, borderRadius } from "../../src/theme/spacing";
+import { ColorPicker } from "../../src/components/ColorPicker";
 
 export default function NewRoleScreen() {
   const colors = useThemeColors();
   const { addRole } = useRoles();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [colorId, setColorId] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
 
   const canSave = name.trim().length > 0;
@@ -27,7 +29,7 @@ export default function NewRoleScreen() {
     if (!canSave || saving) return;
     setSaving(true);
     try {
-      await addRole(name.trim(), description.trim());
+      await addRole(name.trim(), description.trim(), colorId);
       router.back();
     } catch {
       setSaving(false);
@@ -105,6 +107,9 @@ export default function NewRoleScreen() {
           multiline
           numberOfLines={3}
         />
+
+        <Text style={styles.label}>Calendar Color (optional)</Text>
+        <ColorPicker value={colorId} onChange={setColorId} />
 
         <Pressable
           onPress={handleSave}

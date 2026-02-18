@@ -258,6 +258,7 @@ function roleToRow(role: Role): string[] {
     String(role.active),
     role.createdAt,
     role.updatedAt,
+    role.colorId || "",
   ];
 }
 
@@ -270,6 +271,7 @@ function rowToRole(row: string[]): Role {
     active: row[4] !== "false",
     createdAt: row[5] || "",
     updatedAt: row[6] || "",
+    colorId: row[7] || undefined,
   };
 }
 

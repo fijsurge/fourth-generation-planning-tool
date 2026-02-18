@@ -14,6 +14,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useRoles } from "../../src/hooks/useRoles";
 import { useThemeColors } from "../../src/theme/useThemeColors";
 import { spacing, borderRadius } from "../../src/theme/spacing";
+import { ColorPicker } from "../../src/components/ColorPicker";
 
 export default function EditRoleScreen() {
   const colors = useThemeColors();
@@ -21,6 +22,7 @@ export default function EditRoleScreen() {
   const { roles, isLoading, updateRole, deleteRole } = useRoles();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [colorId, setColorId] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
 
   const role = roles.find((r) => r.id === id);
@@ -29,6 +31,7 @@ export default function EditRoleScreen() {
     if (role) {
       setName(role.name);
       setDescription(role.description);
+      setColorId(role.colorId);
     }
   }, [role?.id]);
 
@@ -155,7 +158,7 @@ export default function EditRoleScreen() {
     if (!canSave || saving) return;
     setSaving(true);
     try {
-      await updateRole({ ...role, name: name.trim(), description: description.trim() });
+      await updateRole({ ...role, name: name.trim(), description: description.trim(), colorId });
       router.back();
     } catch {
       setSaving(false);
@@ -257,6 +260,9 @@ export default function EditRoleScreen() {
           multiline
           numberOfLines={3}
         />
+
+        <Text style={styles.label}>Calendar Color (optional)</Text>
+        <ColorPicker value={colorId} onChange={setColorId} />
 
         <Pressable
           onPress={handleSave}

@@ -6,4 +6,5 @@ export interface Role {
   active: boolean;
   createdAt: string;
   updatedAt: string;
+  colorId?: string;
 }

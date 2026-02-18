@@ -28,6 +28,8 @@ import {
 } from "../../src/components/WebDateTimePicker";
 import { useThemeColors } from "../../src/theme/useThemeColors";
 import { spacing, borderRadius } from "../../src/theme/spacing";
+import { useRoles } from "../../src/hooks/useRoles";
+import { ColorPicker } from "../../src/components/ColorPicker";
 
 function toLocalDateTimeString(date: Date): string {
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -50,11 +52,13 @@ export default function NewEventScreen() {
     goalId?: string;
     goalText?: string;
     weekStartDate?: string;
+    roleId?: string;
   }>();
 
   const { createEvent } = useCalendarEvents();
   const { getValidAccessToken } = useAuth();
   const { defaultAttendees } = useSettings();
+  const { roles } = useRoles();
 
   const initialDate = params.date ? new Date(params.date) : new Date();
   if (!params.date) {
@@ -78,6 +82,11 @@ export default function NewEventScreen() {
   const [attendeesStr, setAttendeesStr] = useState(defaultAttendees);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const defaultColorId = params.roleId
+    ? roles.find((r) => r.id === params.roleId)?.colorId
+    : undefined;
+  const [colorId, setColorId] = useState<string | undefined>(defaultColorId);
 
   const updateStart = (newStartStr: string) => {
     const oldStart = new Date(startStr).getTime();
@@ -136,6 +145,7 @@ export default function NewEventScreen() {
         linkedGoalId: params.goalId || undefined,
         attendees: attendees.length > 0 ? attendees : undefined,
         transparency,
+        colorId,
       });
 
       if (params.goalId && params.weekStartDate) {
@@ -444,6 +454,9 @@ export default function NewEventScreen() {
           keyboardType="email-address"
           autoCapitalize="none"
         />
+
+        <Text style={styles.label}>Color (optional)</Text>
+        <ColorPicker value={colorId} onChange={setColorId} />
 
         {params.goalId && (
           <Text style={styles.hint}>

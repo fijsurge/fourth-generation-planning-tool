@@ -43,6 +43,7 @@ function googleEventToCalendarEvent(item: any): CalendarEvent {
     allDay,
     attendees,
     transparency: (item.transparency as EventTransparency) || "opaque",
+    colorId: item.colorId || undefined,
   };
 }
 
@@ -68,6 +69,9 @@ function calendarEventToGoogleBody(event: Partial<CalendarEvent>) {
   }
   if (event.transparency !== undefined) {
     body.transparency = event.transparency;
+  }
+  if (event.colorId !== undefined) {
+    body.colorId = event.colorId;
   }
 
   return body;

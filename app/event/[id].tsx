@@ -22,6 +22,7 @@ import {
 } from "../../src/components/WebDateTimePicker";
 import { useThemeColors } from "../../src/theme/useThemeColors";
 import { spacing, borderRadius } from "../../src/theme/spacing";
+import { ColorPicker } from "../../src/components/ColorPicker";
 
 function toLocalDateTimeString(date: Date): string {
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -53,6 +54,7 @@ export default function EditEventScreen() {
   const [endDateStr, setEndDateStr] = useState("");
   const [transparency, setTransparency] = useState<EventTransparency>("opaque");
   const [attendeesStr, setAttendeesStr] = useState("");
+  const [colorId, setColorId] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -84,6 +86,7 @@ export default function EditEventScreen() {
       setDescription(event.description);
       setAllDay(event.allDay);
       setTransparency(event.transparency || "opaque");
+      setColorId(event.colorId);
       setAttendeesStr(
         (event.attendees || []).map((a) => a.email).join(", ")
       );
@@ -294,6 +297,7 @@ export default function EditEventScreen() {
         allDay,
         attendees: attendees.length > 0 ? attendees : undefined,
         transparency,
+        colorId,
       });
       router.back();
     } catch (err: any) {
@@ -508,6 +512,9 @@ export default function EditEventScreen() {
           keyboardType="email-address"
           autoCapitalize="none"
         />
+
+        <Text style={styles.label}>Color (optional)</Text>
+        <ColorPicker value={colorId} onChange={setColorId} />
 
         {event.attendees && event.attendees.length > 0 && (
           <View style={styles.attendeeList}>

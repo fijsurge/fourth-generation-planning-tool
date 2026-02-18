@@ -129,7 +129,7 @@ export default function WeeklyPlanScreen() {
       router.push(`/event/${goal.calendarEventId}`);
     } else {
       router.push(
-        `/event/new?goalId=${goal.id}&goalText=${encodeURIComponent(goal.goalText)}&weekStartDate=${weekKey}`
+        `/event/new?goalId=${goal.id}&goalText=${encodeURIComponent(goal.goalText)}&weekStartDate=${weekKey}&roleId=${goal.roleId}`
       );
     }
   };

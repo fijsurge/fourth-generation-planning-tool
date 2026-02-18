@@ -18,4 +18,5 @@ export interface CalendarEvent {
   linkedGoalId?: string;
   attendees?: EventAttendee[];
   transparency?: EventTransparency;
+  colorId?: string;
 }

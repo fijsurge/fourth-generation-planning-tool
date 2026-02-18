@@ -13,7 +13,7 @@ export interface RolesState {
   roles: Role[];
   isLoading: boolean;
   error: string | null;
-  addRole: (name: string, description: string) => Promise<Role>;
+  addRole: (name: string, description: string, colorId?: string) => Promise<Role>;
   updateRole: (role: Role) => Promise<void>;
   deleteRole: (roleId: string) => Promise<void>;
   refresh: () => Promise<void>;
@@ -51,7 +51,7 @@ export function RolesProvider({ children }: { children: React.ReactNode }) {
   }, [isLoggedIn, loadRoles]);
 
   const addRole = useCallback(
-    async (name: string, description: string) => {
+    async (name: string, description: string, colorId?: string) => {
       const now = new Date().toISOString();
       const newRole: Role = {
         id: generateId(),
@@ -61,6 +61,7 @@ export function RolesProvider({ children }: { children: React.ReactNode }) {
         active: true,
         createdAt: now,
         updatedAt: now,
+        colorId,
       };
 
       setRoles((prev) => [...prev, newRole]);

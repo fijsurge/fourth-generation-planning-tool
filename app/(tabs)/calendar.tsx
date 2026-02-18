@@ -15,6 +15,7 @@ import { EventTransparency } from "../../src/models/CalendarEvent";
 import { useThemeColors } from "../../src/theme/useThemeColors";
 import { spacing, borderRadius } from "../../src/theme/spacing";
 import { Ionicons } from "@expo/vector-icons";
+import { colorIdToHex } from "../../src/utils/calendarColors";
 
 interface BigCalendarEvent extends ICalendarEventBase {
   id: string;
@@ -76,7 +77,7 @@ export default function CalendarScreen() {
         title: e.title,
         start: new Date(e.startTime),
         end: new Date(e.endTime),
-        color: colors.calendarSource.google,
+        color: colorIdToHex(e.colorId, colors.calendarSource.google),
         transparency: e.transparency,
       })),
     [events, colors]
