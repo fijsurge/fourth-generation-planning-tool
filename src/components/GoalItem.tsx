@@ -13,9 +13,10 @@ interface GoalItemProps {
   onCycleStatus: () => void;
   onCalendarPress?: () => void;
   onMoveOrCopy?: () => void;
+  isLocked?: boolean;
 }
 
-export function GoalItem({ goal, onPress, onCycleStatus, onCalendarPress, onMoveOrCopy }: GoalItemProps) {
+export function GoalItem({ goal, onPress, onCycleStatus, onCalendarPress, onMoveOrCopy, isLocked }: GoalItemProps) {
   const colors = useThemeColors();
   const hasEvent = !!goal.calendarEventId;
 
@@ -49,11 +50,17 @@ export function GoalItem({ goal, onPress, onCycleStatus, onCalendarPress, onMove
     },
   }), [colors]);
 
+  // When locked: block edit/status interactions; allow copy; calendar only for linked events.
+  const effectiveOnPress = isLocked ? undefined : onPress;
+  const effectiveOnCycleStatus = isLocked ? () => {} : onCycleStatus;
+  const effectiveOnCalendarPress =
+    isLocked && !hasEvent ? undefined : onCalendarPress;
+
   return (
     <Pressable
-      onPress={onPress}
+      onPress={effectiveOnPress}
       onLongPress={onMoveOrCopy}
-      style={({ pressed }) => [styles.row, pressed && { opacity: 0.7 }]}
+      style={({ pressed }) => [styles.row, !isLocked && pressed && { opacity: 0.7 }]}
     >
       <Text
         style={[styles.text, goal.status === "complete" && styles.textComplete]}
@@ -62,11 +69,11 @@ export function GoalItem({ goal, onPress, onCycleStatus, onCalendarPress, onMove
         {goal.goalText}
       </Text>
       <View style={styles.badges}>
-        {onCalendarPress && (
+        {effectiveOnCalendarPress && (
           <Pressable
             onPress={(e) => {
               e.stopPropagation();
-              onCalendarPress();
+              effectiveOnCalendarPress();
             }}
             hitSlop={8}
             style={({ pressed }) => [
@@ -97,7 +104,7 @@ export function GoalItem({ goal, onPress, onCycleStatus, onCalendarPress, onMove
           </Pressable>
         )}
         <QuadrantBadge quadrant={goal.quadrant} />
-        <StatusBadge status={goal.status} onPress={onCycleStatus} />
+        <StatusBadge status={goal.status} onPress={effectiveOnCycleStatus} />
       </View>
     </Pressable>
   );

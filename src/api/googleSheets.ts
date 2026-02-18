@@ -1,5 +1,6 @@
 import { Role } from "../models/Role";
 import { WeeklyGoal } from "../models/WeeklyGoal";
+import { WeeklyReflection } from "../models/WeeklyReflection";
 import { SettingsEntry } from "../models/Settings";
 
 const SHEETS_BASE = "https://sheets.googleapis.com/v4/spreadsheets";
@@ -10,6 +11,17 @@ const SPREADSHEET_TITLE = "Fourth Generation Planner";
 const ROLES_SHEET = "Roles";
 const GOALS_SHEET = "WeeklyGoals";
 const SETTINGS_SHEET = "Settings";
+const REFLECTIONS_SHEET = "WeeklyReflections";
+const REFLECTIONS_HEADERS = [
+  "ID",
+  "WeekStartDate",
+  "WentWell",
+  "DidntGoWell",
+  "Intentions",
+  "CreatedAt",
+  "UpdatedAt",
+];
+let reflectionsSheetEnsured = false;
 
 // Header rows
 const ROLES_HEADERS = [
@@ -83,7 +95,7 @@ export async function getOrCreateSpreadsheet(
     return cachedSpreadsheetId!;
   }
 
-  // Create new spreadsheet with 3 sheets
+  // Create new spreadsheet with 4 sheets
   const createRes = await apiFetch(SHEETS_BASE, accessToken, {
     method: "POST",
     body: JSON.stringify({
@@ -92,6 +104,7 @@ export async function getOrCreateSpreadsheet(
         { properties: { title: ROLES_SHEET } },
         { properties: { title: GOALS_SHEET } },
         { properties: { title: SETTINGS_SHEET } },
+        { properties: { title: REFLECTIONS_SHEET } },
       ],
     }),
   });
@@ -110,6 +123,7 @@ export async function getOrCreateSpreadsheet(
           { range: `${ROLES_SHEET}!A1`, values: [ROLES_HEADERS] },
           { range: `${GOALS_SHEET}!A1`, values: [GOALS_HEADERS] },
           { range: `${SETTINGS_SHEET}!A1`, values: [SETTINGS_HEADERS] },
+          { range: `${REFLECTIONS_SHEET}!A1`, values: [REFLECTIONS_HEADERS] },
         ],
       }),
     }
@@ -389,4 +403,119 @@ export async function setSetting(
     // Key doesn't exist yet, append it
     await appendRow(accessToken, SETTINGS_SHEET, [key, value, now]);
   }
+}
+
+// ─── WeeklyReflections CRUD ────────────────────────────────
+
+async function ensureReflectionsSheet(
+  accessToken: string,
+  spreadsheetId: string
+): Promise<void> {
+  if (reflectionsSheetEnsured) return;
+
+  const res = await apiFetch(
+    `${SHEETS_BASE}/${spreadsheetId}?fields=sheets.properties`,
+    accessToken
+  );
+  const data = await res.json();
+  const exists = data.sheets.some(
+    (s: any) => s.properties.title === REFLECTIONS_SHEET
+  );
+
+  if (!exists) {
+    // Add the sheet
+    await apiFetch(`${SHEETS_BASE}/${spreadsheetId}:batchUpdate`, accessToken, {
+      method: "POST",
+      body: JSON.stringify({
+        requests: [{ addSheet: { properties: { title: REFLECTIONS_SHEET } } }],
+      }),
+    });
+    // Write headers to A1
+    await apiFetch(
+      `${SHEETS_BASE}/${spreadsheetId}/values/${encodeURIComponent(
+        REFLECTIONS_SHEET
+      )}!A1?valueInputOption=RAW`,
+      accessToken,
+      {
+        method: "PUT",
+        body: JSON.stringify({ values: [REFLECTIONS_HEADERS] }),
+      }
+    );
+  }
+
+  reflectionsSheetEnsured = true;
+}
+
+function reflectionToRow(r: WeeklyReflection): string[] {
+  return [
+    r.id,
+    r.weekStartDate,
+    r.wentWell,
+    r.didntGoWell,
+    r.intentions,
+    r.createdAt,
+    r.updatedAt,
+  ];
+}
+
+function rowToReflection(row: string[]): WeeklyReflection {
+  return {
+    id: row[0] || "",
+    weekStartDate: row[1] || "",
+    wentWell: row[2] || "",
+    didntGoWell: row[3] || "",
+    intentions: row[4] || "",
+    createdAt: row[5] || "",
+    updatedAt: row[6] || "",
+  };
+}
+
+export async function getReflections(
+  accessToken: string
+): Promise<WeeklyReflection[]> {
+  const spreadsheetId = await getOrCreateSpreadsheet(accessToken);
+  await ensureReflectionsSheet(accessToken, spreadsheetId);
+  const rows = await readSheet(accessToken, REFLECTIONS_SHEET);
+  return rows.map(rowToReflection);
+}
+
+export async function getReflectionByWeek(
+  accessToken: string,
+  weekStartDate: string
+): Promise<WeeklyReflection | null> {
+  const all = await getReflections(accessToken);
+  return all.find((r) => r.weekStartDate === weekStartDate) ?? null;
+}
+
+export async function addReflection(
+  accessToken: string,
+  reflection: WeeklyReflection
+): Promise<void> {
+  const spreadsheetId = await getOrCreateSpreadsheet(accessToken);
+  await ensureReflectionsSheet(accessToken, spreadsheetId);
+  await appendRow(accessToken, REFLECTIONS_SHEET, reflectionToRow(reflection));
+}
+
+export async function updateReflection(
+  accessToken: string,
+  reflection: WeeklyReflection
+): Promise<void> {
+  const rowIndex = await findRowIndex(
+    accessToken,
+    REFLECTIONS_SHEET,
+    reflection.id
+  );
+  await updateRow(
+    accessToken,
+    REFLECTIONS_SHEET,
+    rowIndex,
+    reflectionToRow(reflection)
+  );
+}
+
+export async function deleteReflection(
+  accessToken: string,
+  reflectionId: string
+): Promise<void> {
+  await deleteRow(accessToken, REFLECTIONS_SHEET, reflectionId);
 }

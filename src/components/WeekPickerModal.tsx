@@ -8,7 +8,7 @@ import { shiftWeek, formatWeekRange, formatWeekKey } from "../utils/dates";
 interface WeekPickerModalProps {
   visible: boolean;
   currentWeekStart: Date;
-  onMove: (targetWeekDate: string) => void;
+  onMove?: (targetWeekDate: string) => void;
   onCopy: (targetWeekDate: string) => void;
   onClose: () => void;
 }
@@ -126,7 +126,7 @@ export function WeekPickerModal({
     >
       <Pressable style={styles.overlay} onPress={onClose}>
         <Pressable style={styles.card} onPress={() => {}}>
-          <Text style={styles.title}>Move or Copy to week</Text>
+          <Text style={styles.title}>{onMove ? "Move or Copy to week" : "Copy to week"}</Text>
 
           <View style={styles.weekRow}>
             <Pressable
@@ -148,12 +148,14 @@ export function WeekPickerModal({
             </Pressable>
           </View>
 
-          <Pressable
-            style={({ pressed }) => [styles.moveButton, pressed && { opacity: 0.8 }]}
-            onPress={() => onMove(formatWeekKey(selectedWeek))}
-          >
-            <Text style={styles.moveButtonText}>Move to this week</Text>
-          </Pressable>
+          {onMove && (
+            <Pressable
+              style={({ pressed }) => [styles.moveButton, pressed && { opacity: 0.8 }]}
+              onPress={() => onMove(formatWeekKey(selectedWeek))}
+            >
+              <Text style={styles.moveButtonText}>Move to this week</Text>
+            </Pressable>
+          )}
 
           <Pressable
             style={({ pressed }) => [styles.copyButton, pressed && { opacity: 0.8 }]}

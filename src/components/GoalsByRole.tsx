@@ -13,9 +13,10 @@ interface GoalsByRoleProps {
   onCycleStatus: (goalId: string) => void;
   onCalendarPress?: (goal: WeeklyGoal) => void;
   onMoveOrCopy?: (goal: WeeklyGoal) => void;
+  isLocked?: boolean;
 }
 
-export function GoalsByRole({ goals, roles, onGoalPress, onCycleStatus, onCalendarPress, onMoveOrCopy }: GoalsByRoleProps) {
+export function GoalsByRole({ goals, roles, onGoalPress, onCycleStatus, onCalendarPress, onMoveOrCopy, isLocked }: GoalsByRoleProps) {
   const colors = useThemeColors();
   const roleMap = new Map(roles.filter((r) => r.active).map((r) => [r.id, r]));
 
@@ -97,6 +98,7 @@ export function GoalsByRole({ goals, roles, onGoalPress, onCycleStatus, onCalend
               onCycleStatus={() => onCycleStatus(goal.id)}
               onCalendarPress={onCalendarPress ? () => onCalendarPress(goal) : undefined}
               onMoveOrCopy={onMoveOrCopy ? () => onMoveOrCopy(goal) : undefined}
+              isLocked={isLocked}
             />
           ))}
         </View>
