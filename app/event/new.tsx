@@ -89,22 +89,23 @@ export default function NewEventScreen() {
   const [colorId, setColorId] = useState<string | undefined>(defaultColorId);
 
   const updateStart = (newStartStr: string) => {
-    const oldStart = new Date(startStr).getTime();
-    const oldEnd = new Date(endStr).getTime();
-    const duration = oldEnd - oldStart;
     const newStart = new Date(newStartStr).getTime();
-    if (!isNaN(newStart) && !isNaN(duration)) {
+    const currentEnd = new Date(endStr).getTime();
+    // Only push end forward when start would meet or exceed end
+    if (!isNaN(newStart) && !isNaN(currentEnd) && newStart >= currentEnd) {
+      const oldStart = new Date(startStr).getTime();
+      const duration = !isNaN(oldStart) ? currentEnd - oldStart : 60 * 60 * 1000;
       setEndStr(toLocalDateTimeString(new Date(newStart + duration)));
     }
     setStartStr(newStartStr);
   };
 
   const updateStartDate = (newDateStr: string) => {
-    const oldStart = new Date(startDateStr).getTime();
-    const oldEnd = new Date(endDateStr).getTime();
-    const duration = oldEnd - oldStart;
     const newStart = new Date(newDateStr).getTime();
-    if (!isNaN(newStart) && !isNaN(duration)) {
+    const currentEnd = new Date(endDateStr).getTime();
+    if (!isNaN(newStart) && !isNaN(currentEnd) && newStart >= currentEnd) {
+      const oldStart = new Date(startDateStr).getTime();
+      const duration = !isNaN(oldStart) ? currentEnd - oldStart : 24 * 60 * 60 * 1000;
       setEndDateStr(toLocalDateString(new Date(newStart + duration)));
     }
     setStartDateStr(newDateStr);
