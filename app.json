@@ -7,7 +7,7 @@
     "icon": "./assets/icon.png",
     "scheme": "fourthgenplanner",
     "userInterfaceStyle": "light",
-    "newArchEnabled": false,
+    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -33,6 +33,13 @@
       "expo-router",
       "expo-secure-store",
       "expo-web-browser"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "02e896cf-8717-4b3e-b747-c32ae67d7f02"
+      }
+    },
+    "owner": "fijisurge"
   }
 }
