@@ -77,6 +77,18 @@ function calendarEventToGoogleBody(event: Partial<CalendarEvent>) {
   return body;
 }
 
+export async function getEvent(
+  accessToken: string,
+  eventId: string
+): Promise<CalendarEvent> {
+  const res = await apiFetch(
+    `${CALENDAR_BASE}/events/${eventId}`,
+    accessToken
+  );
+  const data = await res.json();
+  return googleEventToCalendarEvent(data);
+}
+
 // ─── CRUD ─────────────────────────────────────────────────
 
 export async function listEvents(

@@ -14,7 +14,9 @@ import {
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCalendarEvents } from "../../src/hooks/useCalendarEvents";
-import { EventTransparency } from "../../src/models/CalendarEvent";
+import { CalendarEvent, EventTransparency } from "../../src/models/CalendarEvent";
+import { getEvent } from "../../src/api/googleCalendar";
+import { useAuth } from "../../src/auth/AuthContext";
 import {
   WebDateTimePicker,
   dateTimeToPickerValues,
@@ -42,8 +44,13 @@ export default function EditEventScreen() {
   const colors = useThemeColors();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { events, updateEvent, deleteEvent } = useCalendarEvents();
+  const { getValidAccessToken } = useAuth();
 
-  const event = events.find((e) => e.id === id);
+  const eventFromContext = events.find((e) => e.id === id);
+  const [fetchedEvent, setFetchedEvent] = useState<CalendarEvent | null>(null);
+  const [fetching, setFetching] = useState(false);
+
+  const event = eventFromContext ?? fetchedEvent ?? undefined;
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -79,6 +86,17 @@ export default function EditEventScreen() {
     }
     setStartDateStr(newDateStr);
   };
+
+  // Fetch from API when not in context (e.g. after hard refresh)
+  useEffect(() => {
+    if (!id || eventFromContext) return;
+    setFetching(true);
+    getValidAccessToken()
+      .then((token) => getEvent(token, id))
+      .then((e) => setFetchedEvent(e))
+      .catch(() => {/* leave event undefined — "not found" shown below */})
+      .finally(() => setFetching(false));
+  }, [id]);
 
   useEffect(() => {
     if (event) {
@@ -251,6 +269,14 @@ export default function EditEventScreen() {
       fontWeight: "600",
     },
   }), [colors]);
+
+  if (fetching) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
   if (!event) {
     return (
