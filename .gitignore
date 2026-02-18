@@ -11,3 +11,4 @@ web-build/
 .env
 .env.local
 notes.txt
+android/
