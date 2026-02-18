@@ -12,9 +12,10 @@ interface GoalsByRoleProps {
   onGoalPress: (goal: WeeklyGoal) => void;
   onCycleStatus: (goalId: string) => void;
   onCalendarPress?: (goal: WeeklyGoal) => void;
+  onMoveOrCopy?: (goal: WeeklyGoal) => void;
 }
 
-export function GoalsByRole({ goals, roles, onGoalPress, onCycleStatus, onCalendarPress }: GoalsByRoleProps) {
+export function GoalsByRole({ goals, roles, onGoalPress, onCycleStatus, onCalendarPress, onMoveOrCopy }: GoalsByRoleProps) {
   const colors = useThemeColors();
   const roleMap = new Map(roles.filter((r) => r.active).map((r) => [r.id, r]));
 
@@ -95,6 +96,7 @@ export function GoalsByRole({ goals, roles, onGoalPress, onCycleStatus, onCalend
               onPress={() => onGoalPress(goal)}
               onCycleStatus={() => onCycleStatus(goal.id)}
               onCalendarPress={onCalendarPress ? () => onCalendarPress(goal) : undefined}
+              onMoveOrCopy={onMoveOrCopy ? () => onMoveOrCopy(goal) : undefined}
             />
           ))}
         </View>

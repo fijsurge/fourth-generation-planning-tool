@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Pressable, Text, View, StyleSheet } from "react-native";
+import { Pressable, Text, View, StyleSheet, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { WeeklyGoal } from "../models/WeeklyGoal";
 import { QuadrantBadge } from "./QuadrantBadge";
@@ -12,9 +12,10 @@ interface GoalItemProps {
   onPress: () => void;
   onCycleStatus: () => void;
   onCalendarPress?: () => void;
+  onMoveOrCopy?: () => void;
 }
 
-export function GoalItem({ goal, onPress, onCycleStatus, onCalendarPress }: GoalItemProps) {
+export function GoalItem({ goal, onPress, onCycleStatus, onCalendarPress, onMoveOrCopy }: GoalItemProps) {
   const colors = useThemeColors();
   const hasEvent = !!goal.calendarEventId;
 
@@ -51,6 +52,7 @@ export function GoalItem({ goal, onPress, onCycleStatus, onCalendarPress }: Goal
   return (
     <Pressable
       onPress={onPress}
+      onLongPress={onMoveOrCopy}
       style={({ pressed }) => [styles.row, pressed && { opacity: 0.7 }]}
     >
       <Text
@@ -77,6 +79,21 @@ export function GoalItem({ goal, onPress, onCycleStatus, onCalendarPress }: Goal
               size={18}
               color={hasEvent ? colors.primary : colors.textMuted}
             />
+          </Pressable>
+        )}
+        {Platform.OS === "web" && onMoveOrCopy && (
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation();
+              onMoveOrCopy();
+            }}
+            hitSlop={8}
+            style={({ pressed }) => [
+              styles.calendarButton,
+              pressed && { opacity: 0.6 },
+            ]}
+          >
+            <Ionicons name="arrow-redo-outline" size={18} color={colors.textMuted} />
           </Pressable>
         )}
         <QuadrantBadge quadrant={goal.quadrant} />

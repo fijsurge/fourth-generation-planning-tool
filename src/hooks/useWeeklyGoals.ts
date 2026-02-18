@@ -118,6 +118,35 @@ export function useWeeklyGoals(weekStartDate: string) {
     [goals, getValidAccessToken]
   );
 
+  const moveGoalToWeek = useCallback(async (goalId: string, targetWeekDate: string) => {
+    const goal = goals.find((g) => g.id === goalId);
+    if (!goal) return;
+    const previous = goals;
+    setGoals((prev) => prev.filter((g) => g.id !== goalId));
+    try {
+      const token = await getValidAccessToken();
+      await apiUpdateGoal(token, { ...goal, weekStartDate: targetWeekDate, updatedAt: new Date().toISOString() });
+    } catch (err: any) {
+      setGoals(previous);
+      setError(err.message);
+      throw err;
+    }
+  }, [goals, getValidAccessToken]);
+
+  const copyGoalToWeek = useCallback(async (goalId: string, targetWeekDate: string) => {
+    const goal = goals.find((g) => g.id === goalId);
+    if (!goal) return;
+    const now = new Date().toISOString();
+    const copy: WeeklyGoal = { ...goal, id: generateId(), weekStartDate: targetWeekDate, createdAt: now, updatedAt: now };
+    try {
+      const token = await getValidAccessToken();
+      await apiAddGoal(token, copy);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    }
+  }, [goals, getValidAccessToken]);
+
   return {
     goals,
     isLoading,
@@ -126,6 +155,8 @@ export function useWeeklyGoals(weekStartDate: string) {
     updateGoal,
     cycleStatus,
     deleteGoal: deleteGoalById,
+    moveGoalToWeek,
+    copyGoalToWeek,
     refresh: loadGoals,
   };
 }

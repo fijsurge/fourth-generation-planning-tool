@@ -19,6 +19,8 @@ import { QUADRANT_LABELS, getQuadrantColors } from "../../src/utils/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemeColors } from "../../src/theme/useThemeColors";
 import { spacing, borderRadius } from "../../src/theme/spacing";
+import { WeekPickerModal } from "../../src/components/WeekPickerModal";
+import { getWeekStart } from "../../src/utils/dates";
 
 export default function EditGoalScreen() {
   const colors = useThemeColors();
@@ -28,7 +30,7 @@ export default function EditGoalScreen() {
     weekStartDate: string;
   }>();
 
-  const { goals, isLoading, updateGoal, deleteGoal } = useWeeklyGoals(weekStartDate || "");
+  const { goals, isLoading, updateGoal, deleteGoal, moveGoalToWeek, copyGoalToWeek } = useWeeklyGoals(weekStartDate || "");
   const { roles } = useRoles();
   const activeRoles = roles.filter((r) => r.active);
 
@@ -39,6 +41,7 @@ export default function EditGoalScreen() {
   const [quadrant, setQuadrant] = useState<Quadrant>(2);
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [moveOrCopyModalVisible, setMoveOrCopyModalVisible] = useState(false);
 
   useEffect(() => {
     if (goal) {
@@ -154,6 +157,22 @@ export default function EditGoalScreen() {
       fontSize: 16,
       fontWeight: "600",
     },
+    moveOrCopyButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.sm,
+      padding: spacing.md,
+      borderRadius: borderRadius.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      marginTop: spacing.md,
+      justifyContent: "center",
+    },
+    moveOrCopyButtonText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: colors.textSecondary,
+    },
     deleteButton: {
       padding: spacing.md,
       borderRadius: borderRadius.md,
@@ -224,6 +243,32 @@ export default function EditGoalScreen() {
       ]);
     }
   };
+
+  const handleMove = async (targetWeekDate: string) => {
+    if (!goal) return;
+    setMoveOrCopyModalVisible(false);
+    setSaving(true);
+    try {
+      await moveGoalToWeek(goal.id, targetWeekDate);
+      router.back();
+    } catch {
+      setSaving(false);
+    }
+  };
+
+  const handleCopy = async (targetWeekDate: string) => {
+    if (!goal) return;
+    setMoveOrCopyModalVisible(false);
+    setSaving(true);
+    try {
+      await copyGoalToWeek(goal.id, targetWeekDate);
+      setSaving(false);
+    } catch {
+      setSaving(false);
+    }
+  };
+
+  const goalWeekStart = goal ? getWeekStart(new Date(goal.weekStartDate + "T00:00:00")) : getWeekStart(new Date());
 
   return (
     <KeyboardAvoidingView
@@ -325,6 +370,15 @@ export default function EditGoalScreen() {
         )}
 
         <Pressable
+          onPress={() => setMoveOrCopyModalVisible(true)}
+          disabled={saving}
+          style={({ pressed }) => [styles.moveOrCopyButton, pressed && { opacity: 0.8 }]}
+        >
+          <Ionicons name="arrow-redo-outline" size={16} color={colors.textSecondary} />
+          <Text style={styles.moveOrCopyButtonText}>Move / Copy to another week…</Text>
+        </Pressable>
+
+        <Pressable
           onPress={handleSave}
           disabled={!canSave || saving}
           style={({ pressed }) => [
@@ -348,6 +402,14 @@ export default function EditGoalScreen() {
           <Text style={styles.deleteText}>Delete Goal</Text>
         </Pressable>
       </ScrollView>
+
+      <WeekPickerModal
+        visible={moveOrCopyModalVisible}
+        currentWeekStart={goalWeekStart}
+        onMove={handleMove}
+        onCopy={handleCopy}
+        onClose={() => setMoveOrCopyModalVisible(false)}
+      />
     </KeyboardAvoidingView>
   );
 }

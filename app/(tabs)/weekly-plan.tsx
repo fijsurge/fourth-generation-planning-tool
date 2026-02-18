@@ -7,6 +7,7 @@ import { useRoles } from "../../src/hooks/useRoles";
 import { WeekSelector } from "../../src/components/WeekSelector";
 import { WeeklySummary } from "../../src/components/WeeklySummary";
 import { GoalsByRole } from "../../src/components/GoalsByRole";
+import { WeekPickerModal } from "../../src/components/WeekPickerModal";
 import { WeeklyGoal } from "../../src/models/WeeklyGoal";
 import { getWeekStart, shiftWeek, formatWeekKey } from "../../src/utils/dates";
 import { useThemeColors } from "../../src/theme/useThemeColors";
@@ -16,8 +17,9 @@ export default function WeeklyPlanScreen() {
   const colors = useThemeColors();
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()));
   const weekKey = formatWeekKey(weekStart);
+  const [moveOrCopyGoal, setMoveOrCopyGoal] = useState<WeeklyGoal | null>(null);
 
-  const { goals, isLoading: goalsLoading, cycleStatus, refresh: refreshGoals } = useWeeklyGoals(weekKey);
+  const { goals, isLoading: goalsLoading, cycleStatus, moveGoalToWeek, copyGoalToWeek, refresh: refreshGoals } = useWeeklyGoals(weekKey);
   const { roles, isLoading: rolesLoading, refresh: refreshRoles } = useRoles();
 
   useFocusEffect(
@@ -37,6 +39,20 @@ export default function WeeklyPlanScreen() {
 
   const handleAddGoal = () => {
     router.push(`/goal/new?weekStartDate=${weekKey}`);
+  };
+
+  const handleMoveOrCopy = (goal: WeeklyGoal) => setMoveOrCopyGoal(goal);
+
+  const handleMove = async (targetWeekDate: string) => {
+    if (!moveOrCopyGoal) return;
+    setMoveOrCopyGoal(null);
+    await moveGoalToWeek(moveOrCopyGoal.id, targetWeekDate);
+  };
+
+  const handleCopy = async (targetWeekDate: string) => {
+    if (!moveOrCopyGoal) return;
+    setMoveOrCopyGoal(null);
+    await copyGoalToWeek(moveOrCopyGoal.id, targetWeekDate);
   };
 
   const handleCalendarPress = (goal: WeeklyGoal) => {
@@ -104,6 +120,7 @@ export default function WeeklyPlanScreen() {
             onGoalPress={handleGoalPress}
             onCycleStatus={cycleStatus}
             onCalendarPress={handleCalendarPress}
+            onMoveOrCopy={handleMoveOrCopy}
           />
         </ScrollView>
       )}
@@ -114,6 +131,14 @@ export default function WeeklyPlanScreen() {
       >
         <Ionicons name="add" size={28} color={colors.onPrimary} />
       </Pressable>
+
+      <WeekPickerModal
+        visible={!!moveOrCopyGoal}
+        currentWeekStart={weekStart}
+        onMove={handleMove}
+        onCopy={handleCopy}
+        onClose={() => setMoveOrCopyGoal(null)}
+      />
     </View>
   );
 }
