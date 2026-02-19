@@ -2,7 +2,7 @@
   "expo": {
     "name": "Fourth Gen Planner",
     "slug": "fourth-gen-planner",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "fourthgenplanner",
