@@ -4,9 +4,15 @@ import {
   useAuthRequest,
   ResponseType,
 } from "expo-auth-session";
+import { Platform } from "react-native";
 
-const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID!;
-const GOOGLE_CLIENT_SECRET = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_SECRET!;
+const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID!;
+const GOOGLE_WEB_CLIENT_SECRET = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_SECRET!;
+const GOOGLE_ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID!;
+
+// Android OAuth clients are validated by package name + SHA-1, not a client secret
+const GOOGLE_CLIENT_ID =
+  Platform.OS === "android" ? GOOGLE_ANDROID_CLIENT_ID : GOOGLE_WEB_CLIENT_ID;
 
 export const GOOGLE_SCOPES = [
   "openid",
@@ -57,17 +63,23 @@ export async function exchangeCodeForTokens(
   refresh_token?: string;
   expires_in: number;
 }> {
+  const params: Record<string, string> = {
+    client_id: GOOGLE_CLIENT_ID,
+    code,
+    code_verifier: codeVerifier,
+    grant_type: "authorization_code",
+    redirect_uri: redirectUri,
+  };
+
+  // Android OAuth clients don't use a client secret
+  if (Platform.OS !== "android") {
+    params.client_secret = GOOGLE_WEB_CLIENT_SECRET;
+  }
+
   const response = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: GOOGLE_CLIENT_ID,
-      client_secret: GOOGLE_CLIENT_SECRET,
-      code,
-      code_verifier: codeVerifier,
-      grant_type: "authorization_code",
-      redirect_uri: redirectUri,
-    }).toString(),
+    body: new URLSearchParams(params).toString(),
   });
 
   if (!response.ok) {
@@ -84,15 +96,21 @@ export async function exchangeCodeForTokens(
 export async function refreshAccessToken(
   refreshToken: string
 ): Promise<{ access_token: string; expires_in: number }> {
+  const params: Record<string, string> = {
+    client_id: GOOGLE_CLIENT_ID,
+    refresh_token: refreshToken,
+    grant_type: "refresh_token",
+  };
+
+  // Android OAuth clients don't use a client secret
+  if (Platform.OS !== "android") {
+    params.client_secret = GOOGLE_WEB_CLIENT_SECRET;
+  }
+
   const response = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: GOOGLE_CLIENT_ID,
-      client_secret: GOOGLE_CLIENT_SECRET,
-      refresh_token: refreshToken,
-      grant_type: "refresh_token",
-    }).toString(),
+    body: new URLSearchParams(params).toString(),
   });
 
   if (!response.ok) {
