@@ -1,9 +1,15 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "react-native";
 import { useThemeColors } from "../../src/theme/useThemeColors";
+import { useSettings } from "../../src/contexts/SettingsContext";
+
+const logo = require("../../assets/fourth_gen_v1_black_fg_trans_bg.png");
 
 export default function TabLayout() {
   const colors = useThemeColors();
+  const { theme } = useSettings();
+  const logoTint = theme === "dark" ? "#FFFFFF" : "#000000";
 
   return (
     <Tabs
@@ -18,6 +24,12 @@ export default function TabLayout() {
           backgroundColor: colors.background,
         },
         headerTintColor: colors.text,
+        headerLeft: () => (
+          <Image
+            source={logo}
+            style={{ width: 28, height: 28, marginLeft: 16, resizeMode: "contain", tintColor: logoTint }}
+          />
+        ),
       }}
     >
       <Tabs.Screen
