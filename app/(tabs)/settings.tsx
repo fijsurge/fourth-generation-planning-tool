@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, StyleSheet, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import Constants from "expo-constants";
 import { useAuth } from "../../src/auth/AuthContext";
 import { useRoles } from "../../src/hooks/useRoles";
 import { useSettings } from "../../src/contexts/SettingsContext";
@@ -169,6 +170,13 @@ export default function SettingsScreen() {
       color: colors.danger,
       fontWeight: "600",
     },
+    versionText: {
+      fontSize: 12,
+      color: colors.textMuted,
+      textAlign: "center",
+      marginTop: spacing.xl,
+      paddingBottom: spacing.md,
+    },
   }), [colors]);
 
   const THEME_OPTIONS: { label: string; value: ThemeMode }[] = [
@@ -303,6 +311,10 @@ export default function SettingsScreen() {
         <Ionicons name="log-out-outline" size={20} color={colors.danger} />
         <Text style={styles.signOutText}>Sign Out</Text>
       </Pressable>
+
+      <Text style={styles.versionText}>
+        Version {Constants.expoConfig?.version ?? "—"}
+      </Text>
     </ScrollView>
   );
 }
