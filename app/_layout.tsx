@@ -52,6 +52,7 @@ function InnerLayout() {
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ title: "Sign In", headerShown: false }} />
+        <Stack.Screen name="oauth2redirect" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
           name="goal/new"
