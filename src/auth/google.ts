@@ -27,9 +27,17 @@ export const GOOGLE_SCOPES = [
 export function useGoogleAuthConfig() {
   const discovery = useAutoDiscovery("https://accounts.google.com");
 
-  const redirectUri = makeRedirectUri({
-    scheme: "fourthgenplanner",
-  });
+  // Android OAuth clients require the reverse client-ID URI scheme.
+  // e.g. "123-abc.apps.googleusercontent.com" → "com.googleusercontent.apps.123-abc:/oauth2redirect"
+  const redirectUri =
+    Platform.OS === "android"
+      ? makeRedirectUri({
+          native: `com.googleusercontent.apps.${GOOGLE_ANDROID_CLIENT_ID.replace(
+            ".apps.googleusercontent.com",
+            ""
+          )}:/oauth2redirect`,
+        })
+      : makeRedirectUri({ scheme: "fourthgenplanner" });
 
   console.log("[Auth] Redirect URI:", redirectUri);
 
