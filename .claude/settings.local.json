@@ -20,7 +20,21 @@
       "Bash(npm ls:*)",
       "Bash(npm info:*)",
       "Bash(node -e:*)",
-      "Bash(EXPO_DOCTOR_SKIP_DEPENDENCY_VERSION_CHECK=1 npx expo start:*)"
+      "Bash(EXPO_DOCTOR_SKIP_DEPENDENCY_VERSION_CHECK=1 npx expo start:*)",
+      "Bash(powershell -Command \"Get-ChildItem ''C:\\\\Users\\\\fijis\\\\github\\\\fourth-generation-planning-tool'' | Select-Object Name, Length, Attributes\")",
+      "Bash(powershell -Command:*)",
+      "Bash(head -1 powershell -Command \"Get-ChildItem ''C:\\\\Users\\\\fijis\\\\github\\\\fourth-generation-planning-tool\\\\.expo'' -Recurse -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum | Select-Object -ExpandProperty Sum\")",
+      "Bash(powershell -File:*)",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\fijis\\\\github\\\\fourth-generation-planning-tool\\\\check-sizes.ps1\")",
+      "Bash(powershell -ExecutionPolicy Bypass -File:*)",
+      "Bash(dir:*)",
+      "Bash(git -C \"C:/Users/fijis/github/fourth-generation-planning-tool\" rev-parse --git-dir)",
+      "Bash(git -C \"C:/Users/fijis/github/fourth-generation-planning-tool\" rev-parse --absolute-git-dir)",
+      "Bash(git -C \"C:/Users/fijis/github/fourth-generation-planning-tool\" log --oneline -10)",
+      "Bash(git -C \"C:/Users/fijis/github/fourth-generation-planning-tool\" diff HEAD -- package.json)",
+      "Bash(node scripts/bump-version.js:*)",
+      "Bash(git checkout:*)",
+      "Bash(git restore:*)"
     ]
   }
 }

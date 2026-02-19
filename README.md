@@ -1,7 +1,7 @@
 # Fourth Generation Planning Tool
 
 A weekly planning app based on Stephen Covey's fourth-generation time management framework from *The 7 Habits of Highly Effective People*. Organize your life around **roles**, set **weekly goals** for each role, classify them by **Covey Quadrant** (I-IV), and **schedule big rocks** directly to Google Calendar.
-
+ 
 ## Features
 
 - **Weekly Planning** — Set goals for each of your life roles, navigate between weeks, track progress
