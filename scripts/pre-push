@@ -1,0 +1,9 @@
+#!/bin/sh
+# Git pre-push hook — auto-increments the patch version in app.json
+# Source lives in scripts/pre-push; install with: npm run setup-hooks
+
+node "$(git rev-parse --show-toplevel)/scripts/bump-version.js"
+
+# Amend the latest local commit to include the version bump
+# so the push carries the updated app.json without creating an extra commit.
+git commit --amend --no-edit --no-verify
