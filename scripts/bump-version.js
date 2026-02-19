@@ -20,5 +20,5 @@ fs.writeFileSync(appJsonPath, JSON.stringify(appJson, null, 2) + "\n");
 
 console.log(`[bump-version] ${current} → ${next}`);
 
-// Stage the updated app.json so it's included in the push commit
+// Stage the updated app.json so it's included in the commit
 execSync("git add app.json", { stdio: "inherit" });

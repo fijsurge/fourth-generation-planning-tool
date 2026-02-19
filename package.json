@@ -8,7 +8,7 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "build:web": "expo export --platform web",
-    "setup-hooks": "node -e \"require('fs').copyFileSync('scripts/pre-push','.git/hooks/pre-push')\""
+    "setup-hooks": "node -e \"require('fs').copyFileSync('scripts/pre-commit','.git/hooks/pre-commit')\""
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
