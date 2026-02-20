@@ -26,6 +26,10 @@ import {
   dateTimeToPickerValues,
   pickerValuesToDateTimeString,
 } from "../../src/components/WebDateTimePicker";
+import {
+  DateTimePickerField,
+  DatePickerField,
+} from "../../src/components/DateTimePickerField";
 import { useThemeColors } from "../../src/theme/useThemeColors";
 import { spacing, borderRadius } from "../../src/theme/spacing";
 import { useRoles } from "../../src/hooks/useRoles";
@@ -345,92 +349,18 @@ export default function NewEventScreen() {
         {allDay ? (
           <>
             <Text style={styles.label}>Start Date</Text>
-            {Platform.OS === "web" ? (
-              <input
-                type="date"
-                value={startDateStr}
-                onChange={(e) => updateStartDate(e.target.value)}
-                style={webInputStyle}
-              />
-            ) : (
-              <TextInput
-                style={styles.input}
-                value={startDateStr}
-                onChangeText={updateStartDate}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={colors.textMuted}
-              />
-            )}
+            <DatePickerField value={startDateStr} onChange={updateStartDate} />
 
             <Text style={styles.label}>End Date</Text>
-            {Platform.OS === "web" ? (
-              <input
-                type="date"
-                value={endDateStr}
-                onChange={(e) => setEndDateStr(e.target.value)}
-                style={webInputStyle}
-              />
-            ) : (
-              <TextInput
-                style={styles.input}
-                value={endDateStr}
-                onChangeText={setEndDateStr}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={colors.textMuted}
-              />
-            )}
+            <DatePickerField value={endDateStr} onChange={setEndDateStr} />
           </>
         ) : (
           <>
             <Text style={styles.label}>Start</Text>
-            {Platform.OS === "web" ? (
-              (() => {
-                const v = dateTimeToPickerValues(startStr);
-                return (
-                  <WebDateTimePicker
-                    dateValue={v.date}
-                    hourValue={v.hour}
-                    minuteValue={v.minute}
-                    onDateChange={(d) => updateStart(pickerValuesToDateTimeString(d, v.hour, v.minute))}
-                    onHourChange={(h) => updateStart(pickerValuesToDateTimeString(v.date, h, v.minute))}
-                    onMinuteChange={(m) => updateStart(pickerValuesToDateTimeString(v.date, v.hour, m))}
-                  />
-                );
-              })()
-            ) : (
-              <TextInput
-                style={styles.input}
-                value={startStr}
-                onChangeText={updateStart}
-                placeholder="YYYY-MM-DDTHH:MM"
-                placeholderTextColor={colors.textMuted}
-              />
-            )}
+            <DateTimePickerField value={startStr} onChange={updateStart} />
 
             <Text style={styles.label}>End</Text>
-            {Platform.OS === "web" ? (
-              (() => {
-                const v = dateTimeToPickerValues(endStr);
-                return (
-                  <WebDateTimePicker
-                    dateValue={v.date}
-                    hourValue={v.hour}
-                    minuteValue={v.minute}
-                    onDateChange={(d) => setEndStr(pickerValuesToDateTimeString(d, v.hour, v.minute))}
-                    onHourChange={(h) => setEndStr(pickerValuesToDateTimeString(v.date, h, v.minute))}
-                    onMinuteChange={(m) => setEndStr(pickerValuesToDateTimeString(v.date, v.hour, m))}
-                  />
-                );
-              })()
-            ) : (
-              <TextInput
-                style={styles.input}
-                value={endStr}
-                onChangeText={setEndStr}
-                placeholder="YYYY-MM-DDTHH:MM"
-                placeholderTextColor={colors.textMuted}
-              />
-            )}
+            <DateTimePickerField value={endStr} onChange={setEndStr} />
           </>
         )}
 
