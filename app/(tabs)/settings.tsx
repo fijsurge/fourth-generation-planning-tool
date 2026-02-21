@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { View, Text, TextInput, Pressable, ScrollView, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, Pressable, ScrollView, StyleSheet, ActivityIndicator, Switch, Platform } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
@@ -10,19 +10,45 @@ import { RoleCard } from "../../src/components/RoleCard";
 import { useThemeColors } from "../../src/theme/useThemeColors";
 import { ThemeMode } from "../../src/theme/colors";
 import { spacing, borderRadius } from "../../src/theme/spacing";
+import { requestPermission, cancelAllScheduled } from "../../src/notifications/scheduler";
 
 export default function SettingsScreen() {
   const colors = useThemeColors();
   const { logout } = useAuth();
   const { roles, isLoading } = useRoles();
-  const { defaultAttendees, setDefaultAttendees, theme, setTheme } = useSettings();
+  const { defaultAttendees, setDefaultAttendees, theme, setTheme, notificationsEnabled, setNotificationsEnabled, notificationTime, setNotificationTime } = useSettings();
   const activeRoles = roles.filter((r) => r.active);
   const inactiveRoles = roles.filter((r) => !r.active);
   const [inactiveExpanded, setInactiveExpanded] = useState(false);
   const [attendeesInput, setAttendeesInput] = useState<string | null>(null);
   const [savingAttendees, setSavingAttendees] = useState(false);
+  const [notifTimeInput, setNotifTimeInput] = useState<string | null>(null);
+  const [savingNotifTime, setSavingNotifTime] = useState(false);
 
   const attendeesValue = attendeesInput !== null ? attendeesInput : defaultAttendees;
+
+  const handleToggleNotifications = async (value: boolean) => {
+    if (value) {
+      const granted = await requestPermission();
+      if (!granted) return;
+    } else {
+      await cancelAllScheduled();
+    }
+    await setNotificationsEnabled(value);
+  };
+
+  const handleSaveNotifTime = async () => {
+    if (notifTimeInput === null) return;
+    setSavingNotifTime(true);
+    try {
+      await setNotificationTime(notifTimeInput.trim());
+      setNotifTimeInput(null);
+    } catch {
+      // keep local state so user can retry
+    } finally {
+      setSavingNotifTime(false);
+    }
+  };
 
   const handleSaveAttendees = async () => {
     if (attendeesInput === null) return;
@@ -299,6 +325,50 @@ export default function SettingsScreen() {
             <Text style={styles.saveButtonText}>Save</Text>
           )}
         </Pressable>
+      )}
+
+      {Platform.OS !== "web" && (
+        <>
+          <View style={styles.divider} />
+          <Text style={styles.sectionTitle}>Notifications</Text>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.sm }}>
+            <View>
+              <Text style={styles.fieldLabel}>Q2 Goal Reminders</Text>
+              <Text style={styles.fieldHint}>Weekly reminder for important goals</Text>
+            </View>
+            <Switch
+              value={notificationsEnabled}
+              onValueChange={handleToggleNotifications}
+              trackColor={{ true: colors.primary }}
+            />
+          </View>
+          {notificationsEnabled && (
+            <>
+              <Text style={styles.fieldLabel}>Reminder time (HH:mm)</Text>
+              <TextInput
+                style={styles.input}
+                value={notifTimeInput !== null ? notifTimeInput : notificationTime}
+                onChangeText={setNotifTimeInput}
+                placeholder="09:00"
+                placeholderTextColor={colors.textMuted}
+                keyboardType="numbers-and-punctuation"
+              />
+              {notifTimeInput !== null && notifTimeInput.trim() !== notificationTime && (
+                <Pressable
+                  onPress={handleSaveNotifTime}
+                  disabled={savingNotifTime}
+                  style={({ pressed }) => [styles.saveButton, pressed && { opacity: 0.8 }]}
+                >
+                  {savingNotifTime ? (
+                    <ActivityIndicator color={colors.onPrimary} size="small" />
+                  ) : (
+                    <Text style={styles.saveButtonText}>Save</Text>
+                  )}
+                </Pressable>
+              )}
+            </>
+          )}
+        </>
       )}
 
       <View style={styles.divider} />

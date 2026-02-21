@@ -20,6 +20,7 @@ import {
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
+import { Ionicons } from "@expo/vector-icons";
 import { useThemeColors } from "../theme/useThemeColors";
 import { spacing, borderRadius } from "../theme/spacing";
 import {
@@ -134,7 +135,10 @@ export function DateTimePickerField({ value, onChange }: DateTimePickerFieldProp
             setAndroidMode("date");
           }}
         >
-          <Text style={styles.buttonText}>{formatDateTimeDisplay(value)}</Text>
+          <View style={styles.buttonContent}>
+            <Ionicons name="calendar-outline" size={16} color={colors.textMuted} />
+            <Text style={styles.buttonText}>{formatDateTimeDisplay(value)}</Text>
+          </View>
         </Pressable>
         {androidMode !== "none" && (
           <DateTimePicker
@@ -158,7 +162,10 @@ export function DateTimePickerField({ value, onChange }: DateTimePickerFieldProp
           setIosVisible(true);
         }}
       >
-        <Text style={styles.buttonText}>{formatDateTimeDisplay(value)}</Text>
+        <View style={styles.buttonContent}>
+          <Ionicons name="calendar-outline" size={16} color={colors.textMuted} />
+          <Text style={styles.buttonText}>{formatDateTimeDisplay(value)}</Text>
+        </View>
       </Pressable>
       <Modal visible={iosVisible} transparent animationType="slide">
         <View style={styles.overlay}>
@@ -238,7 +245,10 @@ export function DatePickerField({ value, onChange }: DatePickerFieldProps) {
           style={({ pressed }) => [styles.button, pressed && styles.pressed]}
           onPress={() => setShow(true)}
         >
-          <Text style={styles.buttonText}>{formatDateDisplay(value)}</Text>
+          <View style={styles.buttonContent}>
+            <Ionicons name="calendar-outline" size={16} color={colors.textMuted} />
+            <Text style={styles.buttonText}>{formatDateDisplay(value)}</Text>
+          </View>
         </Pressable>
         {show && (
           <DateTimePicker
@@ -266,7 +276,10 @@ export function DatePickerField({ value, onChange }: DatePickerFieldProps) {
           setShow(true);
         }}
       >
-        <Text style={styles.buttonText}>{formatDateDisplay(value)}</Text>
+        <View style={styles.buttonContent}>
+          <Ionicons name="calendar-outline" size={16} color={colors.textMuted} />
+          <Text style={styles.buttonText}>{formatDateDisplay(value)}</Text>
+        </View>
       </Pressable>
       <Modal visible={show} transparent animationType="slide">
         <View style={styles.overlay}>
@@ -306,6 +319,11 @@ function makeStyles(colors: ReturnType<typeof useThemeColors>) {
       backgroundColor: colors.surface,
     },
     pressed: { opacity: 0.7 },
+    buttonContent: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.sm,
+    },
     buttonText: { fontSize: 16, color: colors.text },
     overlay: {
       flex: 1,

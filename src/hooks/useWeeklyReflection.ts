@@ -38,6 +38,7 @@ export function useWeeklyReflection(weekStartDate: string) {
       wentWell: string;
       didntGoWell: string;
       intentions: string;
+      weekRating?: number | null;
     }) => {
       try {
         setError(null);
@@ -50,6 +51,7 @@ export function useWeeklyReflection(weekStartDate: string) {
             wentWell: params.wentWell,
             didntGoWell: params.didntGoWell,
             intentions: params.intentions,
+            weekRating: params.weekRating,
             createdAt: now,
             updatedAt: now,
           };
@@ -61,6 +63,7 @@ export function useWeeklyReflection(weekStartDate: string) {
             wentWell: params.wentWell,
             didntGoWell: params.didntGoWell,
             intentions: params.intentions,
+            weekRating: params.weekRating,
             updatedAt: now,
           };
           await updateReflection(token, updated);

@@ -8,6 +8,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  Switch,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
@@ -20,6 +21,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useThemeColors } from "../../src/theme/useThemeColors";
 import { spacing, borderRadius } from "../../src/theme/spacing";
 import { WeekPickerModal } from "../../src/components/WeekPickerModal";
+import { DatePickerField } from "../../src/components/DateTimePickerField";
 import { getWeekStart } from "../../src/utils/dates";
 
 export default function EditGoalScreen() {
@@ -42,6 +44,10 @@ export default function EditGoalScreen() {
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [moveOrCopyModalVisible, setMoveOrCopyModalVisible] = useState(false);
+  const [recurring, setRecurring] = useState(false);
+  const [recurringEndType, setRecurringEndType] = useState<"none" | "date" | "count">("none");
+  const [recurringEndDate, setRecurringEndDate] = useState("");
+  const [recurringCount, setRecurringCount] = useState("");
 
   useEffect(() => {
     if (goal) {
@@ -49,6 +55,16 @@ export default function EditGoalScreen() {
       setGoalText(goal.goalText);
       setQuadrant(goal.quadrant);
       setNotes(goal.notes);
+      setRecurring(goal.recurring ?? false);
+      if (goal.recurringEnds) {
+        setRecurringEndType("date");
+        setRecurringEndDate(goal.recurringEnds);
+      } else if (goal.recurringRemaining != null) {
+        setRecurringEndType("count");
+        setRecurringCount(String(goal.recurringRemaining));
+      } else {
+        setRecurringEndType("none");
+      }
     }
   }, [goal?.id]);
 
@@ -125,6 +141,38 @@ export default function EditGoalScreen() {
     quadrantLabel: {
       fontSize: 14,
       fontWeight: "500",
+    },
+    switchRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginTop: spacing.md,
+    },
+    segmentedControl: {
+      flexDirection: "row",
+      backgroundColor: colors.surface,
+      borderRadius: borderRadius.md,
+      padding: 2,
+      borderWidth: 1,
+      borderColor: colors.border,
+      marginTop: spacing.sm,
+    },
+    segmentButton: {
+      flex: 1,
+      paddingVertical: spacing.sm,
+      alignItems: "center",
+      borderRadius: borderRadius.sm,
+    },
+    segmentButtonActive: {
+      backgroundColor: colors.primary,
+    },
+    segmentText: {
+      fontSize: 13,
+      fontWeight: "600",
+      color: colors.textSecondary,
+    },
+    segmentTextActive: {
+      color: colors.onPrimary,
     },
     calendarButton: {
       flexDirection: "row",
@@ -208,12 +256,23 @@ export default function EditGoalScreen() {
     if (!canSave || saving) return;
     setSaving(true);
     try {
+      const recurringEnds =
+        recurring && recurringEndType === "date" && recurringEndDate
+          ? recurringEndDate
+          : undefined;
+      const recurringRemainingVal =
+        recurring && recurringEndType === "count" && parseInt(recurringCount, 10) > 0
+          ? parseInt(recurringCount, 10)
+          : undefined;
       await updateGoal({
         ...goal,
         roleId,
         goalText: goalText.trim(),
         quadrant,
         notes: notes.trim(),
+        recurring,
+        recurringEnds,
+        recurringRemaining: recurringRemainingVal,
       });
       router.back();
     } catch {
@@ -338,6 +397,52 @@ export default function EditGoalScreen() {
           multiline
           numberOfLines={3}
         />
+
+        <View style={styles.switchRow}>
+          <Text style={styles.label}>Repeat weekly</Text>
+          <Switch
+            value={recurring}
+            onValueChange={setRecurring}
+            trackColor={{ true: colors.primary }}
+          />
+        </View>
+
+        {recurring && (
+          <>
+            <View style={styles.segmentedControl}>
+              {(["none", "date", "count"] as const).map((opt) => (
+                <Pressable
+                  key={opt}
+                  onPress={() => setRecurringEndType(opt)}
+                  style={[styles.segmentButton, recurringEndType === opt && styles.segmentButtonActive]}
+                >
+                  <Text style={[styles.segmentText, recurringEndType === opt && styles.segmentTextActive]}>
+                    {opt === "none" ? "No end" : opt === "date" ? "End by date" : "End after N weeks"}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+            {recurringEndType === "date" && (
+              <>
+                <Text style={styles.label}>End date</Text>
+                <DatePickerField value={recurringEndDate} onChange={setRecurringEndDate} />
+              </>
+            )}
+            {recurringEndType === "count" && (
+              <>
+                <Text style={styles.label}>Repeat for how many weeks?</Text>
+                <TextInput
+                  style={styles.input}
+                  value={recurringCount}
+                  onChangeText={setRecurringCount}
+                  placeholder="e.g. 4"
+                  placeholderTextColor={colors.textMuted}
+                  keyboardType="number-pad"
+                />
+              </>
+            )}
+          </>
+        )}
 
         {goal.calendarEventId ? (
           <Pressable

@@ -40,6 +40,9 @@ export function useWeeklyGoals(weekStartDate: string) {
       goalText: string;
       quadrant: Quadrant;
       notes?: string;
+      recurring?: boolean;
+      recurringEnds?: string;
+      recurringRemaining?: number;
     }) => {
       const now = new Date().toISOString();
       const newGoal: WeeklyGoal = {
@@ -52,6 +55,9 @@ export function useWeeklyGoals(weekStartDate: string) {
         notes: params.notes || "",
         createdAt: now,
         updatedAt: now,
+        recurring: params.recurring,
+        recurringEnds: params.recurringEnds,
+        recurringRemaining: params.recurringRemaining,
       };
 
       // Optimistic update

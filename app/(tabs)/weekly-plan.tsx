@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { View, ScrollView, Pressable, StyleSheet, ActivityIndicator, Text, Alert, Platform } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -13,13 +13,17 @@ import { WeekPickerModal } from "../../src/components/WeekPickerModal";
 import { CloseoutModal } from "../../src/components/CloseoutModal";
 import { WeeklyGoal } from "../../src/models/WeeklyGoal";
 import { getWeekStart, shiftWeek, formatWeekKey } from "../../src/utils/dates";
-import { getReflectionByWeek } from "../../src/api/googleSheets";
+import { generateId } from "../../src/utils/uuid";
+import { getReflectionByWeek, getWeeklyGoalsByWeek, addWeeklyGoal as apiAddGoal } from "../../src/api/googleSheets";
+import { useSettings } from "../../src/contexts/SettingsContext";
+import { scheduleWeeklyQ2Reminders } from "../../src/notifications/scheduler";
 import { useThemeColors } from "../../src/theme/useThemeColors";
 import { spacing } from "../../src/theme/spacing";
 
 export default function WeeklyPlanScreen() {
   const colors = useThemeColors();
   const { getValidAccessToken } = useAuth();
+  const { notificationsEnabled, notificationTime } = useSettings();
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()));
   const weekKey = formatWeekKey(weekStart);
   const [moveOrCopyGoal, setMoveOrCopyGoal] = useState<WeeklyGoal | null>(null);
@@ -31,7 +35,7 @@ export default function WeeklyPlanScreen() {
   const prevWeekStart = useMemo(() => shiftWeek(getWeekStart(new Date()), -1), []);
   const isCurrentWeek = formatWeekKey(weekStart) === formatWeekKey(getWeekStart(new Date()));
 
-  const { goals, isLoading: goalsLoading, cycleStatus, moveGoalToWeek, copyGoalToWeek, refresh: refreshGoals } = useWeeklyGoals(weekKey);
+  const { goals, isLoading: goalsLoading, cycleStatus, deleteGoal, moveGoalToWeek, copyGoalToWeek, refresh: refreshGoals } = useWeeklyGoals(weekKey);
   const { roles, isLoading: rolesLoading, refresh: refreshRoles } = useRoles();
   const {
     reflection: weekReflection,
@@ -124,6 +128,14 @@ export default function WeeklyPlanScreen() {
     }
   };
 
+  const handleDeleteGoal = useCallback(async (id: string) => {
+    try {
+      await deleteGoal(id);
+    } catch {
+      // deleteGoal handles rollback internally
+    }
+  }, [deleteGoal]);
+
   const handleCalendarPress = (goal: WeeklyGoal) => {
     if (goal.calendarEventId) {
       router.push(`/event/${goal.calendarEventId}`);
@@ -136,6 +148,73 @@ export default function WeeklyPlanScreen() {
 
   const isLoading = goalsLoading || rolesLoading;
 
+  // Recurring carry state
+  const carriedWeekRef = useRef<string | null>(null);
+  const [recurringCarryCount, setRecurringCarryCount] = useState(0);
+
+  useEffect(() => {
+    if (recurringCarryCount > 0) {
+      const t = setTimeout(() => setRecurringCarryCount(0), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [recurringCarryCount]);
+
+  // Auto-carry recurring goals from last week into the current week
+  useEffect(() => {
+    if (!isCurrentWeek || goalsLoading) return;
+    if (carriedWeekRef.current === weekKey) return;
+    carriedWeekRef.current = weekKey;
+
+    (async () => {
+      try {
+        const token = await getValidAccessToken();
+        const prevKey = formatWeekKey(prevWeekStart);
+        const lastWeekGoals = await getWeeklyGoalsByWeek(token, prevKey);
+        const toCarry = lastWeekGoals.filter((g) => {
+          if (!g.recurring) return false;
+          if (g.status === "complete") return false;
+          if (g.recurringEnds && weekKey > g.recurringEnds) return false;
+          if (g.recurringRemaining === 0) return false;
+          return true;
+        });
+        // Deduplicate against existing goals (same role + text)
+        const existingKeys = new Set(goals.map((g) => `${g.roleId}|${g.goalText}`));
+        const newGoals = toCarry.filter((g) => !existingKeys.has(`${g.roleId}|${g.goalText}`));
+        if (newGoals.length === 0) return;
+
+        const now = new Date().toISOString();
+        for (const src of newGoals) {
+          const copy: WeeklyGoal = {
+            ...src,
+            id: generateId(),
+            weekStartDate: weekKey,
+            status: "not_started",
+            calendarEventId: undefined,
+            calendarSource: undefined,
+            createdAt: now,
+            updatedAt: now,
+            recurringRemaining:
+              src.recurringRemaining != null && src.recurringRemaining > 0
+                ? src.recurringRemaining - 1
+                : src.recurringRemaining,
+          };
+          await apiAddGoal(token, copy);
+        }
+        await refreshGoals();
+        setRecurringCarryCount(newGoals.length);
+      } catch {
+        // Silent fail
+      }
+    })();
+  }, [isCurrentWeek, goalsLoading, weekKey]);
+
+  // Schedule Q2 reminders when goals or notification settings change
+  useEffect(() => {
+    if (Platform.OS === "web") return;
+    if (!notificationsEnabled || goalsLoading) return;
+    scheduleWeeklyQ2Reminders(goals, notificationTime).catch(() => {});
+  }, [goals, notificationsEnabled, notificationTime, goalsLoading]);
+
   const styles = useMemo(() => StyleSheet.create({
     container: {
       flex: 1,
@@ -144,10 +223,20 @@ export default function WeeklyPlanScreen() {
     scroll: {
       flex: 1,
     },
-    loader: {
-      flex: 1,
-      justifyContent: "center",
+    recurringToast: {
+      flexDirection: "row",
       alignItems: "center",
+      gap: spacing.xs,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      backgroundColor: colors.primaryLight,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    recurringToastText: {
+      fontSize: 12,
+      color: colors.primary,
+      fontWeight: "600",
     },
     fab: {
       position: "absolute",
@@ -233,23 +322,28 @@ export default function WeeklyPlanScreen() {
         </Pressable>
       )}
 
-      {isLoading ? (
-        <View style={styles.loader}>
-          <ActivityIndicator size="large" color={colors.primary} />
+      {recurringCarryCount > 0 && (
+        <View style={styles.recurringToast}>
+          <Ionicons name="refresh-outline" size={14} color={colors.primary} />
+          <Text style={styles.recurringToastText}>
+            {recurringCarryCount} recurring goal{recurringCarryCount > 1 ? "s" : ""} added from last week
+          </Text>
         </View>
-      ) : (
-        <ScrollView style={styles.scroll} showsVerticalScrollIndicator>
-          <GoalsByRole
-            goals={goals}
-            roles={roles}
-            onGoalPress={handleGoalPress}
-            onCycleStatus={cycleStatus}
-            onCalendarPress={handleCalendarPress}
-            onMoveOrCopy={handleMoveOrCopy}
-            isLocked={isLocked}
-          />
-        </ScrollView>
       )}
+
+      <ScrollView style={styles.scroll} showsVerticalScrollIndicator>
+        <GoalsByRole
+          goals={goals}
+          roles={roles}
+          onGoalPress={handleGoalPress}
+          onCycleStatus={cycleStatus}
+          onCalendarPress={handleCalendarPress}
+          onMoveOrCopy={handleMoveOrCopy}
+          onDeleteGoal={handleDeleteGoal}
+          isLocked={isLocked}
+          isLoading={isLoading}
+        />
+      </ScrollView>
 
       {!isLocked && !reflectionLoading && (
         <Pressable

@@ -6,4 +6,5 @@ export interface WeeklyReflection {
   intentions: string; // "Intentions for next week"
   createdAt: string;
   updatedAt: string;
+  weekRating?: number | null;
 }

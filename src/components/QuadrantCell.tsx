@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { WeeklyGoal, Quadrant } from "../models/WeeklyGoal";
 import { Role } from "../models/Role";
 import { StatusBadge } from "./StatusBadge";
@@ -122,7 +123,9 @@ export function QuadrantCell({
 
       <ScrollView style={styles.list} nestedScrollEnabled>
         {goals.length === 0 ? (
-          <Text style={styles.empty}>No goals</Text>
+          <View style={{ alignItems: "center", padding: spacing.md }}>
+            <Ionicons name="add-circle-outline" size={20} color={colors.textMuted} />
+          </View>
         ) : (
           goals.map((goal) => (
             <Pressable

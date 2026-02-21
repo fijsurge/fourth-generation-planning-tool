@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Platform } from "react-native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import * as Notifications from "expo-notifications";
 import { AuthProvider } from "../src/auth/AuthContext";
 import { RolesProvider } from "../src/contexts/RolesContext";
 import { CalendarEventsProvider } from "../src/contexts/CalendarEventsContext";
@@ -12,6 +13,15 @@ import { useSettings } from "../src/contexts/SettingsContext";
 function InnerLayout() {
   const colors = useThemeColors();
   const { theme } = useSettings();
+
+  useEffect(() => {
+    if (Platform.OS === "android") {
+      Notifications.setNotificationChannelAsync("q2-reminders", {
+        name: "Q2 Reminders",
+        importance: Notifications.AndroidImportance.DEFAULT,
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (Platform.OS !== "web") return;

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -19,7 +19,8 @@ import {
   getWeeklyGoalsByWeek,
   updateWeeklyGoal,
 } from "../../src/api/googleSheets";
-import { EventTransparency } from "../../src/models/CalendarEvent";
+import { CalendarEvent, EventTransparency } from "../../src/models/CalendarEvent";
+import { listEvents } from "../../src/api/googleCalendar";
 import { useSettings } from "../../src/contexts/SettingsContext";
 import {
   WebDateTimePicker,
@@ -86,6 +87,10 @@ export default function NewEventScreen() {
   const [attendeesStr, setAttendeesStr] = useState(defaultAttendees);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [conflictsBusy, setConflictsBusy] = useState<CalendarEvent[]>([]);
+  const [conflictsFree, setConflictsFree] = useState<CalendarEvent[]>([]);
+  const [conflictChecking, setConflictChecking] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const defaultColorId = params.roleId
     ? roles.find((r) => r.id === params.roleId)?.colorId
@@ -114,6 +119,41 @@ export default function NewEventScreen() {
     }
     setStartDateStr(newDateStr);
   };
+
+  useEffect(() => {
+    if (allDay) {
+      setConflictsBusy([]);
+      setConflictsFree([]);
+      return;
+    }
+    if (!startStr || !endStr) {
+      setConflictsBusy([]);
+      setConflictsFree([]);
+      return;
+    }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      setConflictChecking(true);
+      try {
+        const token = await getValidAccessToken();
+        const startISO = new Date(startStr).toISOString();
+        const endISO = new Date(endStr).toISOString();
+        const events = await listEvents(token, startISO, endISO);
+        const overlapping = events.filter(
+          (e) => e.startTime < endISO && e.endTime > startISO
+        );
+        setConflictsBusy(overlapping.filter((e) => (e.transparency || "opaque") === "opaque"));
+        setConflictsFree(overlapping.filter((e) => e.transparency === "transparent"));
+      } catch {
+        // Silent fail
+      } finally {
+        setConflictChecking(false);
+      }
+    }, 600);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [startStr, endStr, allDay]);
 
   const canSave = title.trim().length > 0;
 
@@ -283,6 +323,26 @@ export default function NewEventScreen() {
       fontSize: 16,
       fontWeight: "600",
     },
+    conflictBanner: {
+      borderRadius: borderRadius.md,
+      padding: spacing.sm,
+      marginTop: spacing.sm,
+    },
+    conflictBannerBusy: {
+      backgroundColor: colors.dangerLight,
+    },
+    conflictBannerFree: {
+      backgroundColor: colors.warningBg,
+    },
+    conflictTitle: {
+      fontSize: 12,
+      fontWeight: "700",
+      marginBottom: 2,
+    },
+    conflictItem: {
+      fontSize: 12,
+      marginTop: 1,
+    },
   }), [colors]);
 
   return (
@@ -362,6 +422,30 @@ export default function NewEventScreen() {
             <Text style={styles.label}>End</Text>
             <DateTimePickerField value={endStr} onChange={setEndStr} />
           </>
+        )}
+
+        {conflictChecking && (
+          <ActivityIndicator size="small" color={colors.textMuted} style={{ marginTop: spacing.sm }} />
+        )}
+        {!conflictChecking && conflictsBusy.length > 0 && (
+          <View style={[styles.conflictBanner, styles.conflictBannerBusy]}>
+            <Text style={[styles.conflictTitle, { color: colors.danger }]}>
+              Conflicts with {conflictsBusy.length} busy event(s):
+            </Text>
+            {conflictsBusy.map((e) => (
+              <Text key={e.id} style={[styles.conflictItem, { color: colors.danger }]}>• {e.title}</Text>
+            ))}
+          </View>
+        )}
+        {!conflictChecking && conflictsFree.length > 0 && (
+          <View style={[styles.conflictBanner, styles.conflictBannerFree]}>
+            <Text style={[styles.conflictTitle, { color: colors.warningText }]}>
+              Overlaps with {conflictsFree.length} free event(s):
+            </Text>
+            {conflictsFree.map((e) => (
+              <Text key={e.id} style={[styles.conflictItem, { color: colors.warningText }]}>• {e.title}</Text>
+            ))}
+          </View>
         )}
 
         <Text style={styles.label}>Description (optional)</Text>

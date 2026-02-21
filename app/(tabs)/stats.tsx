@@ -365,6 +365,18 @@ function WeekCard({
             <Text style={styles.noReflectionText}>No reflection recorded for this week.</Text>
           ) : (
             <>
+              {r.weekRating != null && (
+                <View style={{ flexDirection: "row", gap: 2, marginBottom: spacing.xs }}>
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <Ionicons
+                      key={i}
+                      name={i <= r.weekRating! ? "star" : "star-outline"}
+                      size={14}
+                      color={i <= r.weekRating! ? colors.primary : colors.textMuted}
+                    />
+                  ))}
+                </View>
+              )}
               {r.wentWell ? (
                 <View>
                   <Text style={styles.reflectionFieldLabel}>WHAT WENT WELL</Text>

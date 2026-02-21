@@ -8,6 +8,10 @@ interface SettingsState {
   setDefaultAttendees: (value: string) => Promise<void>;
   theme: ThemeMode;
   setTheme: (mode: ThemeMode) => Promise<void>;
+  notificationsEnabled: boolean;
+  setNotificationsEnabled: (value: boolean) => Promise<void>;
+  notificationTime: string;
+  setNotificationTime: (value: string) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -15,11 +19,15 @@ const SettingsContext = createContext<SettingsState | null>(null);
 
 const SETTINGS_KEY_DEFAULT_ATTENDEES = "defaultAttendees";
 const SETTINGS_KEY_THEME = "theme";
+const SETTINGS_KEY_NOTIFICATIONS_ENABLED = "notificationsEnabled";
+const SETTINGS_KEY_NOTIFICATION_TIME = "notificationTime";
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const { getValidAccessToken, isLoggedIn } = useAuth();
   const [defaultAttendees, setDefaultAttendeesState] = useState("");
   const [theme, setThemeState] = useState<ThemeMode>("light");
+  const [notificationsEnabled, setNotificationsEnabledState] = useState(false);
+  const [notificationTime, setNotificationTimeState] = useState("09:00");
   const [isLoading, setIsLoading] = useState(true);
 
   const loadSettings = useCallback(async () => {
@@ -35,6 +43,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       if (themeEntry?.value === "dark") {
         setThemeState("dark");
       }
+      const notifEnabled = entries.find((e) => e.key === SETTINGS_KEY_NOTIFICATIONS_ENABLED);
+      if (notifEnabled?.value === "true") setNotificationsEnabledState(true);
+      const notifTime = entries.find((e) => e.key === SETTINGS_KEY_NOTIFICATION_TIME);
+      if (notifTime?.value) setNotificationTimeState(notifTime.value);
     } catch {
       // Silently fail — settings are optional
     } finally {
@@ -48,6 +60,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     } else {
       setDefaultAttendeesState("");
       setThemeState("light");
+      setNotificationsEnabledState(false);
+      setNotificationTimeState("09:00");
       setIsLoading(false);
     }
   }, [isLoggedIn, loadSettings]);
@@ -74,9 +88,41 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     [getValidAccessToken]
   );
 
+  const setNotificationsEnabled = useCallback(
+    async (value: boolean) => {
+      setNotificationsEnabledState(value);
+      try {
+        const token = await getValidAccessToken();
+        await setSetting(token, SETTINGS_KEY_NOTIFICATIONS_ENABLED, String(value));
+      } catch {
+        // Silent fail
+      }
+    },
+    [getValidAccessToken]
+  );
+
+  const setNotificationTime = useCallback(
+    async (value: string) => {
+      setNotificationTimeState(value);
+      try {
+        const token = await getValidAccessToken();
+        await setSetting(token, SETTINGS_KEY_NOTIFICATION_TIME, value);
+      } catch {
+        // Silent fail
+      }
+    },
+    [getValidAccessToken]
+  );
+
   return (
     <SettingsContext.Provider
-      value={{ defaultAttendees, setDefaultAttendees, theme, setTheme, isLoading }}
+      value={{
+        defaultAttendees, setDefaultAttendees,
+        theme, setTheme,
+        notificationsEnabled, setNotificationsEnabled,
+        notificationTime, setNotificationTime,
+        isLoading,
+      }}
     >
       {children}
     </SettingsContext.Provider>

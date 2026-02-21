@@ -13,10 +13,11 @@ interface GoalItemProps {
   onCycleStatus: () => void;
   onCalendarPress?: () => void;
   onMoveOrCopy?: () => void;
+  onDelete?: () => void;
   isLocked?: boolean;
 }
 
-export function GoalItem({ goal, onPress, onCycleStatus, onCalendarPress, onMoveOrCopy, isLocked }: GoalItemProps) {
+export function GoalItem({ goal, onPress, onCycleStatus, onCalendarPress, onMoveOrCopy, onDelete, isLocked }: GoalItemProps) {
   const colors = useThemeColors();
   const hasEvent = !!goal.calendarEventId;
 
@@ -101,6 +102,21 @@ export function GoalItem({ goal, onPress, onCycleStatus, onCalendarPress, onMove
             ]}
           >
             <Ionicons name="arrow-redo-outline" size={18} color={colors.textMuted} />
+          </Pressable>
+        )}
+        {Platform.OS === "web" && onDelete && !isLocked && (
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            hitSlop={8}
+            style={({ pressed }) => [
+              styles.calendarButton,
+              pressed && { opacity: 0.6 },
+            ]}
+          >
+            <Ionicons name="trash-outline" size={18} color={colors.textMuted} />
           </Pressable>
         )}
         <QuadrantBadge quadrant={goal.quadrant} />

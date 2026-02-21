@@ -20,6 +20,7 @@ const REFLECTIONS_HEADERS = [
   "Intentions",
   "CreatedAt",
   "UpdatedAt",
+  "WeekRating",
 ];
 let reflectionsSheetEnsured = false;
 
@@ -45,6 +46,9 @@ const GOALS_HEADERS = [
   "CalendarSource",
   "CreatedAt",
   "UpdatedAt",
+  "Recurring",
+  "RecurringEnds",
+  "RecurringRemaining",
 ];
 const SETTINGS_HEADERS = ["Key", "Value", "UpdatedAt"];
 
@@ -317,6 +321,9 @@ function goalToRow(goal: WeeklyGoal): string[] {
     goal.calendarSource || "",
     goal.createdAt,
     goal.updatedAt,
+    String(goal.recurring ?? false),
+    goal.recurringEnds ?? "",
+    goal.recurringRemaining != null ? String(goal.recurringRemaining) : "",
   ];
 }
 
@@ -335,6 +342,9 @@ function rowToGoal(row: string[]): WeeklyGoal {
       : undefined,
     createdAt: row[9] || "",
     updatedAt: row[10] || "",
+    recurring: row[11] === "true",
+    recurringEnds: row[12] || undefined,
+    recurringRemaining: row[13] !== "" && row[13] != null ? Number(row[13]) : undefined,
   };
 }
 
@@ -457,6 +467,7 @@ function reflectionToRow(r: WeeklyReflection): string[] {
     r.intentions,
     r.createdAt,
     r.updatedAt,
+    r.weekRating != null ? String(r.weekRating) : "",
   ];
 }
 
@@ -469,6 +480,7 @@ function rowToReflection(row: string[]): WeeklyReflection {
     intentions: row[4] || "",
     createdAt: row[5] || "",
     updatedAt: row[6] || "",
+    weekRating: row[7] ? Number(row[7]) : null,
   };
 }
 

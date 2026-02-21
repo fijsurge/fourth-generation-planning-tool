@@ -47,6 +47,7 @@ export function CloseoutModal({
   const [wentWell, setWentWell] = useState("");
   const [didntGoWell, setDidntGoWell] = useState("");
   const [intentions, setIntentions] = useState("");
+  const [weekRating, setWeekRating] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -56,6 +57,7 @@ export function CloseoutModal({
       setWentWell("");
       setDidntGoWell("");
       setIntentions("");
+      setWeekRating(null);
       setSaving(false);
       setSaveError(null);
     }
@@ -99,7 +101,7 @@ export function CloseoutModal({
     setSaveError(null);
     try {
       await moveCheckedGoals();
-      await saveReflection({ wentWell, didntGoWell, intentions });
+      await saveReflection({ wentWell, didntGoWell, intentions, weekRating });
       onComplete();
     } catch (err: any) {
       setSaveError(err.message || "Something went wrong. Please try again.");
@@ -261,6 +263,20 @@ export function CloseoutModal({
           padding: spacing.xl,
           alignItems: "center",
         },
+        statsSummary: {
+          paddingVertical: spacing.sm,
+        },
+        statsText: {
+          fontSize: 14,
+          color: colors.successText,
+          fontWeight: "600",
+        },
+        starRow: {
+          flexDirection: "row",
+          gap: spacing.md,
+          marginBottom: spacing.md,
+          marginTop: spacing.xs,
+        },
       }),
     [colors]
   );
@@ -294,6 +310,15 @@ export function CloseoutModal({
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
+            {/* Completion stats summary */}
+            {!goalsLoading && (
+              <View style={styles.statsSummary}>
+                <Text style={styles.statsText}>
+                  {goals.filter((g) => g.status === "complete").length} of {goals.length} goals complete
+                </Text>
+              </View>
+            )}
+
             {/* Incomplete Goals Section */}
             <Text style={styles.sectionHeader}>INCOMPLETE GOALS</Text>
             <Text style={styles.subhead}>
@@ -347,13 +372,30 @@ export function CloseoutModal({
             {/* Reflection Section */}
             <Text style={styles.sectionHeader}>REFLECTION</Text>
 
+            <Text style={styles.inputLabel}>How would you rate this week?</Text>
+            <View style={styles.starRow}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Pressable
+                  key={star}
+                  onPress={() => setWeekRating(weekRating === star ? null : star)}
+                  hitSlop={8}
+                >
+                  <Ionicons
+                    name={weekRating != null && star <= weekRating ? "star" : "star-outline"}
+                    size={28}
+                    color={weekRating != null && star <= weekRating ? colors.primary : colors.textMuted}
+                  />
+                </Pressable>
+              ))}
+            </View>
+
             <Text style={styles.inputLabel}>What went well?</Text>
             <TextInput
               style={styles.textInput}
               value={wentWell}
               onChangeText={setWentWell}
               multiline
-              placeholder="Share what worked..."
+              placeholder="Wins, breakthroughs, moments of alignment..."
               placeholderTextColor={colors.textMuted}
             />
 
@@ -363,7 +405,7 @@ export function CloseoutModal({
               value={didntGoWell}
               onChangeText={setDidntGoWell}
               multiline
-              placeholder="Share what was challenging..."
+              placeholder="Obstacles, distractions, missed Q2 time..."
               placeholderTextColor={colors.textMuted}
             />
 
@@ -373,7 +415,7 @@ export function CloseoutModal({
               value={intentions}
               onChangeText={setIntentions}
               multiline
-              placeholder="What do you intend to focus on?"
+              placeholder="Focus areas, big rocks to schedule..."
               placeholderTextColor={colors.textMuted}
             />
 

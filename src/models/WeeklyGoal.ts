@@ -16,4 +16,7 @@ export interface WeeklyGoal {
   calendarSource?: CalendarSource;
   createdAt: string;
   updatedAt: string;
+  recurring?: boolean;
+  recurringEnds?: string;        // YYYY-MM-DD — stop carrying after this date
+  recurringRemaining?: number;   // countdown; 0 = do not carry anymore
 }
