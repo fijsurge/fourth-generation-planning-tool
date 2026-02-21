@@ -47,7 +47,7 @@ export default function EditGoalScreen() {
   const [recurring, setRecurring] = useState(false);
   const [recurringEndType, setRecurringEndType] = useState<"none" | "date" | "count">("none");
   const [recurringEndDate, setRecurringEndDate] = useState("");
-  const [recurringCount, setRecurringCount] = useState("");
+  const [recurringCount, setRecurringCount] = useState(1);
 
   useEffect(() => {
     if (goal) {
@@ -61,7 +61,7 @@ export default function EditGoalScreen() {
         setRecurringEndDate(goal.recurringEnds);
       } else if (goal.recurringRemaining != null) {
         setRecurringEndType("count");
-        setRecurringCount(String(goal.recurringRemaining));
+        setRecurringCount(goal.recurringRemaining > 0 ? goal.recurringRemaining : 1);
       } else {
         setRecurringEndType("none");
       }
@@ -174,6 +174,33 @@ export default function EditGoalScreen() {
     segmentTextActive: {
       color: colors.onPrimary,
     },
+    stepperRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.sm,
+      marginTop: spacing.sm,
+    },
+    stepperButton: {
+      width: 36,
+      height: 36,
+      borderRadius: borderRadius.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    stepperValue: {
+      minWidth: 40,
+      textAlign: "center",
+      fontSize: 16,
+      fontWeight: "600",
+      color: colors.text,
+    },
+    stepperLabel: {
+      fontSize: 14,
+      color: colors.textMuted,
+    },
     calendarButton: {
       flexDirection: "row",
       alignItems: "center",
@@ -261,8 +288,8 @@ export default function EditGoalScreen() {
           ? recurringEndDate
           : undefined;
       const recurringRemainingVal =
-        recurring && recurringEndType === "count" && parseInt(recurringCount, 10) > 0
-          ? parseInt(recurringCount, 10)
+        recurring && recurringEndType === "count" && recurringCount > 0
+          ? recurringCount
           : undefined;
       await updateGoal({
         ...goal,
@@ -429,17 +456,22 @@ export default function EditGoalScreen() {
               </>
             )}
             {recurringEndType === "count" && (
-              <>
-                <Text style={styles.label}>Repeat for how many weeks?</Text>
-                <TextInput
-                  style={styles.input}
-                  value={recurringCount}
-                  onChangeText={setRecurringCount}
-                  placeholder="e.g. 4"
-                  placeholderTextColor={colors.textMuted}
-                  keyboardType="number-pad"
-                />
-              </>
+              <View style={styles.stepperRow}>
+                <Pressable
+                  style={({ pressed }) => [styles.stepperButton, pressed && { opacity: 0.6 }]}
+                  onPress={() => setRecurringCount((n) => Math.max(1, n - 1))}
+                >
+                  <Ionicons name="remove" size={18} color={colors.text} />
+                </Pressable>
+                <Text style={styles.stepperValue}>{recurringCount}</Text>
+                <Pressable
+                  style={({ pressed }) => [styles.stepperButton, pressed && { opacity: 0.6 }]}
+                  onPress={() => setRecurringCount((n) => n + 1)}
+                >
+                  <Ionicons name="add" size={18} color={colors.text} />
+                </Pressable>
+                <Text style={styles.stepperLabel}>week{recurringCount !== 1 ? "s" : ""}</Text>
+              </View>
             )}
           </>
         )}

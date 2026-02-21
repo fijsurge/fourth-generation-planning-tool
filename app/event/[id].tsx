@@ -148,9 +148,13 @@ export default function EditEventScreen() {
         const startISO = new Date(startStr).toISOString();
         const endISO = new Date(endStr).toISOString();
         const events = await listEvents(token, startISO, endISO);
-        const overlapping = events.filter(
-          (e) => e.startTime < endISO && e.endTime > startISO && e.id !== id
-        );
+        const rangeStart = new Date(startISO).getTime();
+        const rangeEnd = new Date(endISO).getTime();
+        const overlapping = events.filter((e) => {
+          const eStart = new Date(e.startTime).getTime();
+          const eEnd = new Date(e.endTime).getTime();
+          return eStart < rangeEnd && eEnd > rangeStart && e.id !== id;
+        });
         setConflictsBusy(overlapping.filter((e) => (e.transparency || "opaque") === "opaque"));
         setConflictsFree(overlapping.filter((e) => e.transparency === "transparent"));
       } catch {

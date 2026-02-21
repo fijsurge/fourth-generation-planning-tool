@@ -223,17 +223,18 @@ export function DatePickerField({ value, onChange }: DatePickerFieldProps) {
       fontSize: 16,
       color: colors.text,
       backgroundColor: colors.surface,
-      width: "100%",
       boxSizing: "border-box",
       fontFamily: "inherit",
     };
     return (
-      <input
-        type="date"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        style={webStyle}
-      />
+      <div style={{ display: "flex", flexDirection: "row", alignItems: "center", width: "100%" }}>
+        <input
+          type="date"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          style={webStyle}
+        />
+      </div>
     );
   }
 
