@@ -50,17 +50,56 @@ A weekly planning app based on Stephen Covey's fourth-generation time management
    npm install
    ```
 
-3. Create a `.env` file with your Google OAuth client IDs:
+3. Create a `.env` file with your Google OAuth credentials:
    ```
    EXPO_PUBLIC_GOOGLE_CLIENT_ID=<your-web-client-id>
+   EXPO_PUBLIC_GOOGLE_CLIENT_SECRET=<your-web-client-secret>
    EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS=<your-ios-client-id>
    EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID=<your-android-client-id>
    ```
+   The client ID and secret are found in **Google Cloud Console → APIs & Services → Credentials** under your Web OAuth 2.0 client. Also ensure `http://localhost:8081` is listed under both **Authorized JavaScript origins** and **Authorized redirect URIs** for local testing.
 
 4. Start the development server:
    ```bash
    npx expo start --web
    ```
+   If you see a `Body is unusable` error on startup, add the `--offline` flag to skip Expo's version-check network call:
+   ```bash
+   npx expo start --web --offline
+   ```
+
+## Building
+
+### Android (local — requires Android Studio)
+
+1. Generate / sync the native Android project:
+   ```bash
+   npx expo prebuild --platform android
+   ```
+
+2. Build the APK:
+   ```bash
+   cd android && ./gradlew assembleDebug
+   ```
+   The APK is output to `android/app/build/outputs/apk/debug/app-debug.apk`.
+
+   For a release build use `assembleRelease` instead.
+
+### Android (cloud — via EAS)
+
+```bash
+# Preview APK (sideloadable)
+npx eas build --platform android --profile preview
+
+# Production AAB (for Google Play)
+npx eas build --platform android --profile production
+```
+
+### Web
+
+```bash
+npx expo export --platform web
+```
 
 ## Project Structure
 
