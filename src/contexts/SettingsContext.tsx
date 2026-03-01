@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
+import { Platform } from "react-native";
+import { getISOWeek, getISOWeekYear } from "date-fns";
 import { useAuth } from "../auth/AuthContext";
 import { getSettings, setSetting } from "../api/googleSheets";
 import { ThemeMode } from "../theme/colors";
@@ -12,6 +14,10 @@ interface SettingsState {
   setNotificationsEnabled: (value: boolean) => Promise<void>;
   notificationTime: string;
   setNotificationTime: (value: string) => Promise<void>;
+  missionStatement: string;
+  setMissionStatement: (value: string) => Promise<void>;
+  shouldShowMissionStatement: boolean;
+  dismissMissionStatement: () => void;
   isLoading: boolean;
 }
 
@@ -21,6 +27,33 @@ const SETTINGS_KEY_DEFAULT_ATTENDEES = "defaultAttendees";
 const SETTINGS_KEY_THEME = "theme";
 const SETTINGS_KEY_NOTIFICATIONS_ENABLED = "notificationsEnabled";
 const SETTINGS_KEY_NOTIFICATION_TIME = "notificationTime";
+const SETTINGS_KEY_MISSION_STATEMENT = "missionStatement";
+
+const MISSION_DISMISSED_STORAGE_KEY = "missionDismissedWeek";
+
+// Module-level fallback for non-web platforms (resets per session)
+let _sessionDismissedWeek = "";
+
+function getCurrentWeekKey(): string {
+  const now = new Date();
+  const week = String(getISOWeek(now)).padStart(2, "0");
+  return `${getISOWeekYear(now)}-W${week}`;
+}
+
+function readDismissedWeek(): string {
+  if (Platform.OS === "web" && typeof localStorage !== "undefined") {
+    return localStorage.getItem(MISSION_DISMISSED_STORAGE_KEY) ?? "";
+  }
+  return _sessionDismissedWeek;
+}
+
+function writeDismissedWeek(weekKey: string): void {
+  if (Platform.OS === "web" && typeof localStorage !== "undefined") {
+    localStorage.setItem(MISSION_DISMISSED_STORAGE_KEY, weekKey);
+  } else {
+    _sessionDismissedWeek = weekKey;
+  }
+}
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const { getValidAccessToken, isLoggedIn } = useAuth();
@@ -28,6 +61,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<ThemeMode>("light");
   const [notificationsEnabled, setNotificationsEnabledState] = useState(false);
   const [notificationTime, setNotificationTimeState] = useState("09:00");
+  const [missionStatement, setMissionStatementState] = useState("");
+  const [dismissedWeek, setDismissedWeekState] = useState<string>(readDismissedWeek);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadSettings = useCallback(async () => {
@@ -47,6 +82,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       if (notifEnabled?.value === "true") setNotificationsEnabledState(true);
       const notifTime = entries.find((e) => e.key === SETTINGS_KEY_NOTIFICATION_TIME);
       if (notifTime?.value) setNotificationTimeState(notifTime.value);
+      const missionEntry = entries.find((e) => e.key === SETTINGS_KEY_MISSION_STATEMENT);
+      if (missionEntry?.value) setMissionStatementState(missionEntry.value);
     } catch {
       // Silently fail — settings are optional
     } finally {
@@ -62,6 +99,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       setThemeState("light");
       setNotificationsEnabledState(false);
       setNotificationTimeState("09:00");
+      setMissionStatementState("");
       setIsLoading(false);
     }
   }, [isLoggedIn, loadSettings]);
@@ -114,6 +152,30 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     [getValidAccessToken]
   );
 
+  const setMissionStatement = useCallback(
+    async (value: string) => {
+      setMissionStatementState(value);
+      try {
+        const token = await getValidAccessToken();
+        await setSetting(token, SETTINGS_KEY_MISSION_STATEMENT, value);
+      } catch {
+        // Silent fail — mission statement still updates locally
+      }
+    },
+    [getValidAccessToken]
+  );
+
+  const shouldShowMissionStatement = useMemo(() => {
+    if (!missionStatement.trim()) return false;
+    return dismissedWeek !== getCurrentWeekKey();
+  }, [missionStatement, dismissedWeek]);
+
+  const dismissMissionStatement = useCallback(() => {
+    const weekKey = getCurrentWeekKey();
+    writeDismissedWeek(weekKey);
+    setDismissedWeekState(weekKey);
+  }, []);
+
   return (
     <SettingsContext.Provider
       value={{
@@ -121,6 +183,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         theme, setTheme,
         notificationsEnabled, setNotificationsEnabled,
         notificationTime, setNotificationTime,
+        missionStatement, setMissionStatement,
+        shouldShowMissionStatement, dismissMissionStatement,
         isLoading,
       }}
     >

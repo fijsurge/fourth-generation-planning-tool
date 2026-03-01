@@ -1,8 +1,9 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { Image } from "react-native";
+import { Image, View } from "react-native";
 import { useThemeColors } from "../../src/theme/useThemeColors";
 import { useSettings } from "../../src/contexts/SettingsContext";
+import { MissionStatementModal } from "../../src/components/MissionStatementModal";
 
 const logo = require("../../assets/fourth_gen_v1_black_fg_trans_bg.png");
 
@@ -12,7 +13,9 @@ export default function TabLayout() {
   const logoTint = theme === "dark" ? "#FFFFFF" : "#000000";
 
   return (
-    <Tabs
+    <View style={{ flex: 1 }}>
+      <MissionStatementModal />
+      <Tabs
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
@@ -78,5 +81,6 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
+    </View>
   );
 }

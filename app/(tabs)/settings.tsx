@@ -16,7 +16,7 @@ export default function SettingsScreen() {
   const colors = useThemeColors();
   const { logout } = useAuth();
   const { roles, isLoading } = useRoles();
-  const { defaultAttendees, setDefaultAttendees, theme, setTheme, notificationsEnabled, setNotificationsEnabled, notificationTime, setNotificationTime } = useSettings();
+  const { defaultAttendees, setDefaultAttendees, theme, setTheme, notificationsEnabled, setNotificationsEnabled, notificationTime, setNotificationTime, missionStatement, setMissionStatement } = useSettings();
   const activeRoles = roles.filter((r) => r.active);
   const inactiveRoles = roles.filter((r) => !r.active);
   const [inactiveExpanded, setInactiveExpanded] = useState(false);
@@ -24,8 +24,11 @@ export default function SettingsScreen() {
   const [savingAttendees, setSavingAttendees] = useState(false);
   const [notifTimeInput, setNotifTimeInput] = useState<string | null>(null);
   const [savingNotifTime, setSavingNotifTime] = useState(false);
+  const [missionInput, setMissionInput] = useState<string | null>(null);
+  const [savingMission, setSavingMission] = useState(false);
 
   const attendeesValue = attendeesInput !== null ? attendeesInput : defaultAttendees;
+  const missionValue = missionInput !== null ? missionInput : missionStatement;
 
   const handleToggleNotifications = async (value: boolean) => {
     if (value) {
@@ -47,6 +50,19 @@ export default function SettingsScreen() {
       // keep local state so user can retry
     } finally {
       setSavingNotifTime(false);
+    }
+  };
+
+  const handleSaveMission = async () => {
+    if (missionInput === null) return;
+    setSavingMission(true);
+    try {
+      await setMissionStatement(missionInput.trim());
+      setMissionInput(null);
+    } catch {
+      // keep local state so user can retry
+    } finally {
+      setSavingMission(false);
     }
   };
 
@@ -203,6 +219,17 @@ export default function SettingsScreen() {
       marginTop: spacing.xl,
       paddingBottom: spacing.md,
     },
+    multilineInput: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: borderRadius.md,
+      padding: spacing.md,
+      fontSize: 14,
+      color: colors.text,
+      backgroundColor: colors.surface,
+      minHeight: 120,
+      textAlignVertical: "top",
+    },
   }), [colors]);
 
   const THEME_OPTIONS: { label: string; value: ThemeMode }[] = [
@@ -293,6 +320,38 @@ export default function SettingsScreen() {
           </Pressable>
         ))}
       </View>
+
+      <View style={styles.divider} />
+
+      <Text style={styles.sectionTitle}>Mission Statement</Text>
+      <Text style={styles.fieldHint}>
+        Your personal mission statement — shown as a reminder at least once a week
+      </Text>
+      <TextInput
+        style={styles.multilineInput}
+        value={missionValue}
+        onChangeText={setMissionInput}
+        placeholder="Write your personal mission statement here..."
+        placeholderTextColor={colors.textMuted}
+        multiline
+        numberOfLines={5}
+      />
+      {missionInput !== null && missionInput.trim() !== missionStatement && (
+        <Pressable
+          onPress={handleSaveMission}
+          disabled={savingMission}
+          style={({ pressed }) => [
+            styles.saveButton,
+            pressed && { opacity: 0.8 },
+          ]}
+        >
+          {savingMission ? (
+            <ActivityIndicator color={colors.onPrimary} size="small" />
+          ) : (
+            <Text style={styles.saveButtonText}>Save</Text>
+          )}
+        </Pressable>
+      )}
 
       <View style={styles.divider} />
 
