@@ -309,6 +309,7 @@ export function CloseoutModal({
             style={{ flex: 1 }}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
             {/* Completion stats summary */}
             {!goalsLoading && (

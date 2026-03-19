@@ -46,7 +46,7 @@ export default function WeeklyPlanScreen() {
   // Separately check whether last week has been closed out, to control the
   // "Close out last week" button visibility when on the current week.
   const prevWeekKey = formatWeekKey(prevWeekStart);
-  const { reflection: prevWeekReflection, isLoading: prevReflectionLoading } =
+  const { reflection: prevWeekReflection, isLoading: prevReflectionLoading, refresh: refreshPrevReflection } =
     useWeeklyReflection(prevWeekKey);
 
   // A week is locked once its reflection exists (i.e. it has been closed out).
@@ -367,8 +367,8 @@ export default function WeeklyPlanScreen() {
           visible
           prevWeekStart={prevWeekStart}
           currentWeekStart={getWeekStart(new Date())}
-          onClose={() => setShowCloseout(false)}
-          onComplete={() => { setShowCloseout(false); refreshGoals(); }}
+          onClose={() => { setShowCloseout(false); refreshGoals(); }}
+          onComplete={() => { setShowCloseout(false); refreshGoals(); refreshPrevReflection(); }}
         />
       )}
     </View>
