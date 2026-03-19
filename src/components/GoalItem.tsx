@@ -85,7 +85,7 @@ export function GoalItem({ goal, onPress, onCycleStatus, onCalendarPress, onMove
             <Ionicons
               name={hasEvent ? "calendar" : "calendar-outline"}
               size={18}
-              color={hasEvent ? colors.primary : colors.textMuted}
+              color={hasEvent ? colors.primary : colors.textSecondary}
             />
           </Pressable>
         )}
