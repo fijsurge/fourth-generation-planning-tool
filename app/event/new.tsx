@@ -354,7 +354,7 @@ export default function NewEventScreen() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <ScrollView contentContainerStyle={styles.form} showsVerticalScrollIndicator>
+      <ScrollView contentContainerStyle={styles.form} showsVerticalScrollIndicator keyboardShouldPersistTaps="handled">
         <Text style={styles.label}>Title</Text>
         <TextInput
           style={styles.input}
