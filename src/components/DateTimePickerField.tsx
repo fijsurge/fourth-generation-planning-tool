@@ -22,6 +22,7 @@ import DateTimePicker, {
 } from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemeColors } from "../theme/useThemeColors";
+import { useSettings } from "../contexts/SettingsContext";
 import { spacing, borderRadius } from "../theme/spacing";
 import {
   WebDateTimePicker,
@@ -202,6 +203,7 @@ interface DatePickerFieldProps {
 
 export function DatePickerField({ value, onChange }: DatePickerFieldProps) {
   const colors = useThemeColors();
+  const { theme } = useSettings();
   const [show, setShow] = useState(false);
   const [iosTemp, setIosTemp] = useState(new Date());
 
@@ -225,6 +227,7 @@ export function DatePickerField({ value, onChange }: DatePickerFieldProps) {
       backgroundColor: colors.surface,
       boxSizing: "border-box",
       fontFamily: "inherit",
+      colorScheme: theme === "dark" ? "dark" : "light",
     };
     return (
       <div style={{ display: "flex", flexDirection: "row", alignItems: "center", width: "100%" }}>

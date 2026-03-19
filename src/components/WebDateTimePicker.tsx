@@ -1,5 +1,6 @@
 import React from "react";
 import { useThemeColors } from "../theme/useThemeColors";
+import { useSettings } from "../contexts/SettingsContext";
 import { spacing, borderRadius } from "../theme/spacing";
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -25,6 +26,7 @@ export function WebDateTimePicker({
   onMinuteChange,
 }: WebDateTimePickerProps) {
   const colors = useThemeColors();
+  const { theme } = useSettings();
 
   const baseStyle: React.CSSProperties = {
     borderWidth: 1,
@@ -37,6 +39,7 @@ export function WebDateTimePicker({
     backgroundColor: colors.surface,
     fontFamily: "inherit",
     boxSizing: "border-box",
+    colorScheme: theme === "dark" ? "dark" : "light",
   };
 
   const dateInputStyle: React.CSSProperties = {
