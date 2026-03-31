@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
+import { Platform } from "react-native";
 import { WeeklyGoal, Quadrant, GoalStatus } from "../models/WeeklyGoal";
 import { useAuth } from "../auth/AuthContext";
+import { pushGoalsToWatch } from "../notifications/wearSync";
 import {
   getWeeklyGoalsByWeek,
   addWeeklyGoal as apiAddGoal,
@@ -23,6 +25,9 @@ export function useWeeklyGoals(weekStartDate: string) {
       const token = await getValidAccessToken();
       const data = await getWeeklyGoalsByWeek(token, weekStartDate);
       setGoals(data);
+      if (Platform.OS === "android") {
+        pushGoalsToWatch(data).catch(() => {});
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {

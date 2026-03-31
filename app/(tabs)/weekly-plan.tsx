@@ -16,14 +16,17 @@ import { getWeekStart, shiftWeek, formatWeekKey } from "../../src/utils/dates";
 import { generateId } from "../../src/utils/uuid";
 import { getReflectionByWeek, getWeeklyGoalsByWeek, addWeeklyGoal as apiAddGoal } from "../../src/api/googleSheets";
 import { useSettings } from "../../src/contexts/SettingsContext";
-import { scheduleWeeklyQ2Reminders } from "../../src/notifications/scheduler";
+import { scheduleDailyGoalReminder, scheduleCloseoutReminder, cancelAllScheduled } from "../../src/notifications/scheduler";
 import { useThemeColors } from "../../src/theme/useThemeColors";
 import { spacing } from "../../src/theme/spacing";
 
 export default function WeeklyPlanScreen() {
   const colors = useThemeColors();
   const { getValidAccessToken } = useAuth();
-  const { notificationsEnabled, notificationTime } = useSettings();
+  const {
+    notificationsEnabled, notificationTime,
+    closeoutReminderEnabled, closeoutReminderDay, closeoutReminderTime,
+  } = useSettings();
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()));
   const weekKey = formatWeekKey(weekStart);
   const [moveOrCopyGoal, setMoveOrCopyGoal] = useState<WeeklyGoal | null>(null);
@@ -208,12 +211,17 @@ export default function WeeklyPlanScreen() {
     })();
   }, [isCurrentWeek, goalsLoading, weekKey]);
 
-  // Schedule Q2 reminders when goals or notification settings change
+  // Schedule notifications when goals or notification settings change
   useEffect(() => {
     if (Platform.OS === "web") return;
-    if (!notificationsEnabled || goalsLoading) return;
-    scheduleWeeklyQ2Reminders(goals, notificationTime).catch(() => {});
-  }, [goals, notificationsEnabled, notificationTime, goalsLoading]);
+    if (goalsLoading) return;
+    if (notificationsEnabled) {
+      scheduleDailyGoalReminder(goals, notificationTime).catch(() => {});
+    }
+    if (closeoutReminderEnabled) {
+      scheduleCloseoutReminder(closeoutReminderDay, closeoutReminderTime).catch(() => {});
+    }
+  }, [goals, notificationsEnabled, notificationTime, closeoutReminderEnabled, closeoutReminderDay, closeoutReminderTime, goalsLoading]);
 
   const styles = useMemo(() => StyleSheet.create({
     container: {

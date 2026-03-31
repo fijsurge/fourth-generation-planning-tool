@@ -14,6 +14,12 @@ interface SettingsState {
   setNotificationsEnabled: (value: boolean) => Promise<void>;
   notificationTime: string;
   setNotificationTime: (value: string) => Promise<void>;
+  closeoutReminderEnabled: boolean;
+  setCloseoutReminderEnabled: (value: boolean) => Promise<void>;
+  closeoutReminderDay: number; // 1=Sun, 2=Mon, ... 7=Sat
+  setCloseoutReminderDay: (value: number) => Promise<void>;
+  closeoutReminderTime: string; // HH:mm
+  setCloseoutReminderTime: (value: string) => Promise<void>;
   missionStatement: string;
   setMissionStatement: (value: string) => Promise<void>;
   shouldShowMissionStatement: boolean;
@@ -27,6 +33,9 @@ const SETTINGS_KEY_DEFAULT_ATTENDEES = "defaultAttendees";
 const SETTINGS_KEY_THEME = "theme";
 const SETTINGS_KEY_NOTIFICATIONS_ENABLED = "notificationsEnabled";
 const SETTINGS_KEY_NOTIFICATION_TIME = "notificationTime";
+const SETTINGS_KEY_CLOSEOUT_REMINDER_ENABLED = "closeoutReminderEnabled";
+const SETTINGS_KEY_CLOSEOUT_REMINDER_DAY = "closeoutReminderDay";
+const SETTINGS_KEY_CLOSEOUT_REMINDER_TIME = "closeoutReminderTime";
 const SETTINGS_KEY_MISSION_STATEMENT = "missionStatement";
 
 const MISSION_DISMISSED_STORAGE_KEY = "missionDismissedWeek";
@@ -61,6 +70,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<ThemeMode>("light");
   const [notificationsEnabled, setNotificationsEnabledState] = useState(false);
   const [notificationTime, setNotificationTimeState] = useState("09:00");
+  const [closeoutReminderEnabled, setCloseoutReminderEnabledState] = useState(false);
+  const [closeoutReminderDay, setCloseoutReminderDayState] = useState(1); // Sunday
+  const [closeoutReminderTime, setCloseoutReminderTimeState] = useState("18:00");
   const [missionStatement, setMissionStatementState] = useState("");
   const [dismissedWeek, setDismissedWeekState] = useState<string>(readDismissedWeek);
   const [isLoading, setIsLoading] = useState(true);
@@ -82,6 +94,12 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       if (notifEnabled?.value === "true") setNotificationsEnabledState(true);
       const notifTime = entries.find((e) => e.key === SETTINGS_KEY_NOTIFICATION_TIME);
       if (notifTime?.value) setNotificationTimeState(notifTime.value);
+      const closeoutEnabled = entries.find((e) => e.key === SETTINGS_KEY_CLOSEOUT_REMINDER_ENABLED);
+      if (closeoutEnabled?.value === "true") setCloseoutReminderEnabledState(true);
+      const closeoutDay = entries.find((e) => e.key === SETTINGS_KEY_CLOSEOUT_REMINDER_DAY);
+      if (closeoutDay?.value) setCloseoutReminderDayState(parseInt(closeoutDay.value, 10));
+      const closeoutTime = entries.find((e) => e.key === SETTINGS_KEY_CLOSEOUT_REMINDER_TIME);
+      if (closeoutTime?.value) setCloseoutReminderTimeState(closeoutTime.value);
       const missionEntry = entries.find((e) => e.key === SETTINGS_KEY_MISSION_STATEMENT);
       if (missionEntry?.value) setMissionStatementState(missionEntry.value);
     } catch {
@@ -99,6 +117,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       setThemeState("light");
       setNotificationsEnabledState(false);
       setNotificationTimeState("09:00");
+      setCloseoutReminderEnabledState(false);
+      setCloseoutReminderDayState(1);
+      setCloseoutReminderTimeState("18:00");
       setMissionStatementState("");
       setIsLoading(false);
     }
@@ -152,6 +173,39 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     [getValidAccessToken]
   );
 
+  const setCloseoutReminderEnabled = useCallback(
+    async (value: boolean) => {
+      setCloseoutReminderEnabledState(value);
+      try {
+        const token = await getValidAccessToken();
+        await setSetting(token, SETTINGS_KEY_CLOSEOUT_REMINDER_ENABLED, String(value));
+      } catch { /* silent fail */ }
+    },
+    [getValidAccessToken]
+  );
+
+  const setCloseoutReminderDay = useCallback(
+    async (value: number) => {
+      setCloseoutReminderDayState(value);
+      try {
+        const token = await getValidAccessToken();
+        await setSetting(token, SETTINGS_KEY_CLOSEOUT_REMINDER_DAY, String(value));
+      } catch { /* silent fail */ }
+    },
+    [getValidAccessToken]
+  );
+
+  const setCloseoutReminderTime = useCallback(
+    async (value: string) => {
+      setCloseoutReminderTimeState(value);
+      try {
+        const token = await getValidAccessToken();
+        await setSetting(token, SETTINGS_KEY_CLOSEOUT_REMINDER_TIME, value);
+      } catch { /* silent fail */ }
+    },
+    [getValidAccessToken]
+  );
+
   const setMissionStatement = useCallback(
     async (value: string) => {
       setMissionStatementState(value);
@@ -183,6 +237,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         theme, setTheme,
         notificationsEnabled, setNotificationsEnabled,
         notificationTime, setNotificationTime,
+        closeoutReminderEnabled, setCloseoutReminderEnabled,
+        closeoutReminderDay, setCloseoutReminderDay,
+        closeoutReminderTime, setCloseoutReminderTime,
         missionStatement, setMissionStatement,
         shouldShowMissionStatement, dismissMissionStatement,
         isLoading,

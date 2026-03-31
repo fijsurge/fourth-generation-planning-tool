@@ -16,7 +16,16 @@ export default function SettingsScreen() {
   const colors = useThemeColors();
   const { logout } = useAuth();
   const { roles, isLoading } = useRoles();
-  const { defaultAttendees, setDefaultAttendees, theme, setTheme, notificationsEnabled, setNotificationsEnabled, notificationTime, setNotificationTime, missionStatement, setMissionStatement } = useSettings();
+  const {
+    defaultAttendees, setDefaultAttendees,
+    theme, setTheme,
+    notificationsEnabled, setNotificationsEnabled,
+    notificationTime, setNotificationTime,
+    closeoutReminderEnabled, setCloseoutReminderEnabled,
+    closeoutReminderDay, setCloseoutReminderDay,
+    closeoutReminderTime, setCloseoutReminderTime,
+    missionStatement, setMissionStatement,
+  } = useSettings();
   const activeRoles = roles.filter((r) => r.active);
   const inactiveRoles = roles.filter((r) => !r.active);
   const [inactiveExpanded, setInactiveExpanded] = useState(false);
@@ -24,6 +33,8 @@ export default function SettingsScreen() {
   const [savingAttendees, setSavingAttendees] = useState(false);
   const [notifTimeInput, setNotifTimeInput] = useState<string | null>(null);
   const [savingNotifTime, setSavingNotifTime] = useState(false);
+  const [closeoutTimeInput, setCloseoutTimeInput] = useState<string | null>(null);
+  const [savingCloseoutTime, setSavingCloseoutTime] = useState(false);
   const [missionInput, setMissionInput] = useState<string | null>(null);
   const [savingMission, setSavingMission] = useState(false);
 
@@ -50,6 +61,19 @@ export default function SettingsScreen() {
       // keep local state so user can retry
     } finally {
       setSavingNotifTime(false);
+    }
+  };
+
+  const handleSaveCloseoutTime = async () => {
+    if (closeoutTimeInput === null) return;
+    setSavingCloseoutTime(true);
+    try {
+      await setCloseoutReminderTime(closeoutTimeInput.trim());
+      setCloseoutTimeInput(null);
+    } catch {
+      // keep local state so user can retry
+    } finally {
+      setSavingCloseoutTime(false);
     }
   };
 
@@ -195,6 +219,26 @@ export default function SettingsScreen() {
     },
     segmentTextActive: {
       color: colors.onPrimary,
+    },
+    chip: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.full,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    chipSelected: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primary,
+    },
+    chipText: {
+      fontSize: 13,
+      color: colors.textSecondary,
+    },
+    chipTextSelected: {
+      color: colors.onPrimary,
+      fontWeight: "600",
     },
     signOutButton: {
       flexDirection: "row",
@@ -390,10 +434,12 @@ export default function SettingsScreen() {
         <>
           <View style={styles.divider} />
           <Text style={styles.sectionTitle}>Notifications</Text>
+
+          {/* Daily goal reminder */}
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.sm }}>
             <View>
-              <Text style={styles.fieldLabel}>Q2 Goal Reminders</Text>
-              <Text style={styles.fieldHint}>Weekly reminder for important goals</Text>
+              <Text style={styles.fieldLabel}>Daily Goal Reminder</Text>
+              <Text style={styles.fieldHint}>Daily reminder for Q1 &amp; Q2 goals</Text>
             </View>
             <Switch
               value={notificationsEnabled}
@@ -419,6 +465,73 @@ export default function SettingsScreen() {
                   style={({ pressed }) => [styles.saveButton, pressed && { opacity: 0.8 }]}
                 >
                   {savingNotifTime ? (
+                    <ActivityIndicator color={colors.onPrimary} size="small" />
+                  ) : (
+                    <Text style={styles.saveButtonText}>Save</Text>
+                  )}
+                </Pressable>
+              )}
+            </>
+          )}
+
+          {/* Weekly closeout reminder */}
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: spacing.md, marginBottom: spacing.sm }}>
+            <View>
+              <Text style={styles.fieldLabel}>Weekly Closeout Reminder</Text>
+              <Text style={styles.fieldHint}>Nudge to reflect and close out the week</Text>
+            </View>
+            <Switch
+              value={closeoutReminderEnabled}
+              onValueChange={setCloseoutReminderEnabled}
+              trackColor={{ true: colors.primary }}
+            />
+          </View>
+          {closeoutReminderEnabled && (
+            <>
+              <Text style={styles.fieldLabel}>Day</Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginBottom: spacing.sm }}>
+                {[
+                  { label: "Sun", value: 1 },
+                  { label: "Mon", value: 2 },
+                  { label: "Tue", value: 3 },
+                  { label: "Wed", value: 4 },
+                  { label: "Thu", value: 5 },
+                  { label: "Fri", value: 6 },
+                  { label: "Sat", value: 7 },
+                ].map(({ label, value }) => (
+                  <Pressable
+                    key={value}
+                    onPress={() => setCloseoutReminderDay(value)}
+                    style={[
+                      styles.chip,
+                      closeoutReminderDay === value && styles.chipSelected,
+                    ]}
+                  >
+                    <Text style={[
+                      styles.chipText,
+                      closeoutReminderDay === value && styles.chipTextSelected,
+                    ]}>
+                      {label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+              <Text style={styles.fieldLabel}>Time (HH:mm)</Text>
+              <TextInput
+                style={styles.input}
+                value={closeoutTimeInput !== null ? closeoutTimeInput : closeoutReminderTime}
+                onChangeText={setCloseoutTimeInput}
+                placeholder="18:00"
+                placeholderTextColor={colors.textMuted}
+                keyboardType="numbers-and-punctuation"
+              />
+              {closeoutTimeInput !== null && closeoutTimeInput.trim() !== closeoutReminderTime && (
+                <Pressable
+                  onPress={handleSaveCloseoutTime}
+                  disabled={savingCloseoutTime}
+                  style={({ pressed }) => [styles.saveButton, pressed && { opacity: 0.8 }]}
+                >
+                  {savingCloseoutTime ? (
                     <ActivityIndicator color={colors.onPrimary} size="small" />
                   ) : (
                     <Text style={styles.saveButtonText}>Save</Text>
