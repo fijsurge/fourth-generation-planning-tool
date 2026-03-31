@@ -262,7 +262,7 @@ export default function NewGoalScreen() {
                 styles.quadrantButton,
                 {
                   borderColor: QUADRANT_COLORS[q],
-                  backgroundColor: quadrant === q ? QUADRANT_COLORS[q] + "15" : "transparent",
+                  backgroundColor: quadrant === q ? QUADRANT_COLORS[q] : "transparent",
                 },
                 quadrant === q && { borderWidth: 2 },
               ]}
@@ -270,7 +270,7 @@ export default function NewGoalScreen() {
               <Text
                 style={[
                   styles.quadrantLabel,
-                  { color: QUADRANT_COLORS[q] },
+                  { color: quadrant === q ? colors.onPrimary : QUADRANT_COLORS[q] },
                   quadrant === q && { fontWeight: "700" },
                 ]}
               >

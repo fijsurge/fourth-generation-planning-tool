@@ -83,8 +83,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             };
             await saveGoogleTokens(newTokens);
             setTokens(newTokens);
-          } catch {
-            await clearGoogleTokens();
+          } catch (refreshErr: any) {
+            // Only clear tokens if Google says the refresh token is definitively invalid.
+            // Transient network errors should not log the user out.
+            if (refreshErr?.message?.includes("invalid_grant")) {
+              await clearGoogleTokens();
+            }
           }
         }
       } finally {
@@ -156,15 +160,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error("Session expired. Please sign in again.");
     }
 
-    const result = await refreshAccessToken(tokens.refreshToken);
-    const newTokens: StoredTokens = {
-      accessToken: result.access_token,
-      refreshToken: tokens.refreshToken,
-      expiresAt: Date.now() + result.expires_in * 1000,
-    };
-    await saveGoogleTokens(newTokens);
-    setTokens(newTokens);
-    return newTokens.accessToken;
+    try {
+      const result = await refreshAccessToken(tokens.refreshToken);
+      const newTokens: StoredTokens = {
+        accessToken: result.access_token,
+        refreshToken: tokens.refreshToken,
+        expiresAt: Date.now() + result.expires_in * 1000,
+      };
+      await saveGoogleTokens(newTokens);
+      setTokens(newTokens);
+      return newTokens.accessToken;
+    } catch (err: any) {
+      if (err?.message?.includes("invalid_grant")) {
+        await logout();
+        throw new Error("Session expired. Please sign in again.");
+      }
+      // Network or transient error — rethrow without logging out
+      throw err;
+    }
   };
 
   return (

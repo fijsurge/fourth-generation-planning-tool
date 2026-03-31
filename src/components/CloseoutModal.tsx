@@ -8,6 +8,8 @@ import {
   TextInput,
   StyleSheet,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useWeeklyGoals } from "../hooks/useWeeklyGoals";
@@ -136,7 +138,7 @@ export function CloseoutModal({
           borderRadius: borderRadius.lg,
           width: "100%",
           maxWidth: 480,
-          maxHeight: "90%",
+          height: "90%",
           shadowColor: colors.shadow,
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.25,
@@ -288,6 +290,10 @@ export function CloseoutModal({
       animationType="fade"
       onRequestClose={onClose}
     >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
       <View style={styles.overlay}>
         <View style={styles.card}>
           {/* Header */}
@@ -449,6 +455,7 @@ export function CloseoutModal({
           </ScrollView>
         </View>
       </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
