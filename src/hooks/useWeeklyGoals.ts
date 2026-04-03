@@ -1,8 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Platform } from "react-native";
 import { WeeklyGoal, Quadrant, GoalStatus } from "../models/WeeklyGoal";
 import { useAuth } from "../auth/AuthContext";
+import { useRoles } from "./useRoles";
 import { pushGoalsToWatch } from "../notifications/wearSync";
+import { requireOptionalNativeModule } from "expo-modules-core";
 import {
   getWeeklyGoalsByWeek,
   addWeeklyGoal as apiAddGoal,
@@ -14,6 +16,7 @@ import { STATUS_CYCLE } from "../utils/constants";
 
 export function useWeeklyGoals(weekStartDate: string) {
   const { getValidAccessToken } = useAuth();
+  const { roles } = useRoles();
   const [goals, setGoals] = useState<WeeklyGoal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,9 +28,6 @@ export function useWeeklyGoals(weekStartDate: string) {
       const token = await getValidAccessToken();
       const data = await getWeeklyGoalsByWeek(token, weekStartDate);
       setGoals(data);
-      if (Platform.OS === "android") {
-        pushGoalsToWatch(data).catch(() => {});
-      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -35,9 +35,44 @@ export function useWeeklyGoals(weekStartDate: string) {
     }
   }, [getValidAccessToken, weekStartDate]);
 
+  // Push to watch whenever goals or roles change (roles load async, so this
+  // ensures we always send with the correct role names even on first load).
+  useEffect(() => {
+    if (Platform.OS !== "android" || goals.length === 0 || roles.length === 0) return;
+    pushGoalsToWatch(goals, roles).catch(() => {});
+  }, [goals, roles]);
+
   useEffect(() => {
     loadGoals();
   }, [loadGoals]);
+
+  // Stable refs so the watch event listener doesn't capture stale closures
+  const goalsRef = useRef(goals);
+  useEffect(() => { goalsRef.current = goals; }, [goals]);
+  const updateGoalRef = useRef<((goal: WeeklyGoal) => Promise<void>) | null>(null);
+
+  // Subscribe to status updates pushed from the Pixel Watch
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+    let WearDataModule: any = null;
+    try {
+      WearDataModule = requireOptionalNativeModule("WearDataModule");
+    } catch {
+      return;
+    }
+    if (!WearDataModule?.addListener) return;
+
+    const subscription = WearDataModule.addListener(
+      "onGoalStatusUpdate",
+      ({ goalId, status }: { goalId: string; status: string }) => {
+        const goal = goalsRef.current.find((g) => g.id === goalId);
+        if (!goal || !updateGoalRef.current) return;
+        updateGoalRef.current({ ...goal, status: status as GoalStatus }).catch(() => {});
+      }
+    );
+
+    return () => subscription.remove();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const addGoal = useCallback(
     async (params: {
@@ -99,6 +134,9 @@ export function useWeeklyGoals(weekStartDate: string) {
     },
     [getValidAccessToken, loadGoals]
   );
+
+  // Keep updateGoalRef current so the watch event listener can call it
+  useEffect(() => { updateGoalRef.current = updateGoal; }, [updateGoal]);
 
   const cycleStatus = useCallback(
     async (goalId: string) => {

@@ -7,7 +7,7 @@
         android:label="4th Gen Planner"
         android:theme="@android:style/Theme.DeviceDefault">
 
-        <!-- Tile service — shows today's goals on the watch face -->
+        <!-- Tile service — shows this week's goals on the watch face -->
         <service
             android:name=".WearTileService"
             android:exported="true"
@@ -23,7 +23,8 @@
         <!-- Listener service — receives goal data pushed from the phone app -->
         <service
             android:name=".WearListenerService"
-            android:exported="true">
+            android:exported="true"
+            android:directBootAware="true">
             <intent-filter>
                 <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
                 <data
@@ -32,6 +33,26 @@
                     android:path="/goals/current" />
             </intent-filter>
         </service>
+
+        <!-- Toggle activity — launched by tile's toggle button -->
+        <activity
+            android:name=".ToggleGroupActivity"
+            android:exported="true"
+            android:taskAffinity=""
+            android:excludeFromRecents="true" />
+
+        <!-- CycleStatusActivity — launched by tapping a goal chip in the tile -->
+        <activity
+            android:name=".CycleStatusActivity"
+            android:exported="true"
+            android:taskAffinity=""
+            android:excludeFromRecents="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <!-- GoalsActivity — full scrollable goals list, launched from tile "View All" -->
+        <activity
+            android:name=".GoalsActivity"
+            android:exported="true" />
 
     </application>
 

@@ -1,0 +1,5 @@
+{
+  "name": "wear-data-module",
+  "version": "1.0.0",
+  "description": "Native Expo module for pushing goals to Pixel Watch via Wearable DataLayer"
+}
