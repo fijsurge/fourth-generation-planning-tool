@@ -7,7 +7,6 @@ import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
-  Switch,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
@@ -15,7 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useWeeklyGoals } from "../../src/hooks/useWeeklyGoals";
 import { useRoles } from "../../src/hooks/useRoles";
-import { Quadrant } from "../../src/models/WeeklyGoal";
+import { Quadrant, RecurringCadence } from "../../src/models/WeeklyGoal";
 import { QUADRANT_LABELS, getQuadrantColors } from "../../src/utils/constants";
 import { DatePickerField } from "../../src/components/DateTimePickerField";
 import { useThemeColors } from "../../src/theme/useThemeColors";
@@ -38,7 +37,7 @@ export default function NewGoalScreen() {
   const [quadrant, setQuadrant] = useState<Quadrant>(2);
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
-  const [recurring, setRecurring] = useState(false);
+  const [recurringCadence, setRecurringCadence] = useState<RecurringCadence | null>(null);
   const [recurringEndType, setRecurringEndType] = useState<"none" | "date" | "count">("none");
   const [recurringEndDate, setRecurringEndDate] = useState("");
   const [recurringCount, setRecurringCount] = useState(1);
@@ -49,12 +48,13 @@ export default function NewGoalScreen() {
     if (!canSave || saving) return;
     setSaving(true);
     try {
+      const isRecurring = recurringCadence !== null;
       const recurringEnds =
-        recurring && recurringEndType === "date" && recurringEndDate
+        isRecurring && recurringEndType === "date" && recurringEndDate
           ? recurringEndDate
           : undefined;
       const recurringRemainingVal =
-        recurring && recurringEndType === "count" && recurringCount > 0
+        isRecurring && recurringEndType === "count" && recurringCount > 0
           ? recurringCount
           : undefined;
       await addGoal({
@@ -62,7 +62,8 @@ export default function NewGoalScreen() {
         goalText: goalText.trim(),
         quadrant,
         notes: notes.trim(),
-        recurring,
+        recurring: isRecurring,
+        recurringCadence: recurringCadence ?? undefined,
         recurringEnds,
         recurringRemaining: recurringRemainingVal,
       });
@@ -291,16 +292,22 @@ export default function NewGoalScreen() {
           numberOfLines={3}
         />
 
-        <View style={styles.switchRow}>
-          <Text style={styles.label}>Repeat weekly</Text>
-          <Switch
-            value={recurring}
-            onValueChange={setRecurring}
-            trackColor={{ true: colors.primary }}
-          />
+        <Text style={styles.label}>Repeat</Text>
+        <View style={styles.chipRow}>
+          {([null, "weekly", "monthly", "quarterly", "yearly"] as (RecurringCadence | null)[]).map((c) => (
+            <Pressable
+              key={c ?? "off"}
+              onPress={() => { setRecurringCadence(c); if (!c) setRecurringEndType("none"); }}
+              style={[styles.chip, recurringCadence === c && styles.chipSelected]}
+            >
+              <Text style={[styles.chipText, recurringCadence === c && styles.chipTextSelected]}>
+                {c === null ? "Off" : c.charAt(0).toUpperCase() + c.slice(1)}
+              </Text>
+            </Pressable>
+          ))}
         </View>
 
-        {recurring && (
+        {recurringCadence !== null && (
           <>
             <View style={styles.segmentedControl}>
               {(["none", "date", "count"] as const).map((opt) => (
@@ -310,7 +317,7 @@ export default function NewGoalScreen() {
                   style={[styles.segmentButton, recurringEndType === opt && styles.segmentButtonActive]}
                 >
                   <Text style={[styles.segmentText, recurringEndType === opt && styles.segmentTextActive]}>
-                    {opt === "none" ? "No end" : opt === "date" ? "End by date" : "End after N weeks"}
+                    {opt === "none" ? "No end" : opt === "date" ? "End by date" : `End after N ${recurringCadence}s`}
                   </Text>
                 </Pressable>
               ))}
@@ -336,7 +343,9 @@ export default function NewGoalScreen() {
                 >
                   <Ionicons name="add" size={18} color={colors.text} />
                 </Pressable>
-                <Text style={styles.stepperLabel}>week{recurringCount !== 1 ? "s" : ""}</Text>
+                <Text style={styles.stepperLabel}>
+                  {recurringCadence}{recurringCount !== 1 ? "s" : ""}
+                </Text>
               </View>
             )}
           </>

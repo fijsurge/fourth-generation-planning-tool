@@ -7,7 +7,7 @@ const logo = require("../../assets/fourth_gen_v1_black_fg_trans_bg.png");
 
 export function MissionStatementModal() {
   const colors = useThemeColors();
-  const { theme, missionStatement, shouldShowMissionStatement, dismissMissionStatement } = useSettings();
+  const { theme, missionStatement, shouldShowMissionStatement, dismissMissionStatement, skipMissionStatement } = useSettings();
   const logoTint = theme === "dark" ? "#FFFFFF" : "#000000";
 
   return (
@@ -39,18 +39,33 @@ export function MissionStatementModal() {
             </Text>
           </ScrollView>
 
-          <Pressable
-            onPress={dismissMissionStatement}
-            style={({ pressed }) => [
-              styles.button,
-              { backgroundColor: colors.primary },
-              pressed && { opacity: 0.85 },
-            ]}
-          >
-            <Text style={[styles.buttonText, { color: colors.onPrimary }]}>
-              Got it — dismiss for this week
-            </Text>
-          </Pressable>
+          <View style={styles.buttonRow}>
+            <Pressable
+              onPress={skipMissionStatement}
+              style={({ pressed }) => [
+                styles.buttonSecondary,
+                { borderColor: colors.border, backgroundColor: colors.surface },
+                pressed && { opacity: 0.75 },
+              ]}
+            >
+              <Text style={[styles.buttonTextSecondary, { color: colors.textSecondary }]}>
+                Remind me later
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={dismissMissionStatement}
+              style={({ pressed }) => [
+                styles.button,
+                { backgroundColor: colors.primary },
+                pressed && { opacity: 0.85 },
+              ]}
+            >
+              <Text style={[styles.buttonText, { color: colors.onPrimary }]}>
+                Done for this week
+              </Text>
+            </Pressable>
+          </View>
         </View>
       </View>
     </Modal>
@@ -102,13 +117,32 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontStyle: "italic",
   },
-  button: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl,
-    borderRadius: borderRadius.md,
+  buttonRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
     marginTop: spacing.sm,
+    width: "100%",
+  },
+  button: {
+    flex: 1,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.md,
+    alignItems: "center",
+  },
+  buttonSecondary: {
+    flex: 1,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    alignItems: "center",
   },
   buttonText: {
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  buttonTextSecondary: {
     fontSize: 15,
     fontWeight: "600",
   },

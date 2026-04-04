@@ -324,6 +324,7 @@ function goalToRow(goal: WeeklyGoal): string[] {
     String(goal.recurring ?? false),
     goal.recurringEnds ?? "",
     goal.recurringRemaining != null ? String(goal.recurringRemaining) : "",
+    goal.recurringCadence ?? "",
   ];
 }
 
@@ -345,6 +346,7 @@ function rowToGoal(row: string[]): WeeklyGoal {
     recurring: row[11] === "true",
     recurringEnds: row[12] || undefined,
     recurringRemaining: row[13] !== "" && row[13] != null ? Number(row[13]) : undefined,
+    recurringCadence: (row[14] as WeeklyGoal["recurringCadence"]) || undefined,
   };
 }
 

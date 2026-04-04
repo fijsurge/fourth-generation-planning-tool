@@ -23,7 +23,8 @@ interface SettingsState {
   missionStatement: string;
   setMissionStatement: (value: string) => Promise<void>;
   shouldShowMissionStatement: boolean;
-  dismissMissionStatement: () => void;
+  dismissMissionStatement: () => void;      // dismiss for the rest of the week
+  skipMissionStatement: () => void;         // skip for ~48h, may show again this week
   isLoading: boolean;
 }
 
@@ -38,10 +39,14 @@ const SETTINGS_KEY_CLOSEOUT_REMINDER_DAY = "closeoutReminderDay";
 const SETTINGS_KEY_CLOSEOUT_REMINDER_TIME = "closeoutReminderTime";
 const SETTINGS_KEY_MISSION_STATEMENT = "missionStatement";
 
-const MISSION_DISMISSED_STORAGE_KEY = "missionDismissedWeek";
+const MISSION_DISMISSED_KEY   = "missionDismissedWeek";
+const MISSION_SKIP_UNTIL_KEY  = "missionSkipUntil";      // ISO timestamp
+const MISSION_SCHEDULED_KEY   = "missionScheduledFor";   // "<weekKey>|<ISO timestamp>"
 
-// Module-level fallback for non-web platforms (resets per session)
+// Module-level fallbacks for non-web platforms (reset per session)
 let _sessionDismissedWeek = "";
+let _sessionSkipUntil = "";
+let _sessionScheduled = "";
 
 function getCurrentWeekKey(): string {
   const now = new Date();
@@ -49,19 +54,44 @@ function getCurrentWeekKey(): string {
   return `${getISOWeekYear(now)}-W${week}`;
 }
 
-function readDismissedWeek(): string {
+function storageGet(key: string, sessionFallback: string): string {
   if (Platform.OS === "web" && typeof localStorage !== "undefined") {
-    return localStorage.getItem(MISSION_DISMISSED_STORAGE_KEY) ?? "";
+    return localStorage.getItem(key) ?? "";
   }
-  return _sessionDismissedWeek;
+  return sessionFallback;
 }
 
-function writeDismissedWeek(weekKey: string): void {
+function storageSet(key: string, value: string, setter: (v: string) => void): void {
   if (Platform.OS === "web" && typeof localStorage !== "undefined") {
-    localStorage.setItem(MISSION_DISMISSED_STORAGE_KEY, weekKey);
-  } else {
-    _sessionDismissedWeek = weekKey;
+    localStorage.setItem(key, value);
   }
+  setter(value);
+}
+
+function readDismissedWeek(): string { return storageGet(MISSION_DISMISSED_KEY, _sessionDismissedWeek); }
+function writeDismissedWeek(v: string) { storageSet(MISSION_DISMISSED_KEY, v, (s) => { _sessionDismissedWeek = s; }); }
+
+function readSkipUntil(): string { return storageGet(MISSION_SKIP_UNTIL_KEY, _sessionSkipUntil); }
+function writeSkipUntil(v: string) { storageSet(MISSION_SKIP_UNTIL_KEY, v, (s) => { _sessionSkipUntil = s; }); }
+
+function readScheduled(): string { return storageGet(MISSION_SCHEDULED_KEY, _sessionScheduled); }
+function writeScheduled(v: string) { storageSet(MISSION_SCHEDULED_KEY, v, (s) => { _sessionScheduled = s; }); }
+
+/** Pick a random ISO timestamp between now and end of current ISO week (Sunday 23:59). */
+function generateScheduledTime(weekKey: string): string {
+  const now = new Date();
+  // End of week = next Monday 00:00 minus 1 ms
+  const endOfWeek = new Date(now);
+  // ISO week ends Sunday; advance to next Mon then subtract
+  const dayOfWeek = endOfWeek.getDay(); // 0=Sun … 6=Sat
+  const daysUntilMon = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
+  endOfWeek.setDate(endOfWeek.getDate() + daysUntilMon);
+  endOfWeek.setHours(0, 0, 0, -1);
+
+  const nowMs = now.getTime();
+  const endMs = endOfWeek.getTime();
+  const scheduledMs = nowMs + Math.random() * (endMs - nowMs);
+  return `${weekKey}|${new Date(scheduledMs).toISOString()}`;
 }
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
@@ -75,6 +105,16 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [closeoutReminderTime, setCloseoutReminderTimeState] = useState("18:00");
   const [missionStatement, setMissionStatementState] = useState("");
   const [dismissedWeek, setDismissedWeekState] = useState<string>(readDismissedWeek);
+  const [skipUntil, setSkipUntilState] = useState<string>(readSkipUntil);
+  const [scheduledFor, setScheduledForState] = useState<string>(() => {
+    const stored = readScheduled();
+    const weekKey = getCurrentWeekKey();
+    // If stored value is for this week, use it; otherwise generate a new one
+    if (stored.startsWith(weekKey + "|")) return stored;
+    const generated = generateScheduledTime(weekKey);
+    writeScheduled(generated);
+    return generated;
+  });
   const [isLoading, setIsLoading] = useState(true);
 
   const loadSettings = useCallback(async () => {
@@ -221,13 +261,30 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   const shouldShowMissionStatement = useMemo(() => {
     if (!missionStatement.trim()) return false;
-    return dismissedWeek !== getCurrentWeekKey();
-  }, [missionStatement, dismissedWeek]);
+    const weekKey = getCurrentWeekKey();
+    if (dismissedWeek === weekKey) return false;
+    // Check scheduled time: only show after the randomly-picked moment this week
+    const scheduledTs = scheduledFor.startsWith(weekKey + "|")
+      ? scheduledFor.split("|")[1]
+      : null;
+    if (scheduledTs && new Date(scheduledTs) > new Date()) return false;
+    // Check skip-until
+    if (skipUntil && new Date(skipUntil) > new Date()) return false;
+    return true;
+  }, [missionStatement, dismissedWeek, scheduledFor, skipUntil]);
 
+  /** Dismiss for the rest of this week — won't show again until next week. */
   const dismissMissionStatement = useCallback(() => {
     const weekKey = getCurrentWeekKey();
     writeDismissedWeek(weekKey);
     setDismissedWeekState(weekKey);
+  }, []);
+
+  /** Skip for ~48 hours — may show again before the week ends. */
+  const skipMissionStatement = useCallback(() => {
+    const until = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+    writeSkipUntil(until);
+    setSkipUntilState(until);
   }, []);
 
   return (
@@ -241,7 +298,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         closeoutReminderDay, setCloseoutReminderDay,
         closeoutReminderTime, setCloseoutReminderTime,
         missionStatement, setMissionStatement,
-        shouldShowMissionStatement, dismissMissionStatement,
+        shouldShowMissionStatement, dismissMissionStatement, skipMissionStatement,
         isLoading,
       }}
     >
