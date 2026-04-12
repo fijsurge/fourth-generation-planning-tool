@@ -8,6 +8,16 @@ import { GoalItem } from "./GoalItem";
 import { useThemeColors } from "../theme/useThemeColors";
 import { spacing } from "../theme/spacing";
 
+const BIG_ROCK_COLOR = "#F59E0B";
+
+function sortByPriority(goals: WeeklyGoal[]): WeeklyGoal[] {
+  return [...goals].sort((a, b) => {
+    const pa = a.priority ?? 9999;
+    const pb = b.priority ?? 9999;
+    return pa - pb;
+  });
+}
+
 interface GoalsByRoleProps {
   goals: WeeklyGoal[];
   roles: Role[];
@@ -28,6 +38,7 @@ function SwipeableGoalRow({
   onMoveOrCopy,
   onDeleteGoal,
   isLocked,
+  roleName,
   colors,
 }: {
   goal: WeeklyGoal;
@@ -37,6 +48,7 @@ function SwipeableGoalRow({
   onMoveOrCopy?: (goal: WeeklyGoal) => void;
   onDeleteGoal?: (goalId: string) => void;
   isLocked?: boolean;
+  roleName?: string;
   colors: ReturnType<typeof useThemeColors>;
 }) {
   const swipeRef = useRef<Swipeable>(null);
@@ -80,6 +92,7 @@ function SwipeableGoalRow({
         onMoveOrCopy={onMoveOrCopy ? () => onMoveOrCopy(goal) : undefined}
         onDelete={onDeleteGoal ? () => handleDelete() : undefined}
         isLocked={isLocked}
+        roleName={roleName}
       />
     </Swipeable>
   );
@@ -89,32 +102,51 @@ export function GoalsByRole({ goals, roles, onGoalPress, onCycleStatus, onCalend
   const colors = useThemeColors();
   const roleMap = new Map(roles.filter((r) => r.active).map((r) => [r.id, r]));
 
-  // Group goals by role
+  // Separate Big Rocks (global, sorted by priority) from regular goals
+  const bigRocks = sortByPriority(goals.filter((g) => g.isBigRock));
+  const regularGoals = goals.filter((g) => !g.isBigRock);
+
+  // Group regular goals by role
   const grouped = new Map<string, WeeklyGoal[]>();
-  for (const goal of goals) {
+  for (const goal of regularGoals) {
     const key = roleMap.has(goal.roleId) ? goal.roleId : "__unassigned__";
     const list = grouped.get(key) || [];
     list.push(goal);
     grouped.set(key, list);
   }
 
-  // Build ordered sections: active roles first (by sortOrder), then unassigned
-  const sections: { label: string; goals: WeeklyGoal[] }[] = [];
   const sortedRoles = [...roleMap.values()].sort((a, b) => a.sortOrder - b.sortOrder);
-
+  const roleSections: { label: string; goals: WeeklyGoal[] }[] = [];
   for (const role of sortedRoles) {
     const roleGoals = grouped.get(role.id);
     if (roleGoals?.length) {
-      sections.push({ label: role.name, goals: roleGoals });
+      roleSections.push({ label: role.name, goals: sortByPriority(roleGoals) });
     }
   }
-
   const unassigned = grouped.get("__unassigned__");
   if (unassigned?.length) {
-    sections.push({ label: "Unassigned", goals: unassigned });
+    roleSections.push({ label: "Unassigned", goals: sortByPriority(unassigned) });
   }
 
   const styles = useMemo(() => StyleSheet.create({
+    bigRocksSection: {
+      marginBottom: spacing.sm,
+    },
+    bigRocksHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xs,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      backgroundColor: colors.surface,
+    },
+    bigRocksHeaderText: {
+      fontSize: 13,
+      fontWeight: "700",
+      color: BIG_ROCK_COLOR,
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+    },
     section: {
       marginBottom: spacing.sm,
     },
@@ -149,7 +181,7 @@ export function GoalsByRole({ goals, roles, onGoalPress, onCycleStatus, onCalend
     return <GoalSkeleton count={3} colors={colors} />;
   }
 
-  if (sections.length === 0) {
+  if (bigRocks.length === 0 && roleSections.length === 0) {
     return (
       <View style={styles.empty}>
         <Ionicons name="calendar-outline" size={48} color={colors.textMuted} />
@@ -159,41 +191,59 @@ export function GoalsByRole({ goals, roles, onGoalPress, onCycleStatus, onCalend
     );
   }
 
+  const renderGoal = (goal: WeeklyGoal, roleName?: string) =>
+    Platform.OS !== "web" && !isLocked && onDeleteGoal ? (
+      <SwipeableGoalRow
+        key={goal.id}
+        goal={goal}
+        onGoalPress={onGoalPress}
+        onCycleStatus={onCycleStatus}
+        onCalendarPress={onCalendarPress}
+        onMoveOrCopy={onMoveOrCopy}
+        onDeleteGoal={onDeleteGoal}
+        isLocked={isLocked}
+        roleName={roleName}
+        colors={colors}
+      />
+    ) : (
+      <GoalItem
+        key={goal.id}
+        goal={goal}
+        onPress={() => onGoalPress(goal)}
+        onCycleStatus={() => onCycleStatus(goal.id)}
+        onCalendarPress={onCalendarPress ? () => onCalendarPress(goal) : undefined}
+        onMoveOrCopy={onMoveOrCopy ? () => onMoveOrCopy(goal) : undefined}
+        onDelete={Platform.OS === "web" && onDeleteGoal && !isLocked ? () => {
+          if (window.confirm("Delete this goal?")) {
+            onDeleteGoal(goal.id);
+          }
+        } : undefined}
+        isLocked={isLocked}
+        roleName={roleName}
+      />
+    );
+
   return (
     <View>
-      {sections.map((section) => (
+      {/* Big Rocks section — shown only when at least one Big Rock exists */}
+      {bigRocks.length > 0 && (
+        <View style={styles.bigRocksSection}>
+          <View style={styles.bigRocksHeader}>
+            <Ionicons name="diamond" size={13} color={BIG_ROCK_COLOR} />
+            <Text style={styles.bigRocksHeaderText}>Big Rocks</Text>
+          </View>
+          {bigRocks.map((goal) => {
+            const role = roleMap.get(goal.roleId);
+            return renderGoal(goal, role?.name);
+          })}
+        </View>
+      )}
+
+      {/* Role sections — regular (non-Big Rock) goals only */}
+      {roleSections.map((section) => (
         <View key={section.label} style={styles.section}>
           <Text style={styles.header}>{section.label}</Text>
-          {section.goals.map((goal) =>
-            Platform.OS !== "web" && !isLocked && onDeleteGoal ? (
-              <SwipeableGoalRow
-                key={goal.id}
-                goal={goal}
-                onGoalPress={onGoalPress}
-                onCycleStatus={onCycleStatus}
-                onCalendarPress={onCalendarPress}
-                onMoveOrCopy={onMoveOrCopy}
-                onDeleteGoal={onDeleteGoal}
-                isLocked={isLocked}
-                colors={colors}
-              />
-            ) : (
-              <GoalItem
-                key={goal.id}
-                goal={goal}
-                onPress={() => onGoalPress(goal)}
-                onCycleStatus={() => onCycleStatus(goal.id)}
-                onCalendarPress={onCalendarPress ? () => onCalendarPress(goal) : undefined}
-                onMoveOrCopy={onMoveOrCopy ? () => onMoveOrCopy(goal) : undefined}
-                onDelete={Platform.OS === "web" && onDeleteGoal && !isLocked ? () => {
-                  if (window.confirm("Delete this goal?")) {
-                    onDeleteGoal(goal.id);
-                  }
-                } : undefined}
-                isLocked={isLocked}
-              />
-            )
-          )}
+          {section.goals.map((goal) => renderGoal(goal))}
         </View>
       ))}
     </View>

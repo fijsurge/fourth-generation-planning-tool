@@ -16,6 +16,8 @@ export interface WeekStats {
   total: number;
   pct: number;
   byQuadrant: QuadrantStats[];
+  bigRockComplete: number;
+  bigRockTotal: number;
   reflection?: WeeklyReflection;
 }
 
@@ -76,12 +78,17 @@ export function useGoalStats(): GoalStatsResult {
           };
         });
 
+        const bigRocks = goals.filter((g) => g.isBigRock);
+        const bigRockComplete = bigRocks.filter((g) => g.status === "complete").length;
+
         history.push({
           weekStartDate,
           complete,
           total,
           pct,
           byQuadrant,
+          bigRockComplete,
+          bigRockTotal: bigRocks.length,
           reflection: reflectionByWeek.get(weekStartDate),
         });
       }

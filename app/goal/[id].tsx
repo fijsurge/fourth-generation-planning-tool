@@ -43,6 +43,8 @@ export default function EditGoalScreen() {
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [moveOrCopyModalVisible, setMoveOrCopyModalVisible] = useState(false);
+  const [isBigRock, setIsBigRock] = useState(false);
+  const [priority, setPriority] = useState<number | null>(null);
   const [recurringCadence, setRecurringCadence] = useState<RecurringCadence | null>(null);
   const [recurringEndType, setRecurringEndType] = useState<"none" | "date" | "count">("none");
   const [recurringEndDate, setRecurringEndDate] = useState("");
@@ -54,6 +56,8 @@ export default function EditGoalScreen() {
       setGoalText(goal.goalText);
       setQuadrant(goal.quadrant);
       setNotes(goal.notes);
+      setIsBigRock(goal.isBigRock ?? false);
+      setPriority(goal.priority ?? null);
       // Backwards compat: if recurring=true but no cadence stored, default to weekly
       if (goal.recurringCadence) {
         setRecurringCadence(goal.recurringCadence);
@@ -304,6 +308,8 @@ export default function EditGoalScreen() {
         goalText: goalText.trim(),
         quadrant,
         notes: notes.trim(),
+        isBigRock,
+        priority: priority ?? undefined,
         recurring: isRecurring,
         recurringCadence: recurringCadence ?? undefined,
         recurringEnds,
@@ -432,6 +438,34 @@ export default function EditGoalScreen() {
           multiline
           numberOfLines={3}
         />
+
+        <Text style={styles.label}>Priority</Text>
+        <View style={styles.chipRow}>
+          <Pressable
+            onPress={() => setIsBigRock((v) => !v)}
+            style={[styles.chip, isBigRock && { borderColor: "#F59E0B", backgroundColor: "#FEF3C7" }]}
+          >
+            <Text style={[styles.chipText, isBigRock && { color: "#F59E0B", fontWeight: "600" }]}>
+              ◆ Big Rock
+            </Text>
+          </Pressable>
+        </View>
+        <View style={styles.stepperRow}>
+          <Pressable
+            style={({ pressed }) => [styles.stepperButton, pressed && { opacity: 0.6 }]}
+            onPress={() => setPriority((n) => (n == null || n <= 1) ? null : n - 1)}
+          >
+            <Ionicons name="remove" size={18} color={colors.text} />
+          </Pressable>
+          <Text style={styles.stepperValue}>{priority ?? "—"}</Text>
+          <Pressable
+            style={({ pressed }) => [styles.stepperButton, pressed && { opacity: 0.6 }]}
+            onPress={() => setPriority((n) => (n == null ? 1 : n + 1))}
+          >
+            <Ionicons name="add" size={18} color={colors.text} />
+          </Pressable>
+          <Text style={styles.stepperLabel}>rank (optional)</Text>
+        </View>
 
         <Text style={styles.label}>Repeat</Text>
         <View style={styles.chipRow}>

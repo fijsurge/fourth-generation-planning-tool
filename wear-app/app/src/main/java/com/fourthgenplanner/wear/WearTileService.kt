@@ -90,11 +90,13 @@ class WearTileService : TileService() {
                 for (i in 0 until array.length()) {
                     val obj = array.getJSONObject(i)
                     goals.add(GoalItem(
-                        id       = obj.optString("id", ""),
-                        text     = obj.optString("text", ""),
-                        quadrant = obj.optInt("quadrant", 1),
-                        roleName = obj.optString("roleName", ""),
-                        status   = obj.optString("status", "not_started")
+                        id        = obj.optString("id", ""),
+                        text      = obj.optString("text", ""),
+                        quadrant  = obj.optInt("quadrant", 1),
+                        roleName  = obj.optString("roleName", ""),
+                        status    = obj.optString("status", "not_started"),
+                        isBigRock = obj.optBoolean("isBigRock", false),
+                        priority  = if (obj.has("priority")) obj.optInt("priority") else null
                     ))
                 }
             }
@@ -194,6 +196,7 @@ class WearTileService : TileService() {
                     val (roleName, roleGoals) = entry
                     val completed = roleGoals.count { effectiveStatus(it, overrides) == "complete" }
                     val total = roleGoals.size
+                    val hasBigRock = roleGoals.any { it.isBigRock }
                     val fraction = completed.toFloat() / total
 
                     val colors = when {
@@ -222,7 +225,7 @@ class WearTileService : TileService() {
                     row.addContent(
                         Chip.Builder(this, clickable, deviceParams)
                             .setWidth(chipWidth)
-                            .setPrimaryLabelContent(roleName)
+                            .setPrimaryLabelContent(if (hasBigRock) "◆ $roleName" else roleName)
                             .setSecondaryLabelContent("$completed / $total done")
                             .setChipColors(colors)
                             .build()

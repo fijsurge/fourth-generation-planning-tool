@@ -22,4 +22,6 @@ export interface WeeklyGoal {
   recurringCadence?: RecurringCadence;
   recurringEnds?: string;        // YYYY-MM-DD — stop carrying after this date
   recurringRemaining?: number;   // countdown; 0 = do not carry anymore
+  isBigRock?: boolean;           // Covey "Big Rock" — top priority goal for the week
+  priority?: number;             // rank within group (Big Rocks or regular), 1 = highest
 }

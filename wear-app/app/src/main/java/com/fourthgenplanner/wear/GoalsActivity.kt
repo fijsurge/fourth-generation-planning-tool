@@ -29,6 +29,7 @@ private val FgComplete   = Color(0xFF81C784)
 private val BgToggle     = Color(0xFF2E7D32)
 private val FgToggle     = Color(0xFFFFFFFF)
 private val FgSection    = Color(0xFFAAAAAA)
+private val FgBigRock    = Color(0xFFF59E0B) // amber
 
 private fun statusBg(s: String) = when (s) {
     "complete"    -> BgComplete
@@ -262,6 +263,14 @@ fun GoalChip(goal: GoalItem, status: String, onTap: () -> Unit) {
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(end = 6.dp)
                 )
+                if (goal.isBigRock) {
+                    Text(
+                        text = "◆ ",
+                        color = FgBigRock,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
                 Text(
                     text = goal.text,
                     color = if (status == "complete")

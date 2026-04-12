@@ -84,6 +84,8 @@ export function useWeeklyGoals(weekStartDate: string) {
       recurringCadence?: RecurringCadence;
       recurringEnds?: string;
       recurringRemaining?: number;
+      isBigRock?: boolean;
+      priority?: number;
     }) => {
       const now = new Date().toISOString();
       const newGoal: WeeklyGoal = {
@@ -100,6 +102,8 @@ export function useWeeklyGoals(weekStartDate: string) {
         recurringCadence: params.recurringCadence,
         recurringEnds: params.recurringEnds,
         recurringRemaining: params.recurringRemaining,
+        isBigRock: params.isBigRock,
+        priority: params.priority,
       };
 
       // Optimistic update

@@ -316,6 +316,32 @@ function WeekCard({
         <View style={[styles.weekBarFill, { width: `${week.pct}%` as any }]} />
       </View>
 
+      {week.bigRockTotal > 0 && (
+        <View style={styles.quadrantRow}>
+          <Text style={{ fontSize: 11, color: "#F59E0B", marginRight: 4 }}>◆</Text>
+          <Text style={[styles.quadrantRowLabel, { color: "#F59E0B" }]} numberOfLines={1}>
+            Big Rocks
+          </Text>
+          <Text style={[styles.quadrantCount, { color: "#F59E0B" }]}>
+            {week.bigRockComplete}/{week.bigRockTotal}
+          </Text>
+          <View style={styles.quadrantBarTrack}>
+            <View
+              style={[
+                styles.quadrantBarFill,
+                {
+                  width: `${week.bigRockTotal > 0 ? Math.round((week.bigRockComplete / week.bigRockTotal) * 100) : 0}%` as any,
+                  backgroundColor: "#F59E0B",
+                },
+              ]}
+            />
+          </View>
+          <Text style={[styles.quadrantPct, { color: "#F59E0B" }]}>
+            {week.bigRockTotal > 0 ? Math.round((week.bigRockComplete / week.bigRockTotal) * 100) : 0}%
+          </Text>
+        </View>
+      )}
+
       {week.byQuadrant.map((qs) => (
         <View key={qs.quadrant} style={styles.quadrantRow}>
           <View style={[styles.dot, { backgroundColor: quadrantColors[qs.quadrant] }]} />

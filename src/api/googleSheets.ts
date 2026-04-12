@@ -49,6 +49,9 @@ const GOALS_HEADERS = [
   "Recurring",
   "RecurringEnds",
   "RecurringRemaining",
+  "RecurringCadence",
+  "IsBigRock",
+  "Priority",
 ];
 const SETTINGS_HEADERS = ["Key", "Value", "UpdatedAt"];
 
@@ -325,6 +328,8 @@ function goalToRow(goal: WeeklyGoal): string[] {
     goal.recurringEnds ?? "",
     goal.recurringRemaining != null ? String(goal.recurringRemaining) : "",
     goal.recurringCadence ?? "",
+    goal.isBigRock ? "true" : "false",
+    goal.priority != null ? String(goal.priority) : "",
   ];
 }
 
@@ -347,6 +352,8 @@ function rowToGoal(row: string[]): WeeklyGoal {
     recurringEnds: row[12] || undefined,
     recurringRemaining: row[13] !== "" && row[13] != null ? Number(row[13]) : undefined,
     recurringCadence: (row[14] as WeeklyGoal["recurringCadence"]) || undefined,
+    isBigRock: row[15] === "true",
+    priority: row[16] !== "" && row[16] != null ? Number(row[16]) : undefined,
   };
 }
 

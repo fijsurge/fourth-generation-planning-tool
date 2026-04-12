@@ -9,6 +9,8 @@ interface WearGoal {
   quadrant: number;
   roleName: string;
   status: string;
+  isBigRock: boolean;
+  priority?: number;
 }
 
 // Expo Modules API — works with New Architecture (bridgeless mode)
@@ -42,6 +44,8 @@ export async function pushGoalsToWatch(goals: WeeklyGoal[], roles: Role[]): Prom
       quadrant: g.quadrant,
       roleName: roleMap.get(g.roleId) ?? "",
       status: g.status,
+      isBigRock: g.isBigRock ?? false,
+      priority: g.priority,
     }));
 
   try {

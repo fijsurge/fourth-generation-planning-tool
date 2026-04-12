@@ -21,7 +21,9 @@ data class GoalItem(
     val text: String,
     val quadrant: Int,
     val roleName: String,
-    val status: String   // "not_started" | "in_progress" | "complete"
+    val status: String,   // "not_started" | "in_progress" | "complete"
+    val isBigRock: Boolean = false,
+    val priority: Int? = null
 )
 
 val STATUS_CYCLE_LIST = listOf("not_started", "in_progress", "complete")
@@ -48,10 +50,17 @@ fun parseGoalsJson(json: String): List<GoalItem> = try {
                 text = o.optString("text", ""),
                 quadrant = o.optInt("quadrant", 1),
                 roleName = o.optString("roleName", ""),
-                status = o.optString("status", "not_started")
+                status = o.optString("status", "not_started"),
+                isBigRock = o.optBoolean("isBigRock", false),
+                priority = if (o.has("priority")) o.optInt("priority") else null
             )
         }
-    }.sortedWith(compareBy({ it.quadrant }, { it.roleName }))
+    }.sortedWith(compareBy(
+        { if (it.isBigRock) 0 else 1 },      // Big Rocks first
+        { it.priority ?: Int.MAX_VALUE },      // ranked items before unranked
+        { it.quadrant },
+        { it.roleName }
+    ))
 } catch (e: Exception) {
     emptyList()
 }
