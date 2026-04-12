@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Platform } from "react-native";
-import { WeeklyGoal, Quadrant, GoalStatus } from "../models/WeeklyGoal";
+import { WeeklyGoal, Quadrant, GoalStatus, RecurringCadence } from "../models/WeeklyGoal";
 import { useAuth } from "../auth/AuthContext";
 import { useRoles } from "./useRoles";
 import { pushGoalsToWatch } from "../notifications/wearSync";
@@ -81,6 +81,7 @@ export function useWeeklyGoals(weekStartDate: string) {
       quadrant: Quadrant;
       notes?: string;
       recurring?: boolean;
+      recurringCadence?: RecurringCadence;
       recurringEnds?: string;
       recurringRemaining?: number;
     }) => {
@@ -96,6 +97,7 @@ export function useWeeklyGoals(weekStartDate: string) {
         createdAt: now,
         updatedAt: now,
         recurring: params.recurring,
+        recurringCadence: params.recurringCadence,
         recurringEnds: params.recurringEnds,
         recurringRemaining: params.recurringRemaining,
       };

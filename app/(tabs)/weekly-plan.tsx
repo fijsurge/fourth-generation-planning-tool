@@ -14,7 +14,7 @@ import { CloseoutModal } from "../../src/components/CloseoutModal";
 import { WeeklyGoal } from "../../src/models/WeeklyGoal";
 import { getWeekStart, shiftWeek, formatWeekKey } from "../../src/utils/dates";
 import { generateId } from "../../src/utils/uuid";
-import { getReflectionByWeek, getWeeklyGoalsByWeek, addWeeklyGoal as apiAddGoal } from "../../src/api/googleSheets";
+import { getReflectionByWeek, getWeeklyGoals, addWeeklyGoal as apiAddGoal } from "../../src/api/googleSheets";
 import { useSettings } from "../../src/contexts/SettingsContext";
 import { scheduleDailyGoalReminder, scheduleCloseoutReminder, cancelAllScheduled } from "../../src/notifications/scheduler";
 import { useThemeColors } from "../../src/theme/useThemeColors";
@@ -162,25 +162,59 @@ export default function WeeklyPlanScreen() {
     }
   }, [recurringCarryCount]);
 
-  // Auto-carry recurring goals from last week into the current week
+  // Auto-carry recurring goals into the viewed week.
+  // Looks across ALL prior weeks (not just last week) so jumping forward multiple
+  // weeks still works. Respects cadence: weekly = every week, monthly = once per
+  // calendar month, quarterly = once per quarter, yearly = once per year.
   useEffect(() => {
-    if (!isCurrentWeek || goalsLoading) return;
+    if (goalsLoading) return;
     if (carriedWeekRef.current === weekKey) return;
     carriedWeekRef.current = weekKey;
 
     (async () => {
       try {
         const token = await getValidAccessToken();
-        const prevKey = formatWeekKey(prevWeekStart);
-        const lastWeekGoals = await getWeeklyGoalsByWeek(token, prevKey);
-        const toCarry = lastWeekGoals.filter((g) => {
-          if (!g.recurring) return false;
-          if (g.status === "complete") return false;
+        const allGoals = await getWeeklyGoals(token);
+
+        // Only consider recurring goals from weeks strictly before this one
+        const priorRecurring = allGoals.filter(
+          (g) => g.recurring && g.weekStartDate < weekKey
+        );
+
+        // For each unique roleId+goalText, keep the most recent prior instance
+        // (so we use the latest recurringRemaining countdown etc.)
+        const latestByKey = new Map<string, typeof priorRecurring[0]>();
+        for (const g of priorRecurring) {
+          const key = `${g.roleId}|${g.goalText}`;
+          const existing = latestByKey.get(key);
+          if (!existing || g.weekStartDate > existing.weekStartDate) {
+            latestByKey.set(key, g);
+          }
+        }
+
+        const toCarry = [...latestByKey.values()].filter((g) => {
           if (g.recurringEnds && weekKey > g.recurringEnds) return false;
           if (g.recurringRemaining === 0) return false;
+          // Cadence check: should this goal appear in the viewed week?
+          const cadence = g.recurringCadence ?? "weekly";
+          const [sy, sm, sd] = g.weekStartDate.split("-").map(Number);
+          const [ty, tm, td] = weekKey.split("-").map(Number);
+          if (cadence === "yearly") {
+            if (ty <= sy) return false;
+          } else if (cadence === "quarterly") {
+            const srcQ = Math.ceil(sm / 3);
+            const tgtQ = Math.ceil(tm / 3);
+            if (ty < sy) return false;
+            if (ty === sy && tgtQ <= srcQ) return false;
+          } else if (cadence === "monthly") {
+            if (ty < sy) return false;
+            if (ty === sy && tm <= sm) return false;
+          }
+          // weekly (or no cadence): always carry
           return true;
         });
-        // Deduplicate against existing goals (same role + text)
+
+        // Deduplicate against goals already in this week
         const existingKeys = new Set(goals.map((g) => `${g.roleId}|${g.goalText}`));
         const newGoals = toCarry.filter((g) => !existingKeys.has(`${g.roleId}|${g.goalText}`));
         if (newGoals.length === 0) return;
@@ -209,7 +243,7 @@ export default function WeeklyPlanScreen() {
         // Silent fail
       }
     })();
-  }, [isCurrentWeek, goalsLoading, weekKey]);
+  }, [goalsLoading, weekKey]);
 
   // Schedule notifications when goals or notification settings change
   useEffect(() => {
