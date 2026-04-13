@@ -89,10 +89,11 @@ export async function getOrCreateSpreadsheet(
 ): Promise<string> {
   if (cachedSpreadsheetId) return cachedSpreadsheetId;
 
-  // Search for existing spreadsheet
+  // Search for existing spreadsheet — sort by modifiedTime desc so the most
+  // recently written-to file wins if duplicates exist.
   const query = `name='${SPREADSHEET_TITLE}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`;
   const searchRes = await apiFetch(
-    `${DRIVE_BASE}?q=${encodeURIComponent(query)}&fields=files(id,name)`,
+    `${DRIVE_BASE}?q=${encodeURIComponent(query)}&fields=files(id,name)&orderBy=modifiedTime desc`,
     accessToken
   );
   const searchData = await searchRes.json();

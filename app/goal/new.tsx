@@ -37,6 +37,7 @@ export default function NewGoalScreen() {
   const [quadrant, setQuadrant] = useState<Quadrant>(2);
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [isBigRock, setIsBigRock] = useState(false);
   const [priority, setPriority] = useState<number | null>(null);
   const [recurringCadence, setRecurringCadence] = useState<RecurringCadence | null>(null);
@@ -49,6 +50,7 @@ export default function NewGoalScreen() {
   const handleSave = async () => {
     if (!canSave || saving) return;
     setSaving(true);
+    setSaveError(null);
     try {
       const isRecurring = recurringCadence !== null;
       const recurringEnds =
@@ -72,8 +74,9 @@ export default function NewGoalScreen() {
         recurringRemaining: recurringRemainingVal,
       });
       router.back();
-    } catch {
+    } catch (err: any) {
       setSaving(false);
+      setSaveError(err?.message ?? "Failed to save goal. Please try again.");
     }
   };
 
@@ -381,6 +384,12 @@ export default function NewGoalScreen() {
               </View>
             )}
           </>
+        )}
+
+        {saveError && (
+          <Text style={{ color: colors.danger, fontSize: 13, marginTop: spacing.sm, textAlign: "center" }}>
+            {saveError}
+          </Text>
         )}
 
         <Pressable
