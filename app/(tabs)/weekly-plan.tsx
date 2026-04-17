@@ -66,7 +66,6 @@ export default function WeeklyPlanScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      console.log("[WeeklyPlan] useFocusEffect fired, weekKey:", weekKey);
       refreshGoals();
       refreshRoles();
 

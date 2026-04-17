@@ -52,7 +52,6 @@ export default function NewGoalScreen() {
     if (!canSave || saving) return;
     setSaving(true);
     setSaveError(null);
-    console.log("[NewGoal] handleSave — weekStartDate param:", weekStartDate, "goalText:", goalText.trim(), "roleId:", roleId);
     try {
       const isRecurring = recurringCadence !== null;
       const recurringEnds =

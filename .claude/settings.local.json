@@ -88,7 +88,8 @@
       "Bash(\"D:/Android/Sdk/platform-tools/adb.exe\" -s \"adb-35091FDH20062B-aGc5LO._adb-tls-connect._tcp\" logcat -s ReactNativeJS:V --line-buffered)",
       "Bash(echo \"Logcat started in background PID=$!\")",
       "Bash(\"D:/Android/Sdk/platform-tools/adb.exe\" -s \"adb-35091FDH20062B-aGc5LO._adb-tls-connect._tcp\" logcat -s ReactNativeJS -d)",
-      "Bash(\"D:/Android/Sdk/platform-tools/adb.exe\" -s \"adb-35091FDH20062B-aGc5LO._adb-tls-connect._tcp\" install -r \"D:/github/fourth-generation-planning-tool/android/app/build/outputs/apk/debug/app-debug.apk\")"
+      "Bash(\"D:/Android/Sdk/platform-tools/adb.exe\" -s \"adb-35091FDH20062B-aGc5LO._adb-tls-connect._tcp\" install -r \"D:/github/fourth-generation-planning-tool/android/app/build/outputs/apk/debug/app-debug.apk\")",
+      "Bash(\"D:/Android/Sdk/platform-tools/adb.exe\" version *)"
     ]
   }
 }

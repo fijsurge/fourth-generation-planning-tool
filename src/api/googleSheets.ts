@@ -152,11 +152,7 @@ async function readSheet(
     accessToken
   );
   const data = await res.json();
-  const rows = (data.values || []).slice(1);
-  if (sheetName === GOALS_SHEET) {
-    console.log("[Sheets] readSheet WeeklyGoals: totalRows (incl header):", (data.values || []).length, "dataRows:", rows.length, "range:", data.range);
-  }
-  return rows;
+  return (data.values || []).slice(1);
 }
 
 async function appendRow(
@@ -165,9 +161,13 @@ async function appendRow(
   row: string[]
 ): Promise<void> {
   const spreadsheetId = await getOrCreateSpreadsheet(accessToken);
+  // Anchor to !A1 so the Sheets API searches for the table starting at
+  // column A, not the entire sheet extent. Without this, if any row has
+  // stale data in a far-right column the API appends at that column instead
+  // of column A, and the row is never found on read-back.
   await apiFetch(
     `${SHEETS_BASE}/${spreadsheetId}/values/${encodeURIComponent(
-      sheetName
+      sheetName + "!A1"
     )}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
     accessToken,
     {
@@ -380,18 +380,7 @@ export async function addWeeklyGoal(
   accessToken: string,
   goal: WeeklyGoal
 ): Promise<void> {
-  console.log("[Sheets] addWeeklyGoal:", goal.id, "weekStartDate:", goal.weekStartDate, "text:", goal.goalText);
-  const spreadsheetId = await getOrCreateSpreadsheet(accessToken);
-  console.log("[Sheets] spreadsheetId:", spreadsheetId);
-  const row = goalToRow(goal);
-  console.log("[Sheets] row[0..3]:", row[0], row[1], row[2], row[3]);
-  const appendRes = await apiFetch(
-    `${SHEETS_BASE}/${spreadsheetId}/values/${encodeURIComponent(GOALS_SHEET)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
-    accessToken,
-    { method: "POST", body: JSON.stringify({ values: [row] }) }
-  );
-  const appendData = await appendRes.json();
-  console.log("[Sheets] addWeeklyGoal SUCCESS:", goal.id, "updatedRange:", appendData?.updates?.updatedRange, "updatedRows:", appendData?.updates?.updatedRows);
+  await appendRow(accessToken, GOALS_SHEET, goalToRow(goal));
 }
 
 export async function updateWeeklyGoal(
