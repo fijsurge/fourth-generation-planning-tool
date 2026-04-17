@@ -186,24 +186,42 @@ export default function WeeklyPlanScreen() {
           (g) => g.recurring && g.weekStartDate < weekKey
         );
 
-        // For each unique roleId+goalText, keep the most recent prior instance
-        // (so we use the latest recurringRemaining countdown etc.)
-        const latestByKey = new Map<string, typeof priorRecurring[0]>();
+        // For each unique roleId+goalText, keep the EARLIEST (original) instance.
+        // Using the original avoids chained-copy issues where recurringRemaining
+        // gets decremented multiple times by duplicate carries.
+        const originalByKey = new Map<string, typeof priorRecurring[0]>();
         for (const g of priorRecurring) {
           const key = `${g.roleId}|${g.goalText}`;
-          const existing = latestByKey.get(key);
-          if (!existing || g.weekStartDate > existing.weekStartDate) {
-            latestByKey.set(key, g);
+          const existing = originalByKey.get(key);
+          if (!existing || g.weekStartDate < existing.weekStartDate) {
+            originalByKey.set(key, g);
           }
         }
 
-        const toCarry = [...latestByKey.values()].filter((g) => {
+        // Count unique weeks each recurring goal already appears in (across ALL
+        // weeks). This replaces the chained-decrement approach for recurringRemaining
+        // checks, so duplicate carry copies don't deplete the counter prematurely.
+        const weekSetByKey = new Map<string, Set<string>>();
+        for (const g of allGoals) {
+          if (!g.recurring) continue;
+          const key = `${g.roleId}|${g.goalText}`;
+          if (!weekSetByKey.has(key)) weekSetByKey.set(key, new Set());
+          weekSetByKey.get(key)!.add(g.weekStartDate);
+        }
+
+        const toCarry = [...originalByKey.values()].filter((g) => {
+          const key = `${g.roleId}|${g.goalText}`;
           if (g.recurringEnds && weekKey > g.recurringEnds) return false;
-          if (g.recurringRemaining === 0) return false;
+          // Count-based limit: 1 original + recurringRemaining carries allowed.
+          // Use unique week count so duplicate rows don't burn extra slots.
+          if (g.recurringRemaining != null) {
+            const totalAllowed = 1 + g.recurringRemaining;
+            if ((weekSetByKey.get(key)?.size ?? 0) >= totalAllowed) return false;
+          }
           // Cadence check: should this goal appear in the viewed week?
           const cadence = g.recurringCadence ?? "weekly";
-          const [sy, sm, sd] = g.weekStartDate.split("-").map(Number);
-          const [ty, tm, td] = weekKey.split("-").map(Number);
+          const [sy, sm] = g.weekStartDate.split("-").map(Number);
+          const [ty, tm] = weekKey.split("-").map(Number);
           if (cadence === "yearly") {
             if (ty <= sy) return false;
           } else if (cadence === "quarterly") {
@@ -237,10 +255,8 @@ export default function WeeklyPlanScreen() {
             calendarSource: undefined,
             createdAt: now,
             updatedAt: now,
-            recurringRemaining:
-              src.recurringRemaining != null && src.recurringRemaining > 0
-                ? src.recurringRemaining - 1
-                : src.recurringRemaining,
+            // Keep original recurringRemaining — limits are enforced via
+            // unique-week count, not chained decrement.
           };
           await apiAddGoal(token, copy);
         }
@@ -263,6 +279,19 @@ export default function WeeklyPlanScreen() {
       scheduleCloseoutReminder(closeoutReminderDay, closeoutReminderTime).catch(() => {});
     }
   }, [goals, notificationsEnabled, notificationTime, closeoutReminderEnabled, closeoutReminderDay, closeoutReminderTime, goalsLoading]);
+
+  // Deduplicate recurring goals for display — pre-existing duplicate rows from
+  // the old carry bug (same roleId+goalText in the same week) should show as one.
+  const dedupedGoals = useMemo(() => {
+    const seen = new Set<string>();
+    return goals.filter((g) => {
+      if (!g.recurring) return true;
+      const key = `${g.roleId}|${g.goalText}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [goals]);
 
   const styles = useMemo(() => StyleSheet.create({
     container: {
@@ -348,7 +377,7 @@ export default function WeeklyPlanScreen() {
         onNextWeek={handleNextWeek}
         onToday={handleToday}
       />
-      <WeeklySummary goals={goals} />
+      <WeeklySummary goals={dedupedGoals} />
 
       {isLocked ? (
         <View style={styles.lockedBanner}>
@@ -382,7 +411,7 @@ export default function WeeklyPlanScreen() {
 
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator>
         <GoalsByRole
-          goals={goals}
+          goals={dedupedGoals}
           roles={roles}
           onGoalPress={handleGoalPress}
           onCycleStatus={cycleStatus}
