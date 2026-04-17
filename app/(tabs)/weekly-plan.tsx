@@ -34,10 +34,6 @@ export default function WeeklyPlanScreen() {
   const [showCloseout, setShowCloseout] = useState(false);
   const hasCheckedCloseout = useRef(false);
 
-  // Refresh goals when any modal (new/edit goal) signals a successful save.
-  // useFocusEffect is unreliable for modals on Android — this is the fallback.
-  useEffect(() => goalEvents.onGoalSaved(() => refreshGoals()), [refreshGoals]);
-
   // useMemo so prevWeekStart is a stable Date reference (not recreated each render).
   // An unstable Date in the useFocusEffect useCallback deps causes an infinite loop.
   const prevWeekStart = useMemo(() => shiftWeek(getWeekStart(new Date()), -1), []);
@@ -45,6 +41,10 @@ export default function WeeklyPlanScreen() {
 
   const { goals, isLoading: goalsLoading, cycleStatus, deleteGoal, moveGoalToWeek, copyGoalToWeek, refresh: refreshGoals } = useWeeklyGoals(weekKey);
   const { roles, isLoading: rolesLoading, refresh: refreshRoles } = useRoles();
+
+  // Refresh goals when any modal (new/edit goal) signals a successful save.
+  // useFocusEffect is unreliable for modals on Android — this is the fallback.
+  useEffect(() => goalEvents.onGoalSaved(() => refreshGoals()), [refreshGoals]);
   const {
     reflection: weekReflection,
     isLoading: reflectionLoading,
