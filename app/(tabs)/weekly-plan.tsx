@@ -219,8 +219,10 @@ export default function WeeklyPlanScreen() {
           return true;
         });
 
-        // Deduplicate against goals already in this week
-        const existingKeys = new Set(goals.map((g) => `${g.roleId}|${g.goalText}`));
+        // Deduplicate against goals already in this week — use allGoals (fresh
+        // from Sheets) not local state, which can be stale across app restarts.
+        const existingThisWeek = allGoals.filter((g) => g.weekStartDate === weekKey);
+        const existingKeys = new Set(existingThisWeek.map((g) => `${g.roleId}|${g.goalText}`));
         const newGoals = toCarry.filter((g) => !existingKeys.has(`${g.roleId}|${g.goalText}`));
         if (newGoals.length === 0) return;
 
