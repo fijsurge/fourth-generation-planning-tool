@@ -77,13 +77,36 @@ A weekly planning app based on Stephen Covey's fourth-generation time management
    npx expo prebuild --platform android
    ```
 
-2. Build the APK:
+2. Apply two required fixes to the generated `android/` folder (prebuild does not set these correctly):
+
+   **a) Embed the JS bundle in debug builds** — in `android/app/build.gradle`, add `debuggableVariants = []` inside the `react {}` block:
+   ```groovy
+   react {
+       // ... existing lines ...
+       bundleCommand = "export:embed"
+       debuggableVariants = []   // add this line
+   }
+   ```
+   Without this, debug APKs skip bundling and crash on-device with *"unable to load script / index.android.bundle"*.
+
+   **b) Fix the OAuth redirect intent filter** — in `android/app/src/main/AndroidManifest.xml`, replace the placeholder scheme with the real reverse client ID:
+   ```xml
+   <!-- Change this: -->
+   <data android:scheme="com.googleusercontent.apps.your-google-android-client-id"/>
+   <!-- To this: -->
+   <data android:scheme="com.googleusercontent.apps.454227728256-pu6m0ps4l03pd503nvcu7hj8kahncn29"/>
+   ```
+   Without this, after Google sign-in the browser redirects to Google's homepage instead of back to the app.
+
+3. Build the APK:
    ```bash
-   cd android && ./gradlew assembleDebug
+   cd android && ./gradlew assembleDebug --no-daemon
    ```
    The APK is output to `android/app/build/outputs/apk/debug/app-debug.apk`.
 
    For a release build use `assembleRelease` instead.
+
+   > **Troubleshooting**: If Gradle reports everything UP-TO-DATE but the APK is stale, delete `android/app/build` and `android/app/.cxx` before rebuilding. If the build fails with file lock errors after a killed process, run `taskkill /F /IM java.exe` first.
 
 ### Android (cloud — via EAS)
 

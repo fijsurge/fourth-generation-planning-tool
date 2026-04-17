@@ -22,6 +22,7 @@ import { spacing, borderRadius } from "../../src/theme/spacing";
 import { WeekPickerModal } from "../../src/components/WeekPickerModal";
 import { DatePickerField } from "../../src/components/DateTimePickerField";
 import { getWeekStart } from "../../src/utils/dates";
+import { goalEvents } from "../../src/utils/goalEvents";
 
 export default function EditGoalScreen() {
   const colors = useThemeColors();
@@ -315,6 +316,7 @@ export default function EditGoalScreen() {
         recurringEnds,
         recurringRemaining: recurringRemainingVal,
       });
+      goalEvents.emitGoalSaved();
       router.back();
     } catch {
       setSaving(false);

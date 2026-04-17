@@ -152,8 +152,11 @@ async function readSheet(
     accessToken
   );
   const data = await res.json();
-  // Skip header row (index 0)
-  return (data.values || []).slice(1);
+  const rows = (data.values || []).slice(1);
+  if (sheetName === GOALS_SHEET) {
+    console.log("[Sheets] readSheet WeeklyGoals: totalRows (incl header):", (data.values || []).length, "dataRows:", rows.length, "range:", data.range);
+  }
+  return rows;
 }
 
 async function appendRow(
@@ -377,7 +380,18 @@ export async function addWeeklyGoal(
   accessToken: string,
   goal: WeeklyGoal
 ): Promise<void> {
-  await appendRow(accessToken, GOALS_SHEET, goalToRow(goal));
+  console.log("[Sheets] addWeeklyGoal:", goal.id, "weekStartDate:", goal.weekStartDate, "text:", goal.goalText);
+  const spreadsheetId = await getOrCreateSpreadsheet(accessToken);
+  console.log("[Sheets] spreadsheetId:", spreadsheetId);
+  const row = goalToRow(goal);
+  console.log("[Sheets] row[0..3]:", row[0], row[1], row[2], row[3]);
+  const appendRes = await apiFetch(
+    `${SHEETS_BASE}/${spreadsheetId}/values/${encodeURIComponent(GOALS_SHEET)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
+    accessToken,
+    { method: "POST", body: JSON.stringify({ values: [row] }) }
+  );
+  const appendData = await appendRes.json();
+  console.log("[Sheets] addWeeklyGoal SUCCESS:", goal.id, "updatedRange:", appendData?.updates?.updatedRange, "updatedRows:", appendData?.updates?.updatedRows);
 }
 
 export async function updateWeeklyGoal(

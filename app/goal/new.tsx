@@ -19,6 +19,7 @@ import { QUADRANT_LABELS, getQuadrantColors } from "../../src/utils/constants";
 import { DatePickerField } from "../../src/components/DateTimePickerField";
 import { useThemeColors } from "../../src/theme/useThemeColors";
 import { spacing, borderRadius } from "../../src/theme/spacing";
+import { goalEvents } from "../../src/utils/goalEvents";
 
 export default function NewGoalScreen() {
   const colors = useThemeColors();
@@ -51,6 +52,7 @@ export default function NewGoalScreen() {
     if (!canSave || saving) return;
     setSaving(true);
     setSaveError(null);
+    console.log("[NewGoal] handleSave — weekStartDate param:", weekStartDate, "goalText:", goalText.trim(), "roleId:", roleId);
     try {
       const isRecurring = recurringCadence !== null;
       const recurringEnds =
@@ -73,6 +75,7 @@ export default function NewGoalScreen() {
         recurringEnds,
         recurringRemaining: recurringRemainingVal,
       });
+      goalEvents.emitGoalSaved();
       router.back();
     } catch (err: any) {
       setSaving(false);

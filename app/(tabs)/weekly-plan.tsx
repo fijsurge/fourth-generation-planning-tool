@@ -19,6 +19,7 @@ import { useSettings } from "../../src/contexts/SettingsContext";
 import { scheduleDailyGoalReminder, scheduleCloseoutReminder, cancelAllScheduled } from "../../src/notifications/scheduler";
 import { useThemeColors } from "../../src/theme/useThemeColors";
 import { spacing } from "../../src/theme/spacing";
+import { goalEvents } from "../../src/utils/goalEvents";
 
 export default function WeeklyPlanScreen() {
   const colors = useThemeColors();
@@ -32,6 +33,10 @@ export default function WeeklyPlanScreen() {
   const [moveOrCopyGoal, setMoveOrCopyGoal] = useState<WeeklyGoal | null>(null);
   const [showCloseout, setShowCloseout] = useState(false);
   const hasCheckedCloseout = useRef(false);
+
+  // Refresh goals when any modal (new/edit goal) signals a successful save.
+  // useFocusEffect is unreliable for modals on Android — this is the fallback.
+  useEffect(() => goalEvents.onGoalSaved(() => refreshGoals()), [refreshGoals]);
 
   // useMemo so prevWeekStart is a stable Date reference (not recreated each render).
   // An unstable Date in the useFocusEffect useCallback deps causes an infinite loop.
@@ -61,6 +66,7 @@ export default function WeeklyPlanScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      console.log("[WeeklyPlan] useFocusEffect fired, weekKey:", weekKey);
       refreshGoals();
       refreshRoles();
 
