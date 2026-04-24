@@ -1,0 +1,35 @@
+name: Versioning & Sync Check
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  validate-versioning:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history needed for git-based version checks
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run versioning logic tests
+        run: npm run test:version
+
+      - name: Verify app.json and package.json are in sync
+        run: |
+          APP_VERSION=$(node -p "require('./app.json').expo.version")
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          echo "app.json version: $APP_VERSION"
+          echo "package.json version: $PKG_VERSION"
+          if [ "$APP_VERSION" != "$PKG_VERSION" ]; then
+            echo "Error: Version mismatch detected between app.json and package.json!"
+            exit 1
+          fi
