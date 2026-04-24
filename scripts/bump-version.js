@@ -13,6 +13,9 @@ const { execSync } = require("child_process");
 
 const appJsonPath = path.resolve(__dirname, "../app.json");
 const appJson = JSON.parse(fs.readFileSync(appJsonPath, "utf8"));
+const packageJsonPath = path.resolve(__dirname, "../package.json");
+const packageJson = fs.existsSync(packageJsonPath) 
+  ? JSON.parse(fs.readFileSync(packageJsonPath, "utf8")) : null;
 
 const current = appJson.expo.version || "1.0.0";
 
@@ -25,21 +28,26 @@ try {
   // No HEAD yet (initial commit) — always bump
 }
 
+let next = current;
+
 if (headVersion && headVersion !== current) {
   console.log(
     `[bump-version] Version already set manually (${headVersion} → ${current}), skipping patch bump`
   );
-  process.exit(0);
+  // We don't exit; we proceed to ensure package.json is synced and files are staged
+} else {
+  const parts = current.split(".").map(Number);
+  parts[2] = (parts[2] || 0) + 1;
+  next = parts.join(".");
+  console.log(`[bump-version] ${current} → ${next}`);
 }
-
-const parts = current.split(".").map(Number);
-parts[2] = (parts[2] || 0) + 1;
-const next = parts.join(".");
 
 appJson.expo.version = next;
 fs.writeFileSync(appJsonPath, JSON.stringify(appJson, null, 2) + "\n");
+execSync(`git add "${appJsonPath}"`, { stdio: "inherit" });
 
-console.log(`[bump-version] ${current} → ${next}`);
-
-// Stage the updated app.json so it's included in the commit
-execSync("git add app.json", { stdio: "inherit" });
+if (packageJson) {
+  packageJson.version = next;
+  fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + "\n");
+  execSync(`git add "${packageJsonPath}"`, { stdio: "inherit" });
+}
