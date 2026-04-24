@@ -18,11 +18,6 @@ import { CalendarEvent, EventTransparency } from "../../src/models/CalendarEvent
 import { getEvent, listEvents } from "../../src/api/googleCalendar";
 import { useAuth } from "../../src/auth/AuthContext";
 import {
-  WebDateTimePicker,
-  dateTimeToPickerValues,
-  pickerValuesToDateTimeString,
-} from "../../src/components/WebDateTimePicker";
-import {
   DateTimePickerField,
   DatePickerField,
 } from "../../src/components/DateTimePickerField";
@@ -105,7 +100,7 @@ export default function EditEventScreen() {
       .then((e) => setFetchedEvent(e))
       .catch(() => {/* leave event undefined — "not found" shown below */})
       .finally(() => setFetching(false));
-  }, [id]);
+  }, [id, eventFromContext, getValidAccessToken]);
 
   useEffect(() => {
     if (event) {
@@ -127,7 +122,7 @@ export default function EditEventScreen() {
         setEndDateStr(toLocalDateString(new Date(event.endTime)));
       }
     }
-  }, [event?.id]);
+  }, [event]);
 
   useEffect(() => {
     if (allDay) {
@@ -166,21 +161,7 @@ export default function EditEventScreen() {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [startStr, endStr, allDay, id]);
-
-  const webInputStyle: React.CSSProperties = {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderStyle: "solid",
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    fontSize: 16,
-    color: colors.text,
-    backgroundColor: colors.surface,
-    width: "100%",
-    boxSizing: "border-box",
-    fontFamily: "inherit",
-  };
+  }, [startStr, endStr, allDay, id, getValidAccessToken]);
 
   const styles = useMemo(() => StyleSheet.create({
     container: {

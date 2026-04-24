@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
-import { View, ScrollView, Pressable, StyleSheet, ActivityIndicator, Text, Alert, Platform } from "react-native";
+import { View, ScrollView, Pressable, StyleSheet, Text, Alert, Platform } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useWeeklyGoals } from "../../src/hooks/useWeeklyGoals";
@@ -16,7 +16,7 @@ import { getWeekStart, shiftWeek, formatWeekKey } from "../../src/utils/dates";
 import { generateId } from "../../src/utils/uuid";
 import { getReflectionByWeek, getWeeklyGoals, addWeeklyGoal as apiAddGoal } from "../../src/api/googleSheets";
 import { useSettings } from "../../src/contexts/SettingsContext";
-import { scheduleDailyGoalReminder, scheduleCloseoutReminder, cancelAllScheduled } from "../../src/notifications/scheduler";
+import { scheduleDailyGoalReminder, scheduleCloseoutReminder } from "../../src/notifications/scheduler";
 import { useThemeColors } from "../../src/theme/useThemeColors";
 import { spacing } from "../../src/theme/spacing";
 import { goalEvents } from "../../src/utils/goalEvents";
@@ -266,7 +266,7 @@ export default function WeeklyPlanScreen() {
         // Silent fail
       }
     })();
-  }, [goalsLoading, weekKey]);
+  }, [goalsLoading, weekKey, getValidAccessToken, refreshGoals]);
 
   // Schedule notifications when goals or notification settings change
   useEffect(() => {

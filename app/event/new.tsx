@@ -23,11 +23,6 @@ import { CalendarEvent, EventTransparency } from "../../src/models/CalendarEvent
 import { listEvents } from "../../src/api/googleCalendar";
 import { useSettings } from "../../src/contexts/SettingsContext";
 import {
-  WebDateTimePicker,
-  dateTimeToPickerValues,
-  pickerValuesToDateTimeString,
-} from "../../src/components/WebDateTimePicker";
-import {
   DateTimePickerField,
   DatePickerField,
 } from "../../src/components/DateTimePickerField";
@@ -157,7 +152,7 @@ export default function NewEventScreen() {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [startStr, endStr, allDay]);
+  }, [startStr, endStr, allDay, getValidAccessToken]);
 
   const canSave = title.trim().length > 0;
 
