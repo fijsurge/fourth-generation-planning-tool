@@ -37,3 +37,13 @@ export function formatWeekRange(weekStart: Date): string {
   const endStr = format(weekEndDate, "MMM d, yyyy");
   return `${startStr} - ${endStr}`;
 }
+
+// Timestamp comparison avoids ISO string bugs with mixed UTC/offset formats.
+export function areIntervalsOverlapping(start1: string | Date, end1: string | Date, start2: string | Date, end2: string | Date): boolean {
+  const s1 = new Date(start1).getTime();
+  const e1 = new Date(end1).getTime();
+  const s2 = new Date(start2).getTime();
+  const e2 = new Date(end2).getTime();
+  
+  return s1 < e2 && s2 < e1;
+}

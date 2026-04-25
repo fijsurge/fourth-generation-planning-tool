@@ -33,6 +33,9 @@ jobs:
       - name: Unit Tests
         run: npm test
 
+      - name: Verify Config Integrity
+        run: npm run test:config
+
       - name: Run versioning logic tests
         run: npm run test:version
 

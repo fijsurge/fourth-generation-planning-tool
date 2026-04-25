@@ -1,6 +1,6 @@
 {
   "name": "fourth-generation-planning-tool",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
@@ -12,7 +12,8 @@
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
     "setup-hooks": "node -e \"require('fs').copyFileSync('scripts/pre-commit','.git/hooks/pre-commit')\"",
-    "test:version": "node scripts/test-bump-version.js"
+    "test:version": "node scripts/test-bump-version.js",
+    "test:config": "node scripts/verify-config.js"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
