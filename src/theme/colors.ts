@@ -1,3 +1,6 @@
+// FourthGen Planner design system — Blueprint theme
+// Brand: deep indigo backgrounds, electric cyan accent, Q2 as visual hero.
+
 export type ThemeMode = "light" | "dark";
 
 export interface ColorPalette {
@@ -30,16 +33,16 @@ export interface ColorPalette {
   scrollbarThumbHover: string;
 
   quadrant: {
-    q1: string; // Urgent + Important (red)
-    q2: string; // Not Urgent + Important (blue)
-    q3: string; // Urgent + Not Important (orange)
-    q4: string; // Not Urgent + Not Important (gray)
+    q1: string; // Urgent + Important
+    q2: string; // Not Urgent + Important (brand hero — cyan)
+    q3: string; // Urgent + Not Important
+    q4: string; // Not Urgent + Not Important
   };
 
   status: {
-    not_started: string; // gray
-    in_progress: string; // amber
-    complete: string; // green
+    not_started: string;
+    in_progress: string;
+    complete: string;
   };
 
   calendarSource: {
@@ -56,109 +59,110 @@ export interface ColorPalette {
 }
 
 export const lightColors: ColorPalette = {
-  primary: "#2563eb",
-  primaryLight: "#dbeafe",
+  primary:      "#0099AA",
+  primaryLight: "rgba(0,153,170,0.10)",
 
-  background: "#ffffff",
-  surface: "#f8fafc",
-  border: "#e2e8f0",
+  background: "#F0F2FC",
+  surface:    "#FFFFFF",
+  border:     "rgba(8,12,34,0.10)",
 
-  text: "#1e293b",
-  textSecondary: "#64748b",
-  textMuted: "#94a3b8",
+  text:          "#080C22",
+  textSecondary: "rgba(8,12,34,0.55)",
+  textMuted:     "rgba(8,12,34,0.35)",
 
-  onPrimary: "#ffffff",
+  onPrimary: "#FFFFFF",
 
-  danger: "#dc2626",
-  dangerLight: "#fef2f2",
+  danger:      "#C83232",
+  dangerLight: "rgba(200,50,50,0.10)",
 
-  warningBg: "#fef3c7",
-  warningText: "#92400e",
+  warningBg:   "rgba(229,160,0,0.12)",
+  warningText: "#E5A000",
 
-  successBg: "#dcfce7",
-  successText: "#16a34a",
+  successBg:   "rgba(0,184,154,0.12)",
+  successText: "#00B89A",
 
-  shadow: "#000000",
+  shadow: "rgba(8,12,34,0.12)",
 
-  scrollbarThumb: "rgba(0,0,0,0.3)",
-  scrollbarThumbHover: "rgba(0,0,0,0.5)",
+  scrollbarThumb:      "rgba(8,12,34,0.25)",
+  scrollbarThumbHover: "rgba(8,12,34,0.45)",
 
   quadrant: {
-    q1: "#dc2626",
-    q2: "#2563eb",
-    q3: "#f59e0b",
-    q4: "#6b7280",
+    q1: "#C83232",
+    q2: "#0099AA",
+    q3: "#4A7AE0",
+    q4: "rgba(60,100,220,0.45)",
   },
 
   status: {
-    not_started: "#94a3b8",
-    in_progress: "#f59e0b",
-    complete: "#16a34a",
+    not_started: "rgba(8,12,34,0.30)",
+    in_progress: "#E5A000",
+    complete:    "#00B89A",
   },
 
   calendarSource: {
-    google: "#2563eb",
-    outlook: "#7c3aed",
+    google:  "#0099AA",
+    outlook: "#4A7AE0",
   },
 
   attendeeStatus: {
-    accepted: "#16a34a",
-    declined: "#dc2626",
-    tentative: "#d97706",
-    needsAction: "#9ca3af",
+    accepted:    "#00B89A",
+    declined:    "#C83232",
+    tentative:   "#E5A000",
+    needsAction: "rgba(8,12,34,0.35)",
   },
 };
 
 export const darkColors: ColorPalette = {
-  primary: "#3b82f6",
-  primaryLight: "#1e3a5f",
+  primary:      "#00E6C8",
+  primaryLight: "rgba(0,230,200,0.13)",
 
-  background: "#0f172a",
-  surface: "#1e293b",
-  border: "#334155",
+  background: "#06091A",
+  surface:    "#0E1435",
+  border:     "rgba(232,236,248,0.10)",
 
-  text: "#f1f5f9",
-  textSecondary: "#94a3b8",
-  textMuted: "#64748b",
+  text:          "#E8ECF8",
+  textSecondary: "rgba(232,236,248,0.55)",
+  textMuted:     "rgba(232,236,248,0.30)",
 
-  onPrimary: "#ffffff",
+  // Cyan buttons need dark text to maintain contrast
+  onPrimary: "#080C22",
 
-  danger: "#ef4444",
-  dangerLight: "#450a0a",
+  danger:      "#FF6B6B",
+  dangerLight: "rgba(255,107,107,0.10)",
 
-  warningBg: "#451a03",
-  warningText: "#fbbf24",
+  warningBg:   "rgba(245,200,66,0.12)",
+  warningText: "#F5C842",
 
-  successBg: "#052e16",
-  successText: "#4ade80",
+  successBg:   "rgba(0,230,200,0.10)",
+  successText: "#00E6C8",
 
-  shadow: "#000000",
+  shadow: "rgba(0,0,0,0.40)",
 
-  scrollbarThumb: "rgba(255,255,255,0.3)",
-  scrollbarThumbHover: "rgba(255,255,255,0.5)",
+  scrollbarThumb:      "rgba(232,236,248,0.25)",
+  scrollbarThumbHover: "rgba(232,236,248,0.45)",
 
   quadrant: {
-    q1: "#ef4444",
-    q2: "#3b82f6",
-    q3: "#fbbf24",
-    q4: "#9ca3af",
+    q1: "#FF6B6B",
+    q2: "#00E6C8",
+    q3: "#6A9AFF",
+    q4: "rgba(100,140,255,0.50)",
   },
 
   status: {
-    not_started: "#64748b",
-    in_progress: "#fbbf24",
-    complete: "#4ade80",
+    not_started: "rgba(232,236,248,0.30)",
+    in_progress: "#F5C842",
+    complete:    "#00E6C8",
   },
 
   calendarSource: {
-    google: "#3b82f6",
-    outlook: "#a78bfa",
+    google:  "#00E6C8",
+    outlook: "#6A9AFF",
   },
 
   attendeeStatus: {
-    accepted: "#4ade80",
-    declined: "#ef4444",
-    tentative: "#fbbf24",
-    needsAction: "#6b7280",
+    accepted:    "#00E6C8",
+    declined:    "#FF6B6B",
+    tentative:   "#F5C842",
+    needsAction: "rgba(232,236,248,0.30)",
   },
 };
