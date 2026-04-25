@@ -2,15 +2,12 @@ import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Image, View } from "react-native";
 import { useThemeColors } from "../../src/theme/useThemeColors";
-import { useSettings } from "../../src/contexts/SettingsContext";
 import { MissionStatementModal } from "../../src/components/MissionStatementModal";
 
-const logo = require("../../assets/fourth_gen_v1_black_fg_trans_bg.png");
+const logo = require("../../assets/adaptive-icon.png");
 
 export default function TabLayout() {
   const colors = useThemeColors();
-  const { theme } = useSettings();
-  const logoTint = theme === "dark" ? "#FFFFFF" : "#000000";
 
   return (
     <View style={{ flex: 1 }}>
@@ -30,7 +27,7 @@ export default function TabLayout() {
         headerLeft: () => (
           <Image
             source={logo}
-            style={{ width: 28, height: 28, marginLeft: 16, resizeMode: "contain", tintColor: logoTint }}
+            style={{ width: 28, height: 28, marginLeft: 16, resizeMode: "contain" }}
           />
         ),
       }}

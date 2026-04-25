@@ -51,9 +51,23 @@ export function useGoalStats(): GoalStatsResult {
       ]);
       const reflectionByWeek = new Map(allReflections.map((r) => [r.weekStartDate, r]));
 
+      // Skip goals with missing weekStartDate (corrupted rows from old Sheets bug).
+      // Deduplicate recurring goals so duplicate carry copies don't inflate stats.
+      const seenRecurring = new Map<string, Set<string>>();
+      const cleanGoals = allGoals.filter((g) => {
+        if (!g.weekStartDate) return false;
+        if (!g.recurring) return true;
+        const key = `${g.roleId}|${g.goalText}`;
+        if (!seenRecurring.has(g.weekStartDate)) seenRecurring.set(g.weekStartDate, new Set());
+        const seen = seenRecurring.get(g.weekStartDate)!;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
       // Group goals by weekStartDate
-      const weekMap = new Map<string, typeof allGoals>();
-      for (const goal of allGoals) {
+      const weekMap = new Map<string, typeof cleanGoals>();
+      for (const goal of cleanGoals) {
         const list = weekMap.get(goal.weekStartDate) || [];
         list.push(goal);
         weekMap.set(goal.weekStartDate, list);
@@ -97,8 +111,8 @@ export function useGoalStats(): GoalStatsResult {
       history.sort((a, b) => a.weekStartDate.localeCompare(b.weekStartDate));
 
       // Compute overall stats
-      const oTotal = allGoals.length;
-      const oComplete = allGoals.filter((g) => g.status === "complete").length;
+      const oTotal = cleanGoals.length;
+      const oComplete = cleanGoals.filter((g) => g.status === "complete").length;
       const oPct = oTotal > 0 ? Math.round((oComplete / oTotal) * 100) : 0;
 
       setWeekHistory(history);

@@ -2,28 +2,27 @@ import { Redirect } from "expo-router";
 import { View, Image, Text, ActivityIndicator, StyleSheet } from "react-native";
 import { useAuth } from "../src/auth/AuthContext";
 import { useThemeColors } from "../src/theme/useThemeColors";
-import { useSettings } from "../src/contexts/SettingsContext";
 
-const logo = require("../assets/fourth_gen_v1_black_fg_trans_bg.png");
+const logo = require("../assets/splash-icon.png");
+
+const SPLASH_BG = "#080C22";
 
 export default function Index() {
   const colors = useThemeColors();
-  const { theme } = useSettings();
   const { isLoading, isLoggedIn } = useAuth();
-  const logoTint = theme === "dark" ? "#FFFFFF" : "#000000";
 
   if (isLoading) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.container, { backgroundColor: SPLASH_BG }]}>
         <Image
           source={logo}
-          style={[styles.logo, { tintColor: logoTint }]}
+          style={styles.logo}
           resizeMode="contain"
         />
-        <Text style={[styles.title, { color: colors.text }]}>
+        <Text style={[styles.title, { color: "#E8ECF8" }]}>
           Fourth Gen Planner
         </Text>
-        <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+        <Text style={[styles.subtitle, { color: "rgba(232,236,248,0.55)" }]}>
           Weekly planning based on Covey's 7 Habits
         </Text>
         <ActivityIndicator
