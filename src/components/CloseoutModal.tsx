@@ -18,6 +18,8 @@ import { QuadrantBadge } from "./QuadrantBadge";
 import { formatWeekKey, formatWeekRange } from "../utils/dates";
 import { useThemeColors } from "../theme/useThemeColors";
 import { spacing, borderRadius } from "../theme/spacing";
+import { typography } from "../theme/typography";
+import { elevation } from "../theme/elevation";
 
 interface CloseoutModalProps {
   visible: boolean;
@@ -140,10 +142,7 @@ export function CloseoutModal({
           maxWidth: 480,
           height: "90%",
           shadowColor: colors.shadow,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.25,
-          shadowRadius: 8,
-          elevation: 8,
+          ...elevation.lg,
         },
         header: {
           flexDirection: "row",
@@ -157,12 +156,12 @@ export function CloseoutModal({
           flex: 1,
         },
         headerTitle: {
-          fontSize: 18,
+          ...typography.h2,
           fontWeight: "700",
           color: colors.text,
         },
         headerSubtitle: {
-          fontSize: 13,
+          ...typography.bodySm,
           color: colors.textSecondary,
           marginTop: 2,
         },
@@ -175,20 +174,20 @@ export function CloseoutModal({
           paddingBottom: spacing.lg,
         },
         sectionHeader: {
-          fontSize: 11,
+          ...typography.micro,
           fontWeight: "700",
           color: colors.textMuted,
-          letterSpacing: 0.8,
+          letterSpacing: 1.0,
           marginTop: spacing.md,
           marginBottom: spacing.sm,
         },
         subhead: {
-          fontSize: 13,
+          ...typography.bodySm,
           color: colors.textSecondary,
           marginBottom: spacing.sm,
         },
         allCompleteText: {
-          fontSize: 14,
+          ...typography.body,
           color: colors.successText,
           paddingVertical: spacing.sm,
         },
@@ -200,7 +199,7 @@ export function CloseoutModal({
         },
         goalText: {
           flex: 1,
-          fontSize: 14,
+          ...typography.body,
           color: colors.text,
         },
         selectLinks: {
@@ -209,7 +208,7 @@ export function CloseoutModal({
           marginTop: spacing.xs,
         },
         selectLink: {
-          fontSize: 13,
+          ...typography.bodySm,
           color: colors.primary,
         },
         divider: {
@@ -218,7 +217,7 @@ export function CloseoutModal({
           marginVertical: spacing.md,
         },
         inputLabel: {
-          fontSize: 13,
+          ...typography.bodySm,
           fontWeight: "600",
           color: colors.textSecondary,
           marginBottom: spacing.xs,
@@ -230,13 +229,13 @@ export function CloseoutModal({
           borderColor: colors.border,
           borderRadius: borderRadius.md,
           padding: spacing.sm,
-          fontSize: 14,
+          ...typography.body,
           color: colors.text,
           minHeight: 70,
           textAlignVertical: "top",
         },
         errorText: {
-          fontSize: 13,
+          ...typography.bodySm,
           color: colors.danger,
           marginTop: spacing.sm,
         },
@@ -248,9 +247,9 @@ export function CloseoutModal({
           marginTop: spacing.lg,
         },
         closeOutButtonText: {
-          color: colors.onPrimary,
-          fontSize: 15,
+          ...typography.body,
           fontWeight: "600",
+          color: colors.onPrimary,
         },
         skipLink: {
           alignItems: "center",
@@ -258,7 +257,7 @@ export function CloseoutModal({
           marginTop: spacing.xs,
         },
         skipLinkText: {
-          fontSize: 14,
+          ...typography.body,
           color: colors.textSecondary,
         },
         loaderContainer: {
@@ -269,9 +268,9 @@ export function CloseoutModal({
           paddingVertical: spacing.sm,
         },
         statsText: {
-          fontSize: 14,
-          color: colors.successText,
+          ...typography.body,
           fontWeight: "600",
+          color: colors.successText,
         },
         starRow: {
           flexDirection: "row",

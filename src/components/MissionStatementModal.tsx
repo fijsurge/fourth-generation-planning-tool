@@ -1,14 +1,14 @@
-import { Modal, View, Text, Image, Pressable, StyleSheet, ScrollView } from "react-native";
+import { Modal, View, Text, Pressable, StyleSheet, ScrollView } from "react-native";
 import { useSettings } from "../contexts/SettingsContext";
 import { useThemeColors } from "../theme/useThemeColors";
 import { spacing, borderRadius } from "../theme/spacing";
-
-const logo = require("../../assets/fourth_gen_v1_black_fg_trans_bg.png");
+import { typography } from "../theme/typography";
+import { elevation } from "../theme/elevation";
+import { Logo } from "./Logo";
 
 export function MissionStatementModal() {
   const colors = useThemeColors();
-  const { theme, missionStatement, shouldShowMissionStatement, dismissMissionStatement, skipMissionStatement } = useSettings();
-  const logoTint = theme === "dark" ? "#FFFFFF" : "#000000";
+  const { missionStatement, shouldShowMissionStatement, dismissMissionStatement, skipMissionStatement } = useSettings();
 
   return (
     <Modal
@@ -18,12 +18,18 @@ export function MissionStatementModal() {
       statusBarTranslucent
     >
       <View style={styles.backdrop}>
-        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Image
-            source={logo}
-            style={[styles.logo, { tintColor: logoTint }]}
-            resizeMode="contain"
-          />
+        <View
+          style={[
+            styles.card,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+              shadowColor: colors.shadow,
+              ...elevation.lg,
+            },
+          ]}
+        >
+          <Logo size={64} />
 
           <Text style={[styles.label, { color: colors.textMuted }]}>
             MY MISSION STATEMENT
@@ -88,18 +94,9 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     alignItems: "center",
     gap: spacing.md,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 8,
-  },
-  logo: {
-    width: 64,
-    height: 64,
   },
   label: {
-    fontSize: 11,
+    ...typography.micro,
     fontWeight: "700",
     letterSpacing: 1.5,
     textTransform: "uppercase",
@@ -139,11 +136,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   buttonText: {
-    fontSize: 15,
+    ...typography.body,
     fontWeight: "600",
   },
   buttonTextSecondary: {
-    fontSize: 15,
+    ...typography.body,
     fontWeight: "600",
   },
 });

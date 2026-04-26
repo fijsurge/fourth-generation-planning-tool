@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>FourthGen Planner — Design System Preview</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    background: #1a1d2e;
+    color: #E8ECF8;
+    padding: 24px;
+  }
+  h1 { font-size: 28px; letter-spacing: -0.4px; margin: 0 0 4px; font-weight: 700; }
+  .sub { font-size: 14px; color: rgba(232,236,248,0.6); margin: 0 0 24px; }
+
+  .pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .panel {
+    border-radius: 14px;
+    padding: 24px;
+    min-height: 100px;
+  }
+  .panel.light  {
+    background: #F0F2FC;
+    color: #080C22;
+    --surface: #FFFFFF;
+    --border: rgba(8,12,34,0.10);
+    --text: #080C22;
+    --text2: rgba(8,12,34,0.55);
+    --textM: rgba(8,12,34,0.35);
+    --primary: #0099AA;
+    --bigRock: #F59E0B;
+    --bigRockSoft: rgba(245,158,11,0.14);
+    --shadow: 0 1px 4px rgba(8,12,34,0.06);
+    --shadowMd: 0 2px 8px rgba(8,12,34,0.10);
+    --q1: #C83232; --q1S: rgba(200,50,50,0.12);
+    --q2: #0099AA; --q2S: rgba(0,153,170,0.12); --q2SS: rgba(0,153,170,0.06);
+    --q3: #4A7AE0; --q3S: rgba(74,122,224,0.12);
+    --q4: #7B8499; --q4S: rgba(123,132,153,0.14);
+    --st0: rgba(8,12,34,0.30); --st0S: rgba(8,12,34,0.08);
+    --st1: #E5A000;             --st1S: rgba(229,160,0,0.12);
+    --st2: #00B89A;             --st2S: rgba(0,184,154,0.12);
+  }
+  .panel.dark {
+    background: #06091A;
+    color: #E8ECF8;
+    --surface: #0E1435;
+    --border: rgba(232,236,248,0.10);
+    --text: #E8ECF8;
+    --text2: rgba(232,236,248,0.55);
+    --textM: rgba(232,236,248,0.30);
+    --primary: #00E6C8;
+    --bigRock: #FFB547;
+    --bigRockSoft: rgba(255,181,71,0.14);
+    --shadow: 0 1px 4px rgba(0,0,0,0.30);
+    --shadowMd: 0 2px 8px rgba(0,0,0,0.40);
+    --q1: #FF6B6B; --q1S: rgba(255,107,107,0.14);
+    --q2: #00E6C8; --q2S: rgba(0,230,200,0.14); --q2SS: rgba(0,230,200,0.07);
+    --q3: #6A9AFF; --q3S: rgba(106,154,255,0.14);
+    --q4: #8A93AB; --q4S: rgba(138,147,171,0.16);
+    --st0: rgba(232,236,248,0.30); --st0S: rgba(232,236,248,0.10);
+    --st1: #F5C842;                --st1S: rgba(245,200,66,0.14);
+    --st2: #00E6C8;                --st2S: rgba(0,230,200,0.14);
+  }
+
+  .panel-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    opacity: 0.55;
+    margin: 0 0 12px;
+    font-weight: 600;
+  }
+
+  /* Section heading on body bg */
+  .section-h { font-size: 13px; text-transform: uppercase; letter-spacing: 1.2px; opacity: 0.6; margin: 32px 0 8px; font-weight: 700; }
+
+  /* Pill (badge) — matches Pill.tsx */
+  .pill {
+    display: inline-flex; align-items: center; padding: 4px 10px;
+    border-radius: 9999px; font-size: 12px; font-weight: 600; letter-spacing: 0.2px;
+    line-height: 16px;
+  }
+  .pill.outline { border-width: 1px; border-style: solid; }
+
+  /* Goal row */
+  .goal-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .goal-row:first-child { border-radius: 12px 12px 0 0; }
+  .goal-row:last-child  { border-radius: 0 0 12px 12px; border-bottom: 0; }
+  .goal-list { box-shadow: var(--shadow); border-radius: 12px; }
+  .goal-text { font-size: 15px; color: var(--text); flex: 1; line-height: 21px; }
+  .goal-text.complete { text-decoration: line-through; color: var(--textM); }
+  .role-sub { font-size: 11px; color: var(--textM); margin-top: 2px; }
+  .indicator { display: inline-flex; align-items: center; gap: 3px; min-width: 28px; }
+  .indicator .num { font-size: 12px; font-weight: 700; color: var(--bigRock); }
+  .diamond {
+    width: 11px; height: 11px; transform: rotate(45deg);
+    background: var(--bigRock); display: inline-block; border-radius: 1px;
+    margin-right: 2px;
+  }
+
+  /* Role card */
+  .role-card {
+    display: flex; align-items: center; padding: 16px;
+    background: var(--surface); border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+  .role-card .name { font-size: 16px; font-weight: 600; color: var(--text); }
+  .role-card .desc { font-size: 13px; color: var(--text2); margin-top: 2px; }
+  .chev { color: var(--textM); font-size: 18px; }
+
+  /* Quadrant cells */
+  .quad-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .quad-cell {
+    background: var(--surface);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    min-height: 110px;
+    display: flex; flex-direction: column;
+  }
+  .quad-cell.emph { background: var(--q2SS); border-color: var(--q2); box-shadow: var(--shadow); }
+  .quad-head { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; }
+  .quad-head .title { font-size: 12px; font-weight: 700; letter-spacing: 0.2px; }
+  .count {
+    min-width: 22px; height: 20px; border-radius: 10px; padding: 0 5px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+  }
+  .quad-goal { padding: 6px 10px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .quad-goal:last-child { border-bottom: 0; }
+
+  /* Token swatches */
+  .swatch-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .swatch {
+    border-radius: 10px; padding: 12px; min-width: 110px;
+    background: var(--surface); border: 1px solid var(--border);
+  }
+  .swatch .chip { width: 100%; height: 28px; border-radius: 6px; }
+  .swatch .lbl { font-size: 11px; margin-top: 6px; opacity: 0.7; font-weight: 600; }
+
+  /* Type ladder */
+  .type-ladder > div { padding: 6px 0; }
+
+  /* Logo demo */
+  .logo-demo {
+    display: flex; align-items: center; gap: 24px; padding: 16px;
+    background: var(--surface); border-radius: 12px; border: 1px solid var(--border);
+  }
+  .logo-demo .lbl { font-size: 11px; opacity: 0.6; margin-top: 4px; }
+
+  /* Old logo (sketch) — placeholder rendering */
+  .old-mark {
+    width: 80px; height: 80px; border: 2px solid currentColor; border-radius: 50%;
+    position: relative; opacity: 0.6;
+  }
+  .old-mark::before, .old-mark::after {
+    content: ''; position: absolute; background: currentColor;
+  }
+  .old-mark::before { left: 50%; top: 8%; bottom: 8%; width: 1.5px; transform: translateX(-50%); }
+  .old-mark::after  { top: 50%; left: 8%; right: 8%;  height: 1.5px; transform: translateY(-50%); }
+
+  hr { border: 0; border-top: 1px solid rgba(232,236,248,0.10); margin: 32px 0 16px; }
+</style>
+</head>
+<body>
+  <h1>FourthGen Planner — Design System Refresh</h1>
+  <p class="sub">Side-by-side preview of the tightened Blueprint theme. Light panel ↔ Dark panel. After-only — the goal is to confirm the tokens and components feel right before you commit.</p>
+
+  <div class="section-h">1. Logo (new SVG mark)</div>
+  <div class="pair">
+    <div class="panel light">
+      <p class="panel-label">Light</p>
+      <div class="logo-demo">
+        <div>
+          <!-- Sketch placeholder for the OLD compass mark -->
+          <div class="old-mark"></div>
+          <div class="lbl">Old: hand-sketched compass</div>
+        </div>
+        <div>
+          <svg viewBox="0 0 64 64" width="80" height="80">
+            <defs>
+              <linearGradient id="q2gL" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#0099AA" stop-opacity="0.18"/>
+                <stop offset="1" stop-color="#0099AA" stop-opacity="0.32"/>
+              </linearGradient>
+            </defs>
+            <rect x="6" y="6"  width="24" height="24" rx="5" fill="rgba(200,50,50,0.06)"  stroke="rgba(8,12,34,0.35)" stroke-width="1.2"/>
+            <rect x="6" y="34" width="24" height="24" rx="5" fill="rgba(74,122,224,0.06)" stroke="rgba(8,12,34,0.35)" stroke-width="1.2"/>
+            <rect x="34" y="34" width="24" height="24" rx="5" fill="rgba(123,132,153,0.07)" stroke="rgba(8,12,34,0.35)" stroke-width="1.2"/>
+            <rect x="34" y="6"  width="24" height="24" rx="5" fill="url(#q2gL)" stroke="#0099AA" stroke-width="2"/>
+            <circle cx="46" cy="18" r="6" fill="none" stroke="#0099AA" stroke-width="1.6"/>
+            <circle cx="46" cy="18" r="2" fill="#0099AA"/>
+            <line x1="46" y1="8"   x2="46" y2="10.5" stroke="#0099AA" stroke-width="1.6" stroke-linecap="round"/>
+            <line x1="46" y1="28"  x2="46" y2="25.5" stroke="#0099AA" stroke-width="1.6" stroke-linecap="round"/>
+            <line x1="36" y1="18"  x2="38.5" y2="18" stroke="#0099AA" stroke-width="1.6" stroke-linecap="round"/>
+            <line x1="56" y1="18"  x2="53.5" y2="18" stroke="#0099AA" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+          <div class="lbl">New: Q2-lit grid mark (matches app icon)</div>
+        </div>
+        <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+          <svg viewBox="0 0 64 64" width="28" height="28">
+            <rect x="6" y="6"  width="24" height="24" rx="5" fill="rgba(200,50,50,0.06)" stroke="rgba(8,12,34,0.35)" stroke-width="1.2"/>
+            <rect x="6" y="34" width="24" height="24" rx="5" fill="rgba(74,122,224,0.06)" stroke="rgba(8,12,34,0.35)" stroke-width="1.2"/>
+            <rect x="34" y="34" width="24" height="24" rx="5" fill="rgba(123,132,153,0.07)" stroke="rgba(8,12,34,0.35)" stroke-width="1.2"/>
+            <rect x="34" y="6"  width="24" height="24" rx="5" fill="rgba(0,153,170,0.18)" stroke="#0099AA" stroke-width="2"/>
+            <circle cx="46" cy="18" r="6" fill="none" stroke="#0099AA" stroke-width="1.6"/>
+            <circle cx="46" cy="18" r="2" fill="#0099AA"/>
+          </svg>
+          <div class="lbl">@ 28px (tab header)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel dark">
+      <p class="panel-label">Dark</p>
+      <div class="logo-demo">
+        <div>
+          <div class="old-mark"></div>
+          <div class="lbl">Old: hand-sketched compass</div>
+        </div>
+        <div>
+          <svg viewBox="0 0 64 64" width="80" height="80">
+            <defs>
+              <linearGradient id="q2gD" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#00E6C8" stop-opacity="0.18"/>
+                <stop offset="1" stop-color="#00E6C8" stop-opacity="0.32"/>
+              </linearGradient>
+            </defs>
+            <rect x="6" y="6"  width="24" height="24" rx="5" fill="rgba(255,107,107,0.07)" stroke="rgba(232,236,248,0.30)" stroke-width="1.2"/>
+            <rect x="6" y="34" width="24" height="24" rx="5" fill="rgba(106,154,255,0.07)" stroke="rgba(232,236,248,0.30)" stroke-width="1.2"/>
+            <rect x="34" y="34" width="24" height="24" rx="5" fill="rgba(138,147,171,0.08)" stroke="rgba(232,236,248,0.30)" stroke-width="1.2"/>
+            <rect x="34" y="6"  width="24" height="24" rx="5" fill="url(#q2gD)" stroke="#00E6C8" stroke-width="2"/>
+            <circle cx="46" cy="18" r="6" fill="none" stroke="#00E6C8" stroke-width="1.6"/>
+            <circle cx="46" cy="18" r="2" fill="#00E6C8"/>
+            <line x1="46" y1="8"   x2="46" y2="10.5" stroke="#00E6C8" stroke-width="1.6" stroke-linecap="round"/>
+            <line x1="46" y1="28"  x2="46" y2="25.5" stroke="#00E6C8" stroke-width="1.6" stroke-linecap="round"/>
+            <line x1="36" y1="18"  x2="38.5" y2="18" stroke="#00E6C8" stroke-width="1.6" stroke-linecap="round"/>
+            <line x1="56" y1="18"  x2="53.5" y2="18" stroke="#00E6C8" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+          <div class="lbl">New: Q2-lit grid mark</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-h">2. Color tokens — quadrants (Q4 is now a true neutral)</div>
+  <div class="pair">
+    <div class="panel light">
+      <p class="panel-label">Light</p>
+      <div class="swatch-row">
+        <div class="swatch"><div class="chip" style="background:#C83232"></div><div class="lbl">Q1 #C83232</div></div>
+        <div class="swatch"><div class="chip" style="background:#0099AA"></div><div class="lbl">Q2 #0099AA (hero)</div></div>
+        <div class="swatch"><div class="chip" style="background:#4A7AE0"></div><div class="lbl">Q3 #4A7AE0</div></div>
+        <div class="swatch"><div class="chip" style="background:#7B8499"></div><div class="lbl">Q4 #7B8499 ← was faded blue</div></div>
+        <div class="swatch"><div class="chip" style="background:#F59E0B"></div><div class="lbl">BigRock #F59E0B (now in palette)</div></div>
+      </div>
+    </div>
+    <div class="panel dark">
+      <p class="panel-label">Dark</p>
+      <div class="swatch-row">
+        <div class="swatch"><div class="chip" style="background:#FF6B6B"></div><div class="lbl">Q1 #FF6B6B</div></div>
+        <div class="swatch"><div class="chip" style="background:#00E6C8"></div><div class="lbl">Q2 #00E6C8 (hero)</div></div>
+        <div class="swatch"><div class="chip" style="background:#6A9AFF"></div><div class="lbl">Q3 #6A9AFF</div></div>
+        <div class="swatch"><div class="chip" style="background:#8A93AB"></div><div class="lbl">Q4 #8A93AB ← was faded blue</div></div>
+        <div class="swatch"><div class="chip" style="background:#FFB547"></div><div class="lbl">BigRock #FFB547</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-h">3. Typography scale (was: hardcoded 11/12/13/15/16 everywhere)</div>
+  <div class="pair">
+    <div class="panel light">
+      <p class="panel-label">Light</p>
+      <div class="type-ladder">
+        <div style="font-size:28px; font-weight:700; letter-spacing:-0.4px">display 28 / Plan the week</div>
+        <div style="font-size:22px; font-weight:700; letter-spacing:-0.3px">h1 22 / Weekly Plan</div>
+        <div style="font-size:18px; font-weight:600; letter-spacing:-0.2px">h2 18 / Q2 — Important, Not Urgent</div>
+        <div style="font-size:16px; font-weight:600">bodyLg 16 / Role: Spouse</div>
+        <div style="font-size:15px">body 15 / Read 30 minutes daily</div>
+        <div style="font-size:13px">bodySm 13 / 6 of 12 goals complete</div>
+        <div style="font-size:12px; font-weight:600; letter-spacing:0.2px">CAPTION 12 · Q2 · NOT STARTED</div>
+        <div style="font-size:11px; opacity:0.6">micro 11 / role label beneath a goal</div>
+      </div>
+    </div>
+    <div class="panel dark">
+      <p class="panel-label">Dark</p>
+      <div class="type-ladder">
+        <div style="font-size:28px; font-weight:700; letter-spacing:-0.4px">display 28 / Plan the week</div>
+        <div style="font-size:22px; font-weight:700; letter-spacing:-0.3px">h1 22 / Weekly Plan</div>
+        <div style="font-size:18px; font-weight:600; letter-spacing:-0.2px">h2 18 / Q2 — Important, Not Urgent</div>
+        <div style="font-size:16px; font-weight:600">bodyLg 16 / Role: Spouse</div>
+        <div style="font-size:15px">body 15 / Read 30 minutes daily</div>
+        <div style="font-size:13px">bodySm 13 / 6 of 12 goals complete</div>
+        <div style="font-size:12px; font-weight:600; letter-spacing:0.2px">CAPTION 12 · Q2 · NOT STARTED</div>
+        <div style="font-size:11px; opacity:0.6">micro 11 / role label beneath a goal</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-h">4. Pills (StatusBadge + QuadrantBadge — now share a Pill primitive)</div>
+  <div class="pair">
+    <div class="panel light">
+      <p class="panel-label">Light</p>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <span class="pill"          style="background:var(--q1S);   color:var(--q1)">Q1</span>
+        <span class="pill"          style="background:var(--q2S);   color:var(--q2)">Q2</span>
+        <span class="pill"          style="background:var(--q3S);   color:var(--q3)">Q3</span>
+        <span class="pill"          style="background:var(--q4S);   color:var(--q4)">Q4</span>
+        <span class="pill outline"  style="background:var(--st0S);  color:var(--st0); border-color:var(--st0)">Not Started</span>
+        <span class="pill outline"  style="background:var(--st1S);  color:var(--st1); border-color:var(--st1)">In Progress</span>
+        <span class="pill outline"  style="background:var(--st2S);  color:var(--st2); border-color:var(--st2)">Complete</span>
+      </div>
+    </div>
+    <div class="panel dark">
+      <p class="panel-label">Dark</p>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <span class="pill"          style="background:var(--q1S);   color:var(--q1)">Q1</span>
+        <span class="pill"          style="background:var(--q2S);   color:var(--q2)">Q2</span>
+        <span class="pill"          style="background:var(--q3S);   color:var(--q3)">Q3</span>
+        <span class="pill"          style="background:var(--q4S);   color:var(--q4)">Q4</span>
+        <span class="pill outline"  style="background:var(--st0S);  color:var(--st0); border-color:var(--st0)">Not Started</span>
+        <span class="pill outline"  style="background:var(--st1S);  color:var(--st1); border-color:var(--st1)">In Progress</span>
+        <span class="pill outline"  style="background:var(--st2S);  color:var(--st2); border-color:var(--st2)">Complete</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-h">5. Goal rows + role card</div>
+  <div class="pair">
+    <div class="panel light">
+      <p class="panel-label">Light</p>
+      <div class="role-card" style="margin-bottom:16px;">
+        <div style="flex:1">
+          <div class="name">Spouse</div>
+          <div class="desc">Be present, plan something we both look forward to.</div>
+        </div>
+        <div class="chev">›</div>
+      </div>
+      <div class="goal-list">
+        <div class="goal-row">
+          <span class="indicator"><span class="diamond"></span><span class="num">1</span></span>
+          <div style="flex:1"><div class="goal-text">Schedule date night Thursday</div><div class="role-sub">Spouse</div></div>
+          <span class="pill" style="background:var(--q2S); color:var(--q2)">Q2</span>
+          <span class="pill outline" style="background:var(--st1S); color:var(--st1); border-color:var(--st1)">In Progress</span>
+        </div>
+        <div class="goal-row">
+          <span class="indicator"></span>
+          <div style="flex:1"><div class="goal-text complete">Reply to landlord about lease renewal</div></div>
+          <span class="pill" style="background:var(--q1S); color:var(--q1)">Q1</span>
+          <span class="pill outline" style="background:var(--st2S); color:var(--st2); border-color:var(--st2)">Complete</span>
+        </div>
+        <div class="goal-row">
+          <span class="indicator"></span>
+          <div style="flex:1"><div class="goal-text">Skim quarterly all-hands deck</div></div>
+          <span class="pill" style="background:var(--q4S); color:var(--q4)">Q4</span>
+          <span class="pill outline" style="background:var(--st0S); color:var(--st0); border-color:var(--st0)">Not Started</span>
+        </div>
+      </div>
+    </div>
+    <div class="panel dark">
+      <p class="panel-label">Dark</p>
+      <div class="role-card" style="margin-bottom:16px;">
+        <div style="flex:1">
+          <div class="name">Spouse</div>
+          <div class="desc">Be present, plan something we both look forward to.</div>
+        </div>
+        <div class="chev">›</div>
+      </div>
+      <div class="goal-list">
+        <div class="goal-row">
+          <span class="indicator"><span class="diamond"></span><span class="num">1</span></span>
+          <div style="flex:1"><div class="goal-text">Schedule date night Thursday</div><div class="role-sub">Spouse</div></div>
+          <span class="pill" style="background:var(--q2S); color:var(--q2)">Q2</span>
+          <span class="pill outline" style="background:var(--st1S); color:var(--st1); border-color:var(--st1)">In Progress</span>
+        </div>
+        <div class="goal-row">
+          <span class="indicator"></span>
+          <div style="flex:1"><div class="goal-text complete">Reply to landlord about lease renewal</div></div>
+          <span class="pill" style="background:var(--q1S); color:var(--q1)">Q1</span>
+          <span class="pill outline" style="background:var(--st2S); color:var(--st2); border-color:var(--st2)">Complete</span>
+        </div>
+        <div class="goal-row">
+          <span class="indicator"></span>
+          <div style="flex:1"><div class="goal-text">Skim quarterly all-hands deck</div></div>
+          <span class="pill" style="background:var(--q4S); color:var(--q4)">Q4</span>
+          <span class="pill outline" style="background:var(--st0S); color:var(--st0); border-color:var(--st0)">Not Started</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-h">6. Quadrant grid (Q2 cell now has elevation + filled border)</div>
+  <div class="pair">
+    <div class="panel light">
+      <p class="panel-label">Light</p>
+      <div class="quad-grid">
+        <div class="quad-cell">
+          <div class="quad-head" style="background:var(--q1S)">
+            <span class="title" style="color:var(--q1)">Q1: Urgent &amp; Important</span>
+            <span class="count" style="background:var(--q1S); color:var(--q1)">1</span>
+          </div>
+          <div class="quad-goal">Reply to landlord about lease renewal</div>
+        </div>
+        <div class="quad-cell emph">
+          <div class="quad-head" style="background:var(--q2S)">
+            <span class="title" style="color:var(--q2)">Q2: Not Urgent &amp; Important</span>
+            <span class="count" style="background:var(--q2S); color:var(--q2)">3</span>
+          </div>
+          <div class="quad-goal">Schedule date night Thursday</div>
+          <div class="quad-goal">Read 30 minutes daily</div>
+          <div class="quad-goal">Walk before breakfast</div>
+        </div>
+        <div class="quad-cell">
+          <div class="quad-head" style="background:var(--q3S)">
+            <span class="title" style="color:var(--q3)">Q3: Urgent &amp; Not Important</span>
+            <span class="count" style="background:var(--q3S); color:var(--q3)">0</span>
+          </div>
+          <div class="quad-goal" style="color:var(--textM); text-align:center; font-style:italic">+</div>
+        </div>
+        <div class="quad-cell">
+          <div class="quad-head" style="background:var(--q4S)">
+            <span class="title" style="color:var(--q4)">Q4: Not Urgent &amp; Not Important</span>
+            <span class="count" style="background:var(--q4S); color:var(--q4)">1</span>
+          </div>
+          <div class="quad-goal">Skim quarterly all-hands deck</div>
+        </div>
+      </div>
+    </div>
+    <div class="panel dark">
+      <p class="panel-label">Dark</p>
+      <div class="quad-grid">
+        <div class="quad-cell">
+          <div class="quad-head" style="background:var(--q1S)">
+            <span class="title" style="color:var(--q1)">Q1: Urgent &amp; Important</span>
+            <span class="count" style="background:var(--q1S); color:var(--q1)">1</span>
+          </div>
+          <div class="quad-goal">Reply to landlord about lease renewal</div>
+        </div>
+        <div class="quad-cell emph">
+          <div class="quad-head" style="background:var(--q2S)">
+            <span class="title" style="color:var(--q2)">Q2: Not Urgent &amp; Important</span>
+            <span class="count" style="background:var(--q2S); color:var(--q2)">3</span>
+          </div>
+          <div class="quad-goal">Schedule date night Thursday</div>
+          <div class="quad-goal">Read 30 minutes daily</div>
+          <div class="quad-goal">Walk before breakfast</div>
+        </div>
+        <div class="quad-cell">
+          <div class="quad-head" style="background:var(--q3S)">
+            <span class="title" style="color:var(--q3)">Q3: Urgent &amp; Not Important</span>
+            <span class="count" style="background:var(--q3S); color:var(--q3)">0</span>
+          </div>
+          <div class="quad-goal" style="color:var(--textM); text-align:center; font-style:italic">+</div>
+        </div>
+        <div class="quad-cell">
+          <div class="quad-head" style="background:var(--q4S)">
+            <span class="title" style="color:var(--q4)">Q4: Not Urgent &amp; Not Important</span>
+            <span class="count" style="background:var(--q4S); color:var(--q4)">1</span>
+          </div>
+          <div class="quad-goal">Skim quarterly all-hands deck</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr/>
+  <p class="sub" style="margin:0;">Generated for review. Once approved, the next pass propagates the typography tokens through the remaining components (CloseoutModal, MissionStatementModal, EventCard, etc.) and removes the unused <code>fourth_gen_v1_*.png</code> assets.</p>
+</body>
+</html>

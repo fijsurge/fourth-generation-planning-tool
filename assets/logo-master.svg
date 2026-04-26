@@ -1,0 +1,43 @@
+<!--
+  FourthGen Planner — master brand mark.
+  Source of truth for: in-app Logo.tsx, generated PNG icons (icon.png,
+  adaptive-icon.png, favicon.png, splash-icon.png).
+
+  Visual: 2x2 quadrant grid with Q2 (top-right) lit cyan and a target glyph
+  inside it. Q2 = "Important, Not Urgent" — Covey's framework hero.
+
+  Designed in a 64x64 viewBox; scales cleanly to icon dimensions.
+  Run `npm run icons` to regenerate the PNG exports from this file.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="q2grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#00E6C8" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#00E6C8" stop-opacity="0.36"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Q1 — top-left (dim) -->
+  <rect x="6" y="6"  width="24" height="24" rx="5" ry="5"
+        fill="rgba(255,107,107,0.07)" stroke="rgba(232,236,248,0.30)" stroke-width="1.2"/>
+
+  <!-- Q3 — bottom-left (dim) -->
+  <rect x="6" y="34" width="24" height="24" rx="5" ry="5"
+        fill="rgba(106,154,255,0.07)" stroke="rgba(232,236,248,0.30)" stroke-width="1.2"/>
+
+  <!-- Q4 — bottom-right (dim) -->
+  <rect x="34" y="34" width="24" height="24" rx="5" ry="5"
+        fill="rgba(138,147,171,0.08)" stroke="rgba(232,236,248,0.30)" stroke-width="1.2"/>
+
+  <!-- Q2 — top-right (lit, hero) -->
+  <rect x="34" y="6" width="24" height="24" rx="5" ry="5"
+        fill="url(#q2grad)" stroke="#00E6C8" stroke-width="2"/>
+
+  <!-- Target glyph inside Q2 -->
+  <circle cx="46" cy="18" r="6" fill="none" stroke="#00E6C8" stroke-width="1.6"/>
+  <circle cx="46" cy="18" r="2" fill="#00E6C8"/>
+  <line x1="46" y1="8"  x2="46" y2="10.5" stroke="#00E6C8" stroke-width="1.6" stroke-linecap="round"/>
+  <line x1="46" y1="28" x2="46" y2="25.5" stroke="#00E6C8" stroke-width="1.6" stroke-linecap="round"/>
+  <line x1="36" y1="18" x2="38.5" y2="18" stroke="#00E6C8" stroke-width="1.6" stroke-linecap="round"/>
+  <line x1="56" y1="18" x2="53.5" y2="18" stroke="#00E6C8" stroke-width="1.6" stroke-linecap="round"/>
+</svg>

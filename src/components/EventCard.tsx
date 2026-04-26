@@ -3,6 +3,7 @@ import { Text, TouchableOpacity } from "react-native";
 import { CalendarTouchableOpacityProps } from "react-native-big-calendar";
 import { EventTransparency } from "../models/CalendarEvent";
 import { useThemeColors } from "../theme/useThemeColors";
+import { typography } from "../theme/typography";
 
 interface BigCalendarEvent {
   start: Date;
@@ -40,7 +41,7 @@ export function EventCard(
     >
       <Text
         numberOfLines={1}
-        style={{ color: isFree ? baseColor : colors.onPrimary, fontSize: 12 }}
+        style={{ ...typography.caption, color: isFree ? baseColor : colors.onPrimary }}
       >
         {event.title}
       </Text>

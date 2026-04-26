@@ -7,6 +7,8 @@ import { StatusBadge } from "./StatusBadge";
 import { QUADRANT_LABELS, getQuadrantColors } from "../utils/constants";
 import { useThemeColors } from "../theme/useThemeColors";
 import { spacing, borderRadius } from "../theme/spacing";
+import { typography } from "../theme/typography";
+import { elevation } from "../theme/elevation";
 
 interface QuadrantCellProps {
   quadrant: Quadrant;
@@ -28,40 +30,48 @@ export function QuadrantCell({
   const colors = useThemeColors();
   const QUADRANT_COLORS = getQuadrantColors(colors);
   const qColor = QUADRANT_COLORS[quadrant];
+  const qSoft = colors.quadrantSoft[`q${quadrant}` as "q1" | "q2" | "q3" | "q4"];
+  const qSofter = colors.quadrantSofter[`q${quadrant}` as "q1" | "q2" | "q3" | "q4"];
   const roleMap = new Map(roles.map((r) => [r.id, r.name]));
 
   const styles = useMemo(() => StyleSheet.create({
     cell: {
       flex: 1,
-      backgroundColor: colors.background,
-      borderRadius: borderRadius.md,
+      backgroundColor: colors.surface,
+      borderRadius: borderRadius.lg,
       borderWidth: 1,
       borderColor: colors.border,
       overflow: "hidden",
+    },
+    cellEmphasized: {
+      backgroundColor: colors.quadrantSofter.q2,
+      borderColor: colors.quadrant.q2,
+      ...elevation.sm,
+      shadowColor: colors.shadow,
     },
     header: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingHorizontal: spacing.sm,
+      paddingHorizontal: spacing.sm + 2,
       paddingVertical: spacing.xs + 2,
     },
     headerText: {
-      fontSize: 12,
+      ...typography.caption,
       fontWeight: "700",
       flex: 1,
     },
     countBadge: {
-      minWidth: 20,
+      minWidth: 22,
       height: 20,
       borderRadius: 10,
       alignItems: "center",
       justifyContent: "center",
-      paddingHorizontal: 4,
+      paddingHorizontal: 5,
       marginLeft: spacing.xs,
     },
     countText: {
-      fontSize: 11,
+      ...typography.micro,
       fontWeight: "700",
     },
     list: {
@@ -69,7 +79,7 @@ export function QuadrantCell({
     },
     empty: {
       padding: spacing.md,
-      fontSize: 13,
+      ...typography.bodySm,
       color: colors.textMuted,
       textAlign: "center",
       fontStyle: "italic",
@@ -87,7 +97,7 @@ export function QuadrantCell({
       marginRight: spacing.xs,
     },
     goalText: {
-      fontSize: 13,
+      ...typography.bodySm,
       color: colors.text,
     },
     goalTextComplete: {
@@ -95,28 +105,19 @@ export function QuadrantCell({
       color: colors.textMuted,
     },
     roleName: {
-      fontSize: 11,
+      ...typography.micro,
       color: colors.textMuted,
       marginTop: 1,
     },
   }), [colors]);
 
   return (
-    <View
-      style={[
-        styles.cell,
-        emphasized && {
-          backgroundColor: colors.quadrant.q2 + "08",
-          borderLeftWidth: 3,
-          borderLeftColor: colors.quadrant.q2,
-        },
-      ]}
-    >
-      <View style={[styles.header, { backgroundColor: qColor + (emphasized ? "20" : "15") }]}>
+    <View style={[styles.cell, emphasized && styles.cellEmphasized]}>
+      <View style={[styles.header, { backgroundColor: emphasized ? qSoft : qSofter }]}>
         <Text style={[styles.headerText, { color: qColor }]} numberOfLines={1}>
           {QUADRANT_LABELS[quadrant]}
         </Text>
-        <View style={[styles.countBadge, { backgroundColor: qColor + "25" }]}>
+        <View style={[styles.countBadge, { backgroundColor: qSoft }]}>
           <Text style={[styles.countText, { color: qColor }]}>{goals.length}</Text>
         </View>
       </View>

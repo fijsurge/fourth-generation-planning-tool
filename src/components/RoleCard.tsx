@@ -4,6 +4,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { Role } from "../models/Role";
 import { useThemeColors } from "../theme/useThemeColors";
 import { spacing, borderRadius } from "../theme/spacing";
+import { typography } from "../theme/typography";
+import { elevation } from "../theme/elevation";
 
 interface RoleCardProps {
   role: Role;
@@ -18,21 +20,22 @@ export function RoleCard({ role, onPress }: RoleCardProps) {
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: colors.surface,
-      borderRadius: borderRadius.md,
+      borderRadius: borderRadius.lg,
       padding: spacing.md,
       borderWidth: 1,
       borderColor: colors.border,
+      ...elevation.sm,
+      shadowColor: colors.shadow,
     },
     content: {
       flex: 1,
     },
     name: {
-      fontSize: 16,
-      fontWeight: "600",
+      ...typography.bodyLg,
       color: colors.text,
     },
     description: {
-      fontSize: 13,
+      ...typography.bodySm,
       color: colors.textSecondary,
       marginTop: 2,
     },

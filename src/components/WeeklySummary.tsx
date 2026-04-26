@@ -5,6 +5,7 @@ import { WeeklyGoal, Quadrant } from "../models/WeeklyGoal";
 import { QUADRANT_LABELS, QUADRANT_SHORT_LABELS, getQuadrantColors } from "../utils/constants";
 import { useThemeColors } from "../theme/useThemeColors";
 import { spacing } from "../theme/spacing";
+import { typography } from "../theme/typography";
 
 interface WeeklySummaryProps {
   goals: WeeklyGoal[];
@@ -29,16 +30,16 @@ export function WeeklySummary({ goals }: WeeklySummaryProps) {
       paddingVertical: spacing.xs,
     },
     progressText: {
-      fontSize: 13,
+      ...typography.bodySm,
       fontWeight: "600",
       color: colors.textSecondary,
     },
     separator: {
-      fontSize: 13,
+      ...typography.bodySm,
       color: colors.textMuted,
     },
     quadrantText: {
-      fontSize: 13,
+      ...typography.bodySm,
       fontWeight: "500",
     },
     chevron: {
@@ -62,12 +63,14 @@ export function WeeklySummary({ goals }: WeeklySummaryProps) {
       flexShrink: 0,
     },
     quadrantRowLabel: {
-      fontSize: 12,
+      ...typography.caption,
+      fontWeight: "400",
       color: colors.textSecondary,
       flex: 1,
     },
     quadrantCount: {
-      fontSize: 12,
+      ...typography.caption,
+      fontWeight: "400",
       color: colors.textMuted,
       minWidth: 40,
       textAlign: "right",
@@ -84,7 +87,8 @@ export function WeeklySummary({ goals }: WeeklySummaryProps) {
       borderRadius: 3,
     },
     pctText: {
-      fontSize: 12,
+      ...typography.caption,
+      fontWeight: "400",
       color: colors.textMuted,
       width: 32,
       textAlign: "right",

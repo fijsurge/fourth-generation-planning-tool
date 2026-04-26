@@ -7,8 +7,7 @@ import { Role } from "../models/Role";
 import { GoalItem } from "./GoalItem";
 import { useThemeColors } from "../theme/useThemeColors";
 import { spacing } from "../theme/spacing";
-
-const BIG_ROCK_COLOR = "#F59E0B";
+import { typography } from "../theme/typography";
 
 function sortByPriority(goals: WeeklyGoal[]): WeeklyGoal[] {
   return [...goals].sort((a, b) => {
@@ -78,7 +77,7 @@ function SwipeableGoalRow({
       }}
     >
       <Ionicons name="trash-outline" size={22} color="#fff" />
-      <Text style={{ color: "#fff", fontSize: 12, marginTop: 2 }}>Delete</Text>
+      <Text style={{ color: "#fff", ...typography.caption, marginTop: 2 }}>Delete</Text>
     </Pressable>
   );
 
@@ -141,21 +140,21 @@ export function GoalsByRole({ goals, roles, onGoalPress, onCycleStatus, onCalend
       backgroundColor: colors.surface,
     },
     bigRocksHeaderText: {
-      fontSize: 13,
+      ...typography.bodySm,
       fontWeight: "700",
-      color: BIG_ROCK_COLOR,
+      color: colors.bigRock,
       textTransform: "uppercase",
-      letterSpacing: 0.5,
+      letterSpacing: 0.6,
     },
     section: {
       marginBottom: spacing.sm,
     },
     header: {
-      fontSize: 13,
+      ...typography.bodySm,
       fontWeight: "700",
       color: colors.textSecondary,
       textTransform: "uppercase",
-      letterSpacing: 0.5,
+      letterSpacing: 0.6,
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
       backgroundColor: colors.surface,
@@ -167,11 +166,11 @@ export function GoalsByRole({ goals, roles, onGoalPress, onCycleStatus, onCalend
       paddingVertical: spacing.xxl,
     },
     emptyText: {
-      fontSize: 16,
+      ...typography.bodyLg,
       color: colors.textSecondary,
     },
     emptyHint: {
-      fontSize: 13,
+      ...typography.bodySm,
       color: colors.textMuted,
       marginTop: spacing.xs,
     },
@@ -229,7 +228,7 @@ export function GoalsByRole({ goals, roles, onGoalPress, onCycleStatus, onCalend
       {bigRocks.length > 0 && (
         <View style={styles.bigRocksSection}>
           <View style={styles.bigRocksHeader}>
-            <Ionicons name="diamond" size={13} color={BIG_ROCK_COLOR} />
+            <Ionicons name="diamond" size={13} color={colors.bigRock} />
             <Text style={styles.bigRocksHeaderText}>Big Rocks</Text>
           </View>
           {bigRocks.map((goal) => {

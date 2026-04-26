@@ -1,6 +1,6 @@
 {
   "name": "fourth-generation-planning-tool",
-  "version": "1.2.7",
+  "version": "1.2.8",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
@@ -13,7 +13,8 @@
     "type-check": "tsc --noEmit",
     "setup-hooks": "node -e \"require('fs').copyFileSync('scripts/pre-commit','.git/hooks/pre-commit')\"",
     "test:version": "node scripts/test-bump-version.js",
-    "test:config": "node scripts/verify-config.js"
+    "test:config": "node scripts/verify-config.js",
+    "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
@@ -39,6 +40,7 @@
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
+    "react-native-svg": "~15.13.0",
     "react-native-web": "^0.21.0"
   },
   "devDependencies": {
@@ -52,6 +54,7 @@
     "jest": "^29.7.0",
     "jest-expo": "latest",
     "react-test-renderer": "19.0.0",
+    "sharp": "^0.33.5",
     "typescript": "~5.9.2"
   },
   "private": true

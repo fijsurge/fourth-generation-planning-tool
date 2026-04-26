@@ -5,9 +5,8 @@ import { WeeklyGoal } from "../models/WeeklyGoal";
 import { QuadrantBadge } from "./QuadrantBadge";
 import { StatusBadge } from "./StatusBadge";
 import { useThemeColors } from "../theme/useThemeColors";
-import { spacing, borderRadius } from "../theme/spacing";
-
-const BIG_ROCK_COLOR = "#F59E0B"; // amber — visible in both light and dark
+import { spacing } from "../theme/spacing";
+import { typography } from "../theme/typography";
 
 interface GoalItemProps {
   goal: WeeklyGoal;
@@ -29,10 +28,10 @@ export function GoalItem({ goal, onPress, onCycleStatus, onCalendarPress, onMove
     row: {
       flexDirection: "row",
       alignItems: "center",
-      paddingVertical: spacing.sm,
+      paddingVertical: spacing.sm + 2,
       paddingHorizontal: spacing.md,
-      backgroundColor: colors.background,
-      borderBottomWidth: 1,
+      backgroundColor: colors.surface,
+      borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.border,
     },
     indicator: {
@@ -43,12 +42,12 @@ export function GoalItem({ goal, onPress, onCycleStatus, onCalendarPress, onMove
       minWidth: 28,
     },
     priorityText: {
-      fontSize: 12,
+      ...typography.caption,
       fontWeight: "700",
-      color: BIG_ROCK_COLOR,
+      color: colors.bigRock,
     },
     priorityTextRegular: {
-      fontSize: 12,
+      ...typography.caption,
       fontWeight: "700",
       color: colors.textMuted,
     },
@@ -57,7 +56,7 @@ export function GoalItem({ goal, onPress, onCycleStatus, onCalendarPress, onMove
       marginRight: spacing.sm,
     },
     text: {
-      fontSize: 15,
+      ...typography.body,
       color: colors.text,
     },
     textComplete: {
@@ -65,7 +64,7 @@ export function GoalItem({ goal, onPress, onCycleStatus, onCalendarPress, onMove
       color: colors.textMuted,
     },
     roleLabel: {
-      fontSize: 11,
+      ...typography.micro,
       color: colors.textMuted,
       marginTop: 1,
     },
@@ -92,7 +91,7 @@ export function GoalItem({ goal, onPress, onCycleStatus, onCalendarPress, onMove
       {showIndicator && (
         <View style={styles.indicator}>
           {goal.isBigRock && (
-            <Ionicons name="diamond" size={13} color={BIG_ROCK_COLOR} />
+            <Ionicons name="diamond" size={13} color={colors.bigRock} />
           )}
           {goal.priority != null && (
             <Text style={goal.isBigRock ? styles.priorityText : styles.priorityTextRegular}>

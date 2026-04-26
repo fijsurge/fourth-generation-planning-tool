@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { formatWeekRange } from "../utils/dates";
 import { useThemeColors } from "../theme/useThemeColors";
 import { spacing, borderRadius } from "../theme/spacing";
+import { typography } from "../theme/typography";
 
 interface WeekSelectorProps {
   weekStart: Date;
@@ -34,14 +35,13 @@ export function WeekSelector({ weekStart, onPrevWeek, onNextWeek, onToday }: Wee
       borderRadius: borderRadius.md,
     },
     range: {
-      fontSize: 16,
-      fontWeight: "600",
+      ...typography.bodyLg,
       color: colors.text,
     },
     todayLink: {
-      fontSize: 13,
-      color: colors.primary,
+      ...typography.bodySm,
       fontWeight: "500",
+      color: colors.primary,
       marginTop: spacing.xs,
     },
   }), [colors]);

@@ -1,8 +1,7 @@
-import { View, Text, StyleSheet } from "react-native";
 import { Quadrant } from "../models/WeeklyGoal";
-import { getQuadrantColors, QUADRANT_SHORT_LABELS } from "../utils/constants";
+import { QUADRANT_SHORT_LABELS } from "../utils/constants";
 import { useThemeColors } from "../theme/useThemeColors";
-import { borderRadius, spacing } from "../theme/spacing";
+import { Pill } from "./Pill";
 
 interface QuadrantBadgeProps {
   quadrant: Quadrant;
@@ -10,25 +9,14 @@ interface QuadrantBadgeProps {
 
 export function QuadrantBadge({ quadrant }: QuadrantBadgeProps) {
   const colors = useThemeColors();
-  const QUADRANT_COLORS = getQuadrantColors(colors);
 
   return (
-    <View style={[styles.badge, { backgroundColor: QUADRANT_COLORS[quadrant] + "20" }]}>
-      <Text style={[styles.label, { color: QUADRANT_COLORS[quadrant] }]}>
-        {QUADRANT_SHORT_LABELS[quadrant]}
-      </Text>
-    </View>
+    <Pill
+      color={colors.quadrant[`q${quadrant}` as "q1" | "q2" | "q3" | "q4"]}
+      backgroundColor={colors.quadrantSoft[`q${quadrant}` as "q1" | "q2" | "q3" | "q4"]}
+      bordered={false}
+    >
+      {QUADRANT_SHORT_LABELS[quadrant]}
+    </Pill>
   );
 }
-
-const styles = StyleSheet.create({
-  badge: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-  },
-  label: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-});
