@@ -8,7 +8,7 @@ android {
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.fourthgenplanner.app"
+        applicationId "com.fourthgenplanner.wear"
         minSdk 30  // Wear OS 3+ (Pixel Watch 1+)
         targetSdk 34
         versionCode 2
