@@ -19,28 +19,18 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-// ---------- Status colour tokens ----------
-private val BgNotStarted = Color(0xFF2D2D2D)
-private val FgNotStarted = Color(0xFFABABAB)
-private val BgInProgress = Color(0xFF1A3050)
-private val FgInProgress = Color(0xFF90CAF9)
-private val BgComplete   = Color(0xFF1A3B1F)
-private val FgComplete   = Color(0xFF81C784)
-private val BgToggle     = Color(0xFF2E7D32)
-private val FgToggle     = Color(0xFFFFFFFF)
-private val FgSection    = Color(0xFFAAAAAA)
-private val FgBigRock    = Color(0xFFF59E0B) // amber
+// ---------- Status helpers — colors live in Theme.kt (WatchTheme.*) ----------
 
 private fun statusBg(s: String) = when (s) {
-    "complete"    -> BgComplete
-    "in_progress" -> BgInProgress
-    else          -> BgNotStarted
+    "complete"    -> WatchTheme.StatusCompleteBg
+    "in_progress" -> WatchTheme.StatusInProgressBg
+    else          -> WatchTheme.StatusNotStartedBg
 }
 
 private fun statusFg(s: String) = when (s) {
-    "complete"    -> FgComplete
-    "in_progress" -> FgInProgress
-    else          -> FgNotStarted
+    "complete"    -> WatchTheme.StatusCompleteFg
+    "in_progress" -> WatchTheme.StatusInProgressFg
+    else          -> WatchTheme.StatusNotStartedFg
 }
 
 private fun statusIcon(s: String) = when (s) {
@@ -117,7 +107,7 @@ fun GoalsScreen(context: Context, roleFilter: String? = null) {
             item {
                 Text(
                     text = activeFilter.value ?: "Goals This Week",
-                    color = Color.White,
+                    color = WatchTheme.Text,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
@@ -134,14 +124,14 @@ fun GoalsScreen(context: Context, roleFilter: String? = null) {
                             activeFilter.value = null
                             groupByRole.value = false
                         },
-                        colors = ChipDefaults.chipColors(backgroundColor = Color(0xFF3A3A3A)),
+                        colors = ChipDefaults.chipColors(backgroundColor = WatchTheme.SurfaceElevated),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 2.dp),
                         label = {
                             Text(
                                 text = "← All Roles",
-                                color = Color(0xFFE0E0E0),
+                                color = WatchTheme.Text,
                                 fontSize = 12.sp
                             )
                         }
@@ -159,14 +149,14 @@ fun GoalsScreen(context: Context, roleFilter: String? = null) {
                             context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
                                 .edit().putBoolean(KEY_GROUP_BY_ROLE, next).apply()
                         },
-                        colors = ChipDefaults.chipColors(backgroundColor = BgToggle),
+                        colors = ChipDefaults.chipColors(backgroundColor = WatchTheme.ToggleBg),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 2.dp),
                         label = {
                             Text(
                                 text = if (groupByRole.value) "◈  View by Quadrant" else "◈  View by Role",
-                                color = FgToggle,
+                                color = WatchTheme.ToggleFg,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Medium
                             )
@@ -179,35 +169,37 @@ fun GoalsScreen(context: Context, roleFilter: String? = null) {
                 item {
                     Text(
                         text = "No goals found.",
-                        color = FgSection,
+                        color = WatchTheme.SectionLabel,
                         fontSize = 12.sp,
                         modifier = Modifier.padding(top = 12.dp)
                     )
                 }
             } else {
-                // Build sections based on current grouping
-                val sections: List<Pair<String, List<GoalItem>>> = if (groupByRole.value && activeFilter.value == null) {
+                // Build sections based on current grouping.
+                // We carry the quadrant int alongside the label so we can color
+                // section headers per-quadrant (Q2 in cyan = framework hero).
+                val sections: List<Triple<String, Int?, List<GoalItem>>> = if (groupByRole.value && activeFilter.value == null) {
                     goals
                         .groupBy { it.roleName.ifEmpty { "Other" } }
                         .entries
                         .sortedBy { it.key }
-                        .map { it.key to it.value }
+                        .map { Triple(it.key, null, it.value) }
                 } else {
                     // Group by quadrant; for single-role view this shows Q1 / Q2 headers
                     goals
                         .groupBy { it.quadrant }
                         .entries
                         .sortedBy { it.key }
-                        .map { qLabel(it.key) to it.value }
+                        .map { Triple(qLabel(it.key), it.key, it.value) }
                 }
 
-                for ((sectionTitle, sectionGoals) in sections) {
+                for ((sectionTitle, sectionQuadrant, sectionGoals) in sections) {
                     item {
                         Text(
                             text = sectionTitle,
-                            color = FgSection,
+                            color = sectionQuadrant?.let { quadrantColor(it) } ?: WatchTheme.SectionLabel,
                             fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium,
+                            fontWeight = if (sectionQuadrant == 2) FontWeight.Bold else FontWeight.Medium,
                             modifier = Modifier.padding(top = 6.dp, bottom = 2.dp)
                         )
                     }
@@ -266,7 +258,7 @@ fun GoalChip(goal: GoalItem, status: String, onTap: () -> Unit) {
                 if (goal.isBigRock) {
                     Text(
                         text = "◆ ",
-                        color = FgBigRock,
+                        color = WatchTheme.BigRock,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
                     )

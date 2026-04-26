@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  FourthGen Planner — watch app themes.
+
+  Defines the launcher activity theme. The Android 12+ splash screen attrs
+  ('windowSplashScreen*') only take effect on API 31+, but we list them on
+  the base theme: older API levels just ignore unknown attributes.
+
+  Splash behavior:
+    - Background color = brand deep-indigo (matches launcher icon background,
+      so the splash reads as a continuation of the icon you tapped)
+    - Splash icon = the same vector launcher foreground (the Q2-lit grid mark)
+
+  postSplashScreenTheme tells the system which theme to switch to once the
+  splash dismisses, keeping the rest of the app on Theme.DeviceDefault.
+-->
+<resources>
+
+    <!-- Applied to GoalsActivity (the launcher entry point) -->
+    <style name="Theme.FourthGen.Splash" parent="@android:style/Theme.DeviceDefault.NoActionBar">
+        <item name="android:windowSplashScreenBackground">@color/splash_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@color/splash_background</item>
+        <item name="android:windowSplashScreenBrandingImage">@null</item>
+        <!-- Once splash finishes, hand control back to the device default theme -->
+        <item name="android:postSplashScreenTheme">@android:style/Theme.DeviceDefault</item>
+    </style>
+
+</resources>

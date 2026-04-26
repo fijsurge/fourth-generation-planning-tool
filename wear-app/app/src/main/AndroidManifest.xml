@@ -50,10 +50,13 @@
             android:excludeFromRecents="true"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
-        <!-- GoalsActivity — full scrollable goals list; also the app launcher entry point -->
+        <!-- GoalsActivity — full scrollable goals list; also the app launcher entry point.
+             android:theme applies the custom splash (brand bg + Q2-lit grid mark);
+             postSplashScreenTheme then hands control back to Theme.DeviceDefault. -->
         <activity
             android:name=".GoalsActivity"
-            android:exported="true">
+            android:exported="true"
+            android:theme="@style/Theme.FourthGen.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

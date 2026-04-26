@@ -33,8 +33,12 @@ export function Logo({ size = 32, mono = false, accent }: LogoProps) {
   const gap = 4;              // grid gap (between tiles, around target)
   const offset = (VB - 2 * tile - gap) / 2; // 6
   const stroke = 2;
-  const dimStroke = mono ? colors.text : colors.textMuted;
-  const dimFill = mono ? "transparent" : colors.quadrantSofter.q2;
+  // Inactive tiles: use textSecondary (~0.55 alpha) for the stroke so the
+  // four-cell grid is still legible at 28px on dark backgrounds. Earlier
+  // version multiplied textMuted by 0.5 — effective alpha ~0.15, invisible
+  // in dark mode.
+  const dimStroke = mono ? colors.text : colors.textSecondary;
+  const dimStrokeWidth = stroke * 0.8;
 
   // Top-right (Q2) tile coordinates
   const q2x = offset + tile + gap;
@@ -60,8 +64,7 @@ export function Logo({ size = 32, mono = false, accent }: LogoProps) {
           ry={radius}
           fill={mono ? "transparent" : colors.quadrantSofter.q1}
           stroke={dimStroke}
-          strokeWidth={stroke * 0.6}
-          strokeOpacity={mono ? 0.6 : 0.5}
+          strokeWidth={dimStrokeWidth}
         />
 
         {/* Q3 — bottom-left (dim) */}
@@ -74,8 +77,7 @@ export function Logo({ size = 32, mono = false, accent }: LogoProps) {
           ry={radius}
           fill={mono ? "transparent" : colors.quadrantSofter.q3}
           stroke={dimStroke}
-          strokeWidth={stroke * 0.6}
-          strokeOpacity={mono ? 0.6 : 0.5}
+          strokeWidth={dimStrokeWidth}
         />
 
         {/* Q4 — bottom-right (dim) */}
@@ -88,8 +90,7 @@ export function Logo({ size = 32, mono = false, accent }: LogoProps) {
           ry={radius}
           fill={mono ? "transparent" : colors.quadrantSofter.q4}
           stroke={dimStroke}
-          strokeWidth={stroke * 0.6}
-          strokeOpacity={mono ? 0.6 : 0.5}
+          strokeWidth={dimStrokeWidth}
         />
 
         {/* Q2 — top-right (lit, hero) */}

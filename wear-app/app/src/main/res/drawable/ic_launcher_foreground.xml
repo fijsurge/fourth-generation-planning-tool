@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  FourthGen Planner — adaptive launcher icon foreground.
+
+  Renders the brand mark (2x2 quadrant grid with Q2 lit cyan + target glyph)
+  on a transparent background. The 108x108 viewport is the Android adaptive-
+  icon canvas; the mark sits inside the inner ~76x76 region (safe zone) so
+  Android's various launcher mask shapes never clip it.
+
+  Design source-of-truth lives in:
+    - assets/logo-master.svg (SVG master)
+    - src/components/Logo.tsx (in-app React Native renderer)
+    - this file (Wear OS launcher / splash icon)
+
+  Geometry: the original 64-unit logo design is scaled 1.2× and translated
+  by 14 units to center it within the 108-unit adaptive-icon viewport
+  (108 - 64*1.2) / 2 ≈ 15.6 → 14 with a slight bias toward visual center.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <group
+        android:translateX="14"
+        android:translateY="14"
+        android:scaleX="1.25"
+        android:scaleY="1.25">
+
+        <!-- Q1 — top-left (dim outline) -->
+        <path
+            android:pathData="M11,6 h14 a5,5 0 0 1 5,5 v14 a5,5 0 0 1 -5,5 h-14 a5,5 0 0 1 -5,-5 v-14 a5,5 0 0 1 5,-5 z"
+            android:fillColor="#00000000"
+            android:strokeColor="#8E92A8"
+            android:strokeWidth="1.6"/>
+
+        <!-- Q3 — bottom-left (dim outline) -->
+        <path
+            android:pathData="M11,34 h14 a5,5 0 0 1 5,5 v14 a5,5 0 0 1 -5,5 h-14 a5,5 0 0 1 -5,-5 v-14 a5,5 0 0 1 5,-5 z"
+            android:fillColor="#00000000"
+            android:strokeColor="#8E92A8"
+            android:strokeWidth="1.6"/>
+
+        <!-- Q4 — bottom-right (dim outline) -->
+        <path
+            android:pathData="M39,34 h14 a5,5 0 0 1 5,5 v14 a5,5 0 0 1 -5,5 h-14 a5,5 0 0 1 -5,-5 v-14 a5,5 0 0 1 5,-5 z"
+            android:fillColor="#00000000"
+            android:strokeColor="#8E92A8"
+            android:strokeWidth="1.6"/>
+
+        <!-- Q2 — top-right (lit, hero). Tinted cyan fill + cyan border. -->
+        <path
+            android:pathData="M39,6 h14 a5,5 0 0 1 5,5 v14 a5,5 0 0 1 -5,5 h-14 a5,5 0 0 1 -5,-5 v-14 a5,5 0 0 1 5,-5 z"
+            android:fillColor="#3300E6C8"
+            android:strokeColor="#00E6C8"
+            android:strokeWidth="2"/>
+
+        <!-- Target glyph inside Q2 — outer ring -->
+        <path
+            android:pathData="M40,18 a6,6 0 1 0 12,0 a6,6 0 1 0 -12,0 z"
+            android:fillColor="#00000000"
+            android:strokeColor="#00E6C8"
+            android:strokeWidth="1.6"/>
+
+        <!-- Center dot -->
+        <path
+            android:pathData="M44,18 a2,2 0 1 0 4,0 a2,2 0 1 0 -4,0 z"
+            android:fillColor="#00E6C8"/>
+
+        <!-- Crosshair tick — top -->
+        <path
+            android:pathData="M46,8 L46,10.5"
+            android:strokeColor="#00E6C8"
+            android:strokeWidth="1.6"
+            android:strokeLineCap="round"/>
+
+        <!-- Crosshair tick — bottom -->
+        <path
+            android:pathData="M46,28 L46,25.5"
+            android:strokeColor="#00E6C8"
+            android:strokeWidth="1.6"
+            android:strokeLineCap="round"/>
+
+        <!-- Crosshair tick — left -->
+        <path
+            android:pathData="M36,18 L38.5,18"
+            android:strokeColor="#00E6C8"
+            android:strokeWidth="1.6"
+            android:strokeLineCap="round"/>
+
+        <!-- Crosshair tick — right -->
+        <path
+            android:pathData="M56,18 L53.5,18"
+            android:strokeColor="#00E6C8"
+            android:strokeWidth="1.6"
+            android:strokeLineCap="round"/>
+
+    </group>
+</vector>

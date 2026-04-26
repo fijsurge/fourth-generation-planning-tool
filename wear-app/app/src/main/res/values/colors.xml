@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  FourthGen Planner — watch app colors.
+
+  Resources referenced from the manifest, theme, and adaptive-icon must live
+  in XML (not the Kotlin Theme.kt file). Keep the values here in sync with
+  WatchTheme in Theme.kt. Today only the launcher-related colors live here;
+  add more as themes/styles need them.
+-->
+<resources>
+
+    <!-- Adaptive launcher icon background — deep indigo, matches phone dark bg -->
+    <color name="ic_launcher_background">#06091A</color>
+
+    <!-- Splash screen background (Android 12+ system splash) — same as launcher
+         background so launch reads as a continuation of the icon -->
+    <color name="splash_background">#06091A</color>
+
+</resources>

@@ -1,5 +1,6 @@
 package com.fourthgenplanner.wear
 
+import androidx.compose.ui.graphics.toArgb
 import androidx.wear.protolayout.ActionBuilders
 import androidx.wear.protolayout.ColorBuilders.argb
 import androidx.wear.protolayout.DeviceParametersBuilders
@@ -25,7 +26,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.tasks.await
 import org.json.JSONArray
 
-private const val RESOURCES_VERSION = "5"
+private const val RESOURCES_VERSION = "6"  // bumped: theme refresh
 private const val MAX_ROLE_CHIPS = 4
 private const val H_PADDING_DP = 12   // matches column left/right padding
 private const val CHIP_GAP_DP  = 4
@@ -156,7 +157,7 @@ class WearTileService : TileService() {
                 .setFontStyle(FontStyle.Builder()
                     .setSize(sp(14f))
                     .setWeight(FontWeightProp.Builder().setValue(FONT_WEIGHT_BOLD).build())
-                    .setColor(argb(0xFFFFFFFF.toInt()))
+                    .setColor(argb(WatchTheme.Text.toArgb()))
                     .build())
                 .setMaxLines(1)
                 .build()
@@ -169,7 +170,7 @@ class WearTileService : TileService() {
                     .setText("Open the phone app to sync goals.")
                     .setFontStyle(FontStyle.Builder()
                         .setSize(sp(12f))
-                        .setColor(argb(0xFFAAAAAA.toInt()))
+                        .setColor(argb(WatchTheme.SectionLabel.toArgb()))
                         .build())
                     .setMaxLines(3)
                     .build()
@@ -199,10 +200,23 @@ class WearTileService : TileService() {
                     val hasBigRock = roleGoals.any { it.isBigRock }
                     val fraction = completed.toFloat() / total
 
+                    // Status colors mirror phone palette (see WatchTheme):
+                    //   complete    = cyan teal (Q2/primary)
+                    //   in_progress = amber (was blue — visible drift fixed)
+                    //   not_started = neutral gray
                     val colors = when {
-                        fraction >= 1f -> ChipColors(argb(0xFF1A3B1F.toInt()), argb(0xFF81C784.toInt()))
-                        fraction > 0f  -> ChipColors(argb(0xFF1A3050.toInt()), argb(0xFF90CAF9.toInt()))
-                        else           -> ChipColors(argb(0xFF2D2D2D.toInt()), argb(0xFFCCCCCC.toInt()))
+                        fraction >= 1f -> ChipColors(
+                            argb(WatchTheme.StatusCompleteBg.toArgb()),
+                            argb(WatchTheme.StatusCompleteFg.toArgb())
+                        )
+                        fraction > 0f  -> ChipColors(
+                            argb(WatchTheme.StatusInProgressBg.toArgb()),
+                            argb(WatchTheme.StatusInProgressFg.toArgb())
+                        )
+                        else           -> ChipColors(
+                            argb(WatchTheme.StatusNotStartedBg.toArgb()),
+                            argb(WatchTheme.StatusNotStartedFg.toArgb())
+                        )
                     }
 
                     val chipWidth = if (rowRoles.size == 1) expand() else dp(halfChipDp)
