@@ -22,8 +22,6 @@
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
         <item name="android:windowSplashScreenIconBackgroundColor">@color/splash_background</item>
         <item name="android:windowSplashScreenBrandingImage">@null</item>
-        <!-- Once splash finishes, hand control back to the device default theme -->
-        <item name="android:postSplashScreenTheme">@android:style/Theme.DeviceDefault</item>
     </style>
 
 </resources>
