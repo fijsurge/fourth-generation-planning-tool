@@ -226,7 +226,7 @@ class WearTileService : TileService() {
                         .setOnClick(ActionBuilders.LaunchAction.Builder()
                             .setAndroidActivity(ActionBuilders.AndroidActivity.Builder()
                                 .setClassName("com.fourthgenplanner.wear.GoalsActivity")
-                                .setPackageName("com.fourthgenplanner.wear")
+                                .setPackageName("com.fourthgenplanner.app")
                                 .addKeyToExtraMapping(
                                     "roleFilter",
                                     ActionBuilders.AndroidStringExtra.Builder()
