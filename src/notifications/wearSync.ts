@@ -36,7 +36,18 @@ export async function pushGoalsToWatch(goals: WeeklyGoal[], roles: Role[]): Prom
 
   const roleMap = new Map(roles.map((r) => [r.id, r.name]));
 
-  const payload: WearGoal[] = goals
+  // Deduplicate recurring goals — pre-existing duplicate rows from the old
+  // carry bug should appear as one on the watch (matches phone display dedup).
+  const seen = new Set<string>();
+  const deduped = goals.filter((g) => {
+    if (!g.recurring) return true;
+    const key = `${g.roleId}|${g.goalText}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  const payload: WearGoal[] = deduped
     .filter((g) => g.quadrant === 1 || g.quadrant === 2)
     .map((g) => ({
       id: g.id,
