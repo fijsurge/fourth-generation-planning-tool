@@ -11,6 +11,7 @@ import { WeeklySummary } from "../../src/components/WeeklySummary";
 import { GoalsByRole } from "../../src/components/GoalsByRole";
 import { WeekPickerModal } from "../../src/components/WeekPickerModal";
 import { CloseoutModal } from "../../src/components/CloseoutModal";
+import { CloseoutIntroModal } from "../../src/components/onboarding/CloseoutIntroModal";
 import { WeeklyGoal } from "../../src/models/WeeklyGoal";
 import { getWeekStart, shiftWeek, formatWeekKey } from "../../src/utils/dates";
 import { generateId } from "../../src/utils/uuid";
@@ -28,11 +29,13 @@ export default function WeeklyPlanScreen() {
   const {
     notificationsEnabled, notificationTime,
     closeoutReminderEnabled, closeoutReminderDay, closeoutReminderTime,
+    closeoutOnboardingCompletedAt,
   } = useSettings();
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()));
   const weekKey = formatWeekKey(weekStart);
   const [moveOrCopyGoal, setMoveOrCopyGoal] = useState<WeeklyGoal | null>(null);
   const [showCloseout, setShowCloseout] = useState(false);
+  const [showCloseoutIntro, setShowCloseoutIntro] = useState(false);
   const hasCheckedCloseout = useRef(false);
 
   // useMemo so prevWeekStart is a stable Date reference (not recreated each render).
@@ -77,13 +80,27 @@ export default function WeeklyPlanScreen() {
           try {
             const token = await getValidAccessToken();
             const existing = await getReflectionByWeek(token, prevKey);
-            if (!existing) setShowCloseout(true);
+            if (!existing) {
+              // closeoutReminderDay: 1=Sun … 7=Sat; week starts Monday.
+              // Offset from prevWeekStart to the chosen closeout day:
+              const dayOffset = (closeoutReminderDay - 2 + 7) % 7;
+              const closeoutAt = new Date(prevWeekStart);
+              closeoutAt.setDate(closeoutAt.getDate() + dayOffset);
+              const [h, m] = closeoutReminderTime.split(":").map(Number);
+              closeoutAt.setHours(h || 18, m || 0, 0, 0);
+              const reached = new Date() >= closeoutAt;
+              if (!closeoutOnboardingCompletedAt && reached) {
+                setShowCloseoutIntro(true);
+              } else {
+                setShowCloseout(true);
+              }
+            }
           } catch {
             // Silent fail — never block the user
           }
         })();
       }
-    }, [refreshGoals, refreshRoles, getValidAccessToken, isCurrentWeek, prevWeekStart])
+    }, [refreshGoals, refreshRoles, getValidAccessToken, isCurrentWeek, prevWeekStart, closeoutReminderDay, closeoutReminderTime, closeoutOnboardingCompletedAt])
   );
 
   const handlePrevWeek = () => setWeekStart((prev) => shiftWeek(prev, -1));
@@ -450,6 +467,15 @@ export default function WeeklyPlanScreen() {
         onMove={isLocked ? undefined : handleMove}
         onCopy={handleCopy}
         onClose={() => setMoveOrCopyGoal(null)}
+      />
+
+      <CloseoutIntroModal
+        visible={showCloseoutIntro}
+        onContinueToCloseout={() => {
+          setShowCloseoutIntro(false);
+          setShowCloseout(true);
+        }}
+        onDismiss={() => setShowCloseoutIntro(false)}
       />
 
       {showCloseout && (

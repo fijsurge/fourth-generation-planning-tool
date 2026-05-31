@@ -41,6 +41,9 @@ interface SettingsState {
   isSpotlightDismissed: (name: string) => boolean;
   dismissSpotlight: (name: string) => Promise<void>;
   resetAllSpotlights: () => Promise<void>;
+  // Closeout (Week-2) onboarding
+  closeoutOnboardingCompletedAt: string | null;
+  completeCloseoutOnboarding: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -57,6 +60,7 @@ const SETTINGS_KEY_MISSION_STATEMENT = "missionStatement";
 const SETTINGS_KEY_ONBOARDING_COMPLETED_AT = "onboardingCompletedAt";
 const SETTINGS_KEY_ONBOARDING_VERSION = "onboardingVersion";
 const SETTINGS_KEY_SPOTLIGHTS_DISMISSED = "spotlightsDismissed"; // JSON Record<string, boolean>
+const SETTINGS_KEY_CLOSEOUT_ONBOARDING_COMPLETED_AT = "closeoutOnboardingCompletedAt";
 
 // Bump to re-prompt users who completed a previous flow.
 export const CURRENT_ONBOARDING_VERSION = 1;
@@ -152,6 +156,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [onboardingModalOpen, setOnboardingModalOpenState] = useState<boolean>(false);
   const [onboardingPreviewMode, setOnboardingPreviewModeState] = useState<boolean>(false);
   const [spotlightsDismissed, setSpotlightsDismissedState] = useState<Record<string, boolean>>({});
+  const [closeoutOnboardingCompletedAt, setCloseoutOnboardingCompletedAtState] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadSettings = useCallback(async () => {
@@ -190,6 +195,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           if (parsed && typeof parsed === "object") setSpotlightsDismissedState(parsed);
         } catch { /* stale/corrupt JSON — ignore, treat as none dismissed */ }
       }
+      const closeoutOnboardingEntry = entries.find((e) => e.key === SETTINGS_KEY_CLOSEOUT_ONBOARDING_COMPLETED_AT);
+      if (closeoutOnboardingEntry?.value) setCloseoutOnboardingCompletedAtState(closeoutOnboardingEntry.value);
     } catch {
       // Silently fail — settings are optional
     } finally {
@@ -214,6 +221,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       setOnboardingModalOpenState(false);
       setOnboardingPreviewModeState(false);
       setSpotlightsDismissedState({});
+      setCloseoutOnboardingCompletedAtState(null);
       setIsLoading(false);
     }
   }, [isLoggedIn, loadSettings]);
@@ -396,6 +404,15 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     } catch { /* silent fail */ }
   }, [getValidAccessToken]);
 
+  const completeCloseoutOnboarding = useCallback(async () => {
+    const now = new Date().toISOString();
+    setCloseoutOnboardingCompletedAtState(now);
+    try {
+      const token = await getValidAccessToken();
+      await setSetting(token, SETTINGS_KEY_CLOSEOUT_ONBOARDING_COMPLETED_AT, now);
+    } catch { /* silent fail — local state still reflects completion */ }
+  }, [getValidAccessToken]);
+
   const shouldAutoLaunchOnboarding = useMemo(() => {
     if (isLoading) return false;
     if (onboardingCompletedAt) return false;
@@ -428,6 +445,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         onboardingModalOpen, onboardingPreviewMode,
         openOnboarding, closeOnboarding, completeOnboarding, markOnboardingAutoLaunched,
         spotlightsDismissed, isSpotlightDismissed, dismissSpotlight, resetAllSpotlights,
+        closeoutOnboardingCompletedAt, completeCloseoutOnboarding,
         isLoading,
       }}
     >
