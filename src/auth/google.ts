@@ -20,7 +20,6 @@ export const GOOGLE_SCOPES = [
   "email",
   "https://www.googleapis.com/auth/spreadsheets",
   "https://www.googleapis.com/auth/calendar",
-  "https://www.googleapis.com/auth/calendar.events",
   "https://www.googleapis.com/auth/drive.file",
 ];
 
@@ -50,7 +49,6 @@ export function useGoogleAuthConfig() {
       usePKCE: true,
       extraParams: {
         access_type: "offline",
-        prompt: "consent",
       },
     },
     discovery
