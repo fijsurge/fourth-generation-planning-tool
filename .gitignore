@@ -12,3 +12,9 @@ web-build/
 .env.local
 notes.txt
 android/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
