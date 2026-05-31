@@ -14,6 +14,7 @@ import { useRoles } from "../../src/hooks/useRoles";
 import { useThemeColors } from "../../src/theme/useThemeColors";
 import { spacing, borderRadius } from "../../src/theme/spacing";
 import { ColorPicker } from "../../src/components/ColorPicker";
+import { SpotlightCallout } from "../../src/components/onboarding/SpotlightCallout";
 
 export default function NewRoleScreen() {
   const colors = useThemeColors();
@@ -106,6 +107,12 @@ export default function NewRoleScreen() {
           placeholderTextColor={colors.textMuted}
           multiline
           numberOfLines={3}
+        />
+
+        <SpotlightCallout
+          name="role-color-picker"
+          title="Color-code your roles"
+          body="Pick a color for this role and any calendar events tied to it will be color-coded automatically on your Google Calendar."
         />
 
         <Text style={styles.label}>Calendar Color (optional)</Text>

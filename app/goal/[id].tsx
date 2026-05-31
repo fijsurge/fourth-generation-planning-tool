@@ -23,6 +23,7 @@ import { WeekPickerModal } from "../../src/components/WeekPickerModal";
 import { DatePickerField } from "../../src/components/DateTimePickerField";
 import { getWeekStart } from "../../src/utils/dates";
 import { goalEvents } from "../../src/utils/goalEvents";
+import { SpotlightCallout } from "../../src/components/onboarding/SpotlightCallout";
 
 export default function EditGoalScreen() {
   const colors = useThemeColors();
@@ -468,6 +469,12 @@ export default function EditGoalScreen() {
           </Pressable>
           <Text style={styles.stepperLabel}>rank (optional)</Text>
         </View>
+
+        <SpotlightCallout
+          name="recurrence-picker"
+          title="Make goals recurring"
+          body="Set a goal to repeat weekly, monthly, quarterly, or yearly. It will auto-carry to next week so you don't have to re-add it."
+        />
 
         <Text style={styles.label}>Repeat</Text>
         <View style={styles.chipRow}>

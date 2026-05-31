@@ -11,6 +11,7 @@ import { useThemeColors } from "../../src/theme/useThemeColors";
 import { ThemeMode } from "../../src/theme/colors";
 import { spacing, borderRadius } from "../../src/theme/spacing";
 import { requestPermission, cancelAllScheduled } from "../../src/notifications/scheduler";
+import { SpotlightCallout } from "../../src/components/onboarding/SpotlightCallout";
 
 export default function SettingsScreen() {
   const colors = useThemeColors();
@@ -26,6 +27,7 @@ export default function SettingsScreen() {
     closeoutReminderTime, setCloseoutReminderTime,
     missionStatement, setMissionStatement,
     openOnboarding,
+    resetAllSpotlights,
   } = useSettings();
   const activeRoles = roles.filter((r) => r.active);
   const inactiveRoles = roles.filter((r) => !r.active);
@@ -423,10 +425,31 @@ export default function SettingsScreen() {
         </View>
         <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
       </Pressable>
+      <Pressable
+        onPress={() => resetAllSpotlights().catch(() => {})}
+        style={({ pressed }) => [
+          styles.previewTourRow,
+          pressed && { opacity: 0.7 },
+        ]}
+      >
+        <Ionicons name="refresh-outline" size={20} color={colors.primary} />
+        <View style={{ flex: 1 }}>
+          <Text style={styles.fieldLabel}>Reset feature hints</Text>
+          <Text style={styles.fieldHint}>
+            Show the small "did you know?" callouts again as you re-discover features
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+      </Pressable>
 
       <View style={styles.divider} />
 
       <Text style={styles.sectionTitle}>Calendar</Text>
+      <SpotlightCallout
+        name="calendar-invitees"
+        title="Auto-invite people to your goals"
+        body="Add emails here once and every calendar event you create from a goal will pre-fill these attendees. Handy for joint planning with a partner or accountability buddy."
+      />
       <Text style={styles.fieldLabel}>Default Attendees</Text>
       <Text style={styles.fieldHint}>
         Comma-separated emails pre-filled when creating events

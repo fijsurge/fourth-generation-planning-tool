@@ -36,6 +36,11 @@ interface SettingsState {
   closeOnboarding: () => void;
   completeOnboarding: () => Promise<void>;
   markOnboardingAutoLaunched: () => void;
+  // Spotlight first-visit callouts
+  spotlightsDismissed: Record<string, boolean>;
+  isSpotlightDismissed: (name: string) => boolean;
+  dismissSpotlight: (name: string) => Promise<void>;
+  resetAllSpotlights: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -51,6 +56,7 @@ const SETTINGS_KEY_CLOSEOUT_REMINDER_TIME = "closeoutReminderTime";
 const SETTINGS_KEY_MISSION_STATEMENT = "missionStatement";
 const SETTINGS_KEY_ONBOARDING_COMPLETED_AT = "onboardingCompletedAt";
 const SETTINGS_KEY_ONBOARDING_VERSION = "onboardingVersion";
+const SETTINGS_KEY_SPOTLIGHTS_DISMISSED = "spotlightsDismissed"; // JSON Record<string, boolean>
 
 // Bump to re-prompt users who completed a previous flow.
 export const CURRENT_ONBOARDING_VERSION = 1;
@@ -145,6 +151,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [autoLaunchedFlag, setAutoLaunchedFlagState] = useState<string>(readOnboardingAutoLaunched);
   const [onboardingModalOpen, setOnboardingModalOpenState] = useState<boolean>(false);
   const [onboardingPreviewMode, setOnboardingPreviewModeState] = useState<boolean>(false);
+  const [spotlightsDismissed, setSpotlightsDismissedState] = useState<Record<string, boolean>>({});
   const [isLoading, setIsLoading] = useState(true);
 
   const loadSettings = useCallback(async () => {
@@ -176,6 +183,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       if (onboardingCompletedEntry?.value) setOnboardingCompletedAtState(onboardingCompletedEntry.value);
       const onboardingVersionEntry = entries.find((e) => e.key === SETTINGS_KEY_ONBOARDING_VERSION);
       if (onboardingVersionEntry?.value) setOnboardingVersionState(parseInt(onboardingVersionEntry.value, 10) || 0);
+      const spotlightsEntry = entries.find((e) => e.key === SETTINGS_KEY_SPOTLIGHTS_DISMISSED);
+      if (spotlightsEntry?.value) {
+        try {
+          const parsed = JSON.parse(spotlightsEntry.value);
+          if (parsed && typeof parsed === "object") setSpotlightsDismissedState(parsed);
+        } catch { /* stale/corrupt JSON — ignore, treat as none dismissed */ }
+      }
     } catch {
       // Silently fail — settings are optional
     } finally {
@@ -199,6 +213,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       setOnboardingVersionState(0);
       setOnboardingModalOpenState(false);
       setOnboardingPreviewModeState(false);
+      setSpotlightsDismissedState({});
       setIsLoading(false);
     }
   }, [isLoggedIn, loadSettings]);
@@ -355,6 +370,32 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [getValidAccessToken]);
 
+  const isSpotlightDismissed = useCallback(
+    (name: string) => !!spotlightsDismissed[name],
+    [spotlightsDismissed]
+  );
+
+  const dismissSpotlight = useCallback(
+    async (name: string) => {
+      if (spotlightsDismissed[name]) return;
+      const next = { ...spotlightsDismissed, [name]: true };
+      setSpotlightsDismissedState(next);
+      try {
+        const token = await getValidAccessToken();
+        await setSetting(token, SETTINGS_KEY_SPOTLIGHTS_DISMISSED, JSON.stringify(next));
+      } catch { /* silent fail — local state still reflects dismissal */ }
+    },
+    [spotlightsDismissed, getValidAccessToken]
+  );
+
+  const resetAllSpotlights = useCallback(async () => {
+    setSpotlightsDismissedState({});
+    try {
+      const token = await getValidAccessToken();
+      await setSetting(token, SETTINGS_KEY_SPOTLIGHTS_DISMISSED, "");
+    } catch { /* silent fail */ }
+  }, [getValidAccessToken]);
+
   const shouldAutoLaunchOnboarding = useMemo(() => {
     if (isLoading) return false;
     if (onboardingCompletedAt) return false;
@@ -386,6 +427,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         shouldAutoLaunchOnboarding, shouldShowOnboardingBanner,
         onboardingModalOpen, onboardingPreviewMode,
         openOnboarding, closeOnboarding, completeOnboarding, markOnboardingAutoLaunched,
+        spotlightsDismissed, isSpotlightDismissed, dismissSpotlight, resetAllSpotlights,
         isLoading,
       }}
     >

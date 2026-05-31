@@ -16,6 +16,7 @@ import { useThemeColors } from "../../src/theme/useThemeColors";
 import { spacing, borderRadius } from "../../src/theme/spacing";
 import { Ionicons } from "@expo/vector-icons";
 import { colorIdToHex } from "../../src/utils/calendarColors";
+import { SpotlightCallout } from "../../src/components/onboarding/SpotlightCallout";
 
 interface BigCalendarEvent extends ICalendarEventBase {
   id: string;
@@ -202,6 +203,13 @@ export default function CalendarScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={{ paddingHorizontal: spacing.md }}>
+        <SpotlightCallout
+          name="calendar-big-rocks"
+          title="Schedule your Big Rocks first"
+          body="Open any goal from the Weekly Plan and tap the calendar icon to block time for it. Q2 work that isn't on the calendar tends not to happen — protect it before the small stuff fills your week."
+        />
+      </View>
       <View style={styles.toolbar}>
         <View style={styles.modeRow}>
           {MODES.map((m) => (

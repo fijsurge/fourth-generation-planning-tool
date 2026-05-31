@@ -20,6 +20,7 @@ import { scheduleDailyGoalReminder, scheduleCloseoutReminder } from "../../src/n
 import { useThemeColors } from "../../src/theme/useThemeColors";
 import { spacing } from "../../src/theme/spacing";
 import { goalEvents } from "../../src/utils/goalEvents";
+import { SpotlightCallout } from "../../src/components/onboarding/SpotlightCallout";
 
 export default function WeeklyPlanScreen() {
   const colors = useThemeColors();
@@ -410,6 +411,17 @@ export default function WeeklyPlanScreen() {
       )}
 
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator>
+        {dedupedGoals.length > 0 && (
+          <View style={{ paddingHorizontal: spacing.md }}>
+            <SpotlightCallout
+              name="goal-context-menu"
+              title="Move, copy, or schedule goals"
+              body={Platform.OS === "web"
+                ? "Tap the menu (⋯) on any goal to move it to another week, copy it forward, or block calendar time for it."
+                : "Long-press any goal to move it to another week, copy it forward, or block calendar time for it."}
+            />
+          </View>
+        )}
         <GoalsByRole
           goals={dedupedGoals}
           roles={roles}

@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { View, Pressable, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, Pressable, StyleSheet, ActivityIndicator } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useWeeklyGoals } from "../../src/hooks/useWeeklyGoals";
@@ -10,7 +10,8 @@ import { QuadrantGrid } from "../../src/components/QuadrantGrid";
 import { WeeklyGoal } from "../../src/models/WeeklyGoal";
 import { getWeekStart, shiftWeek, formatWeekKey } from "../../src/utils/dates";
 import { useThemeColors } from "../../src/theme/useThemeColors";
-import { spacing } from "../../src/theme/spacing";
+import { spacing, borderRadius } from "../../src/theme/spacing";
+import { typography } from "../../src/theme/typography";
 
 export default function QuadrantScreen() {
   const colors = useThemeColors();
@@ -67,6 +68,38 @@ export default function QuadrantScreen() {
       shadowOpacity: 0.25,
       shadowRadius: 4,
     },
+    emptyHint: {
+      marginHorizontal: spacing.md,
+      marginTop: spacing.sm,
+      marginBottom: spacing.xs,
+      padding: spacing.md,
+      borderRadius: borderRadius.md,
+      borderWidth: 1,
+      borderColor: colors.primary,
+      backgroundColor: colors.primaryLight,
+      gap: spacing.xs,
+      alignItems: "flex-start",
+    },
+    emptyHintTitle: {
+      ...typography.bodyLg,
+      fontWeight: "700",
+      color: colors.primary,
+    },
+    emptyHintBody: {
+      ...typography.body,
+      color: colors.text,
+      lineHeight: 20,
+    },
+    emptyHintCta: {
+      marginTop: spacing.xs,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.sm,
+    },
+    emptyHintCtaText: {
+      ...typography.caption,
+      fontWeight: "700",
+    },
   }), [colors]);
 
   return (
@@ -84,12 +117,37 @@ export default function QuadrantScreen() {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
-        <QuadrantGrid
-          goals={goals}
-          roles={roles}
-          onGoalPress={handleGoalPress}
-          onCycleStatus={cycleStatus}
-        />
+        <>
+          {goals.length === 0 && (
+            <View style={styles.emptyHint}>
+              <Ionicons name="grid-outline" size={20} color={colors.primary} />
+              <Text style={styles.emptyHintTitle}>Nothing in your quadrants yet</Text>
+              <Text style={styles.emptyHintBody}>
+                Goals you add appear here, sorted by urgent vs. important. The top-right
+                (Q2) is the magic zone — that's where the framework wants you to spend
+                your planning effort.
+              </Text>
+              <Pressable
+                onPress={handleAddGoal}
+                style={({ pressed }) => [
+                  styles.emptyHintCta,
+                  { backgroundColor: colors.primary },
+                  pressed && { opacity: 0.85 },
+                ]}
+              >
+                <Text style={[styles.emptyHintCtaText, { color: colors.onPrimary }]}>
+                  Add your first goal
+                </Text>
+              </Pressable>
+            </View>
+          )}
+          <QuadrantGrid
+            goals={goals}
+            roles={roles}
+            onGoalPress={handleGoalPress}
+            onCycleStatus={cycleStatus}
+          />
+        </>
       )}
 
       <Pressable

@@ -16,6 +16,7 @@ import { QUADRANT_LABELS, getQuadrantColors } from "../../src/utils/constants";
 import { useThemeColors } from "../../src/theme/useThemeColors";
 import { spacing, borderRadius } from "../../src/theme/spacing";
 import { Quadrant } from "../../src/models/WeeklyGoal";
+import { SpotlightCallout } from "../../src/components/onboarding/SpotlightCallout";
 
 export default function StatsScreen() {
   const colors = useThemeColors();
@@ -240,7 +241,19 @@ export default function StatsScreen() {
   if (weekHistory.length === 0) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.emptyText}>No goals recorded yet.</Text>
+        <Ionicons
+          name="bar-chart-outline"
+          size={48}
+          color={colors.textMuted}
+          style={{ marginBottom: spacing.md }}
+        />
+        <Text style={[styles.emptyText, { fontWeight: "600", marginBottom: spacing.xs }]}>
+          Stats appear once you've recorded some goals
+        </Text>
+        <Text style={styles.emptyText}>
+          You'll see your weekly completion rate, an all-time score, and a quadrant
+          breakdown so you can spot whether you're drifting away from Q2.
+        </Text>
       </View>
     );
   }
@@ -259,6 +272,12 @@ export default function StatsScreen() {
         />
       }
     >
+      <SpotlightCallout
+        name="stats-tab"
+        title="Track your follow-through"
+        body="Each week's completion rate, plus a quadrant breakdown so you can see where your time actually went. Use this to spot drift toward Q1/Q3 — and protect more Q2 time next week."
+      />
+
       {/* Overall Card */}
       <View style={styles.overallCard}>
         <Text style={styles.overallTitle}>ALL-TIME SUCCESS RATE</Text>
