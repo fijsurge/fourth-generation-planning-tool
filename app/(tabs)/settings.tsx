@@ -25,6 +25,7 @@ export default function SettingsScreen() {
     closeoutReminderDay, setCloseoutReminderDay,
     closeoutReminderTime, setCloseoutReminderTime,
     missionStatement, setMissionStatement,
+    openOnboarding,
   } = useSettings();
   const activeRoles = roles.filter((r) => r.active);
   const inactiveRoles = roles.filter((r) => !r.active);
@@ -274,6 +275,12 @@ export default function SettingsScreen() {
       minHeight: 120,
       textAlignVertical: "top",
     },
+    previewTourRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.md,
+      paddingVertical: spacing.md,
+    },
   }), [colors]);
 
   const THEME_OPTIONS: { label: string; value: ThemeMode }[] = [
@@ -396,6 +403,26 @@ export default function SettingsScreen() {
           )}
         </Pressable>
       )}
+
+      <View style={styles.divider} />
+
+      <Text style={styles.sectionTitle}>Help</Text>
+      <Pressable
+        onPress={() => openOnboarding({ preview: true })}
+        style={({ pressed }) => [
+          styles.previewTourRow,
+          pressed && { opacity: 0.7 },
+        ]}
+      >
+        <Ionicons name="sparkles-outline" size={20} color={colors.primary} />
+        <View style={{ flex: 1 }}>
+          <Text style={styles.fieldLabel}>Preview the welcome tour</Text>
+          <Text style={styles.fieldHint}>
+            Walk through the 5-step intro without changing your data
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+      </Pressable>
 
       <View style={styles.divider} />
 

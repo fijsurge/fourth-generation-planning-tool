@@ -25,6 +25,17 @@ interface SettingsState {
   shouldShowMissionStatement: boolean;
   dismissMissionStatement: () => void;      // dismiss for the rest of the week
   skipMissionStatement: () => void;         // skip for ~48h, may show again this week
+  // Onboarding walkthrough
+  onboardingCompletedAt: string | null;     // ISO timestamp; null = not yet finished
+  onboardingVersion: number;                // version she completed; 0 = none
+  shouldAutoLaunchOnboarding: boolean;      // true = immersive launch this session
+  shouldShowOnboardingBanner: boolean;      // true = persistent CTA in the app shell
+  onboardingModalOpen: boolean;             // controls WalkthroughModal visibility
+  onboardingPreviewMode: boolean;           // true = ephemeral (no sheet writes)
+  openOnboarding: (opts?: { preview?: boolean }) => void;
+  closeOnboarding: () => void;
+  completeOnboarding: () => Promise<void>;
+  markOnboardingAutoLaunched: () => void;
   isLoading: boolean;
 }
 
@@ -38,15 +49,22 @@ const SETTINGS_KEY_CLOSEOUT_REMINDER_ENABLED = "closeoutReminderEnabled";
 const SETTINGS_KEY_CLOSEOUT_REMINDER_DAY = "closeoutReminderDay";
 const SETTINGS_KEY_CLOSEOUT_REMINDER_TIME = "closeoutReminderTime";
 const SETTINGS_KEY_MISSION_STATEMENT = "missionStatement";
+const SETTINGS_KEY_ONBOARDING_COMPLETED_AT = "onboardingCompletedAt";
+const SETTINGS_KEY_ONBOARDING_VERSION = "onboardingVersion";
+
+// Bump to re-prompt users who completed a previous flow.
+export const CURRENT_ONBOARDING_VERSION = 1;
 
 const MISSION_DISMISSED_KEY   = "missionDismissedWeek";
 const MISSION_SKIP_UNTIL_KEY  = "missionSkipUntil";      // ISO timestamp
 const MISSION_SCHEDULED_KEY   = "missionScheduledFor";   // "<weekKey>|<ISO timestamp>"
+const ONBOARDING_AUTO_LAUNCHED_KEY = "onboardingAutoLaunched"; // local-only flag
 
 // Module-level fallbacks for non-web platforms (reset per session)
 let _sessionDismissedWeek = "";
 let _sessionSkipUntil = "";
 let _sessionScheduled = "";
+let _sessionOnboardingAutoLaunched = "";
 
 function getCurrentWeekKey(): string {
   const now = new Date();
@@ -76,6 +94,13 @@ function writeSkipUntil(v: string) { storageSet(MISSION_SKIP_UNTIL_KEY, v, (s) =
 
 function readScheduled(): string { return storageGet(MISSION_SCHEDULED_KEY, _sessionScheduled); }
 function writeScheduled(v: string) { storageSet(MISSION_SCHEDULED_KEY, v, (s) => { _sessionScheduled = s; }); }
+
+function readOnboardingAutoLaunched(): string {
+  return storageGet(ONBOARDING_AUTO_LAUNCHED_KEY, _sessionOnboardingAutoLaunched);
+}
+function writeOnboardingAutoLaunched(v: string) {
+  storageSet(ONBOARDING_AUTO_LAUNCHED_KEY, v, (s) => { _sessionOnboardingAutoLaunched = s; });
+}
 
 /** Pick a random ISO timestamp between now and end of current ISO week (Sunday 23:59). */
 function generateScheduledTime(weekKey: string): string {
@@ -115,6 +140,11 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     writeScheduled(generated);
     return generated;
   });
+  const [onboardingCompletedAt, setOnboardingCompletedAtState] = useState<string | null>(null);
+  const [onboardingVersion, setOnboardingVersionState] = useState<number>(0);
+  const [autoLaunchedFlag, setAutoLaunchedFlagState] = useState<string>(readOnboardingAutoLaunched);
+  const [onboardingModalOpen, setOnboardingModalOpenState] = useState<boolean>(false);
+  const [onboardingPreviewMode, setOnboardingPreviewModeState] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadSettings = useCallback(async () => {
@@ -142,6 +172,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       if (closeoutTime?.value) setCloseoutReminderTimeState(closeoutTime.value);
       const missionEntry = entries.find((e) => e.key === SETTINGS_KEY_MISSION_STATEMENT);
       if (missionEntry?.value) setMissionStatementState(missionEntry.value);
+      const onboardingCompletedEntry = entries.find((e) => e.key === SETTINGS_KEY_ONBOARDING_COMPLETED_AT);
+      if (onboardingCompletedEntry?.value) setOnboardingCompletedAtState(onboardingCompletedEntry.value);
+      const onboardingVersionEntry = entries.find((e) => e.key === SETTINGS_KEY_ONBOARDING_VERSION);
+      if (onboardingVersionEntry?.value) setOnboardingVersionState(parseInt(onboardingVersionEntry.value, 10) || 0);
     } catch {
       // Silently fail — settings are optional
     } finally {
@@ -161,6 +195,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       setCloseoutReminderDayState(1);
       setCloseoutReminderTimeState("18:00");
       setMissionStatementState("");
+      setOnboardingCompletedAtState(null);
+      setOnboardingVersionState(0);
+      setOnboardingModalOpenState(false);
+      setOnboardingPreviewModeState(false);
       setIsLoading(false);
     }
   }, [isLoggedIn, loadSettings]);
@@ -287,6 +325,51 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setSkipUntilState(until);
   }, []);
 
+  const markOnboardingAutoLaunched = useCallback(() => {
+    writeOnboardingAutoLaunched("true");
+    setAutoLaunchedFlagState("true");
+  }, []);
+
+  const openOnboarding = useCallback((opts?: { preview?: boolean }) => {
+    setOnboardingPreviewModeState(!!opts?.preview);
+    setOnboardingModalOpenState(true);
+  }, []);
+
+  const closeOnboarding = useCallback(() => {
+    setOnboardingModalOpenState(false);
+    setOnboardingPreviewModeState(false);
+  }, []);
+
+  const completeOnboarding = useCallback(async () => {
+    const now = new Date().toISOString();
+    setOnboardingCompletedAtState(now);
+    setOnboardingVersionState(CURRENT_ONBOARDING_VERSION);
+    setOnboardingModalOpenState(false);
+    setOnboardingPreviewModeState(false);
+    try {
+      const token = await getValidAccessToken();
+      await setSetting(token, SETTINGS_KEY_ONBOARDING_COMPLETED_AT, now);
+      await setSetting(token, SETTINGS_KEY_ONBOARDING_VERSION, String(CURRENT_ONBOARDING_VERSION));
+    } catch {
+      // Silent fail — local state still reflects completion
+    }
+  }, [getValidAccessToken]);
+
+  const shouldAutoLaunchOnboarding = useMemo(() => {
+    if (isLoading) return false;
+    if (onboardingCompletedAt) return false;
+    if (autoLaunchedFlag === "true") return false;
+    return true;
+  }, [isLoading, onboardingCompletedAt, autoLaunchedFlag]);
+
+  const shouldShowOnboardingBanner = useMemo(() => {
+    if (isLoading) return false;
+    if (onboardingCompletedAt) return false;
+    if (onboardingModalOpen) return false;       // hide banner while modal is up
+    if (autoLaunchedFlag !== "true") return false; // before auto-launch fires, no banner
+    return true;
+  }, [isLoading, onboardingCompletedAt, onboardingModalOpen, autoLaunchedFlag]);
+
   return (
     <SettingsContext.Provider
       value={{
@@ -299,6 +382,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         closeoutReminderTime, setCloseoutReminderTime,
         missionStatement, setMissionStatement,
         shouldShowMissionStatement, dismissMissionStatement, skipMissionStatement,
+        onboardingCompletedAt, onboardingVersion,
+        shouldAutoLaunchOnboarding, shouldShowOnboardingBanner,
+        onboardingModalOpen, onboardingPreviewMode,
+        openOnboarding, closeOnboarding, completeOnboarding, markOnboardingAutoLaunched,
         isLoading,
       }}
     >

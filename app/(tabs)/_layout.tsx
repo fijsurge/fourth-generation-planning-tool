@@ -3,6 +3,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { View } from "react-native";
 import { useThemeColors } from "../../src/theme/useThemeColors";
 import { MissionStatementModal } from "../../src/components/MissionStatementModal";
+import { WalkthroughModal } from "../../src/components/onboarding/WalkthroughModal";
+import { OnboardingBanner } from "../../src/components/onboarding/OnboardingBanner";
 import { Logo } from "../../src/components/Logo";
 
 export default function TabLayout() {
@@ -11,6 +13,8 @@ export default function TabLayout() {
   return (
     <View style={{ flex: 1 }}>
       <MissionStatementModal />
+      <WalkthroughModal />
+      <OnboardingBanner />
       <Tabs
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
