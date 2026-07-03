@@ -24,6 +24,8 @@ import {
 import { useThemeColors } from "../../src/theme/useThemeColors";
 import { spacing, borderRadius } from "../../src/theme/spacing";
 import { ColorPicker } from "../../src/components/ColorPicker";
+import { useSettings } from "../../src/contexts/SettingsContext";
+import { rescheduleFollowupForEvent, cancelGoalFollowup } from "../../src/notifications/goalNotifications";
 
 function toLocalDateTimeString(date: Date): string {
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -44,6 +46,7 @@ export default function EditEventScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { events, updateEvent, deleteEvent } = useCalendarEvents();
   const { getValidAccessToken } = useAuth();
+  const { quietHoursEnabled, quietHoursStart, quietHoursEnd } = useSettings();
 
   const eventFromContext = events.find((e) => e.id === id);
   const [fetchedEvent, setFetchedEvent] = useState<CalendarEvent | null>(null);
@@ -374,6 +377,16 @@ export default function EditEventScreen() {
         transparency,
         colorId,
       });
+      // If this event backs a weekly goal, keep its follow-up aligned to the new time.
+      if (event.linkedGoalId) {
+        await rescheduleFollowupForEvent({
+          goalId: event.linkedGoalId,
+          newEventStartISO: startTime,
+          allDay,
+          calendarEventId: id,
+          quiet: { enabled: quietHoursEnabled, start: quietHoursStart, end: quietHoursEnd },
+        }).catch(() => {});
+      }
       router.back();
     } catch (err: any) {
       const msg = err?.message || "Failed to save event";
@@ -392,6 +405,9 @@ export default function EditEventScreen() {
       setSaving(true);
       try {
         await deleteEvent(id!);
+        if (event.linkedGoalId) {
+          await cancelGoalFollowup(event.linkedGoalId).catch(() => {});
+        }
         router.back();
       } catch {
         setSaving(false);

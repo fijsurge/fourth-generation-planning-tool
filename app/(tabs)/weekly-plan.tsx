@@ -17,17 +17,26 @@ import { getWeekStart, shiftWeek, formatWeekKey } from "../../src/utils/dates";
 import { generateId } from "../../src/utils/uuid";
 import { getReflectionByWeek, getWeeklyGoals, addWeeklyGoal as apiAddGoal } from "../../src/api/googleSheets";
 import { useSettings } from "../../src/contexts/SettingsContext";
-import { scheduleDailyGoalReminder, scheduleCloseoutReminder } from "../../src/notifications/scheduler";
+import { scheduleCloseoutReminder } from "../../src/notifications/scheduler";
 import { useThemeColors } from "../../src/theme/useThemeColors";
 import { spacing } from "../../src/theme/spacing";
 import { goalEvents } from "../../src/utils/goalEvents";
 import { SpotlightCallout } from "../../src/components/onboarding/SpotlightCallout";
 
+// Identifies the recurrence period a week belongs to for a given cadence, so
+// a monthly/quarterly/yearly goal can be recognized as "already carried" for
+// that period regardless of which specific week within it was used.
+function periodKey(weekStartDate: string, cadence: "monthly" | "quarterly" | "yearly"): string {
+  const [y, m] = weekStartDate.split("-").map(Number);
+  if (cadence === "yearly") return String(y);
+  if (cadence === "quarterly") return `${y}-Q${Math.ceil(m / 3)}`;
+  return `${y}-${m}`; // monthly
+}
+
 export default function WeeklyPlanScreen() {
   const colors = useThemeColors();
   const { getValidAccessToken } = useAuth();
   const {
-    notificationsEnabled, notificationTime,
     closeoutReminderEnabled, closeoutReminderDay, closeoutReminderTime,
     closeoutOnboardingCompletedAt,
   } = useSettings();
@@ -237,19 +246,18 @@ export default function WeeklyPlanScreen() {
             if ((weekSetByKey.get(key)?.size ?? 0) >= totalAllowed) return false;
           }
           // Cadence check: should this goal appear in the viewed week?
+          // For monthly/quarterly/yearly cadences, the goal should only appear
+          // ONCE per period — check whether any week this goal already occupies
+          // falls in the same period as the viewed week, not just whether the
+          // viewed week's period is later than the origin's.
           const cadence = g.recurringCadence ?? "weekly";
-          const [sy, sm] = g.weekStartDate.split("-").map(Number);
-          const [ty, tm] = weekKey.split("-").map(Number);
-          if (cadence === "yearly") {
-            if (ty <= sy) return false;
-          } else if (cadence === "quarterly") {
-            const srcQ = Math.ceil(sm / 3);
-            const tgtQ = Math.ceil(tm / 3);
-            if (ty < sy) return false;
-            if (ty === sy && tgtQ <= srcQ) return false;
-          } else if (cadence === "monthly") {
-            if (ty < sy) return false;
-            if (ty === sy && tm <= sm) return false;
+          if (cadence !== "weekly") {
+            const targetPeriod = periodKey(weekKey, cadence);
+            const weeksForKey = weekSetByKey.get(key) ?? new Set<string>();
+            const alreadyInPeriod = [...weeksForKey].some(
+              (w) => periodKey(w, cadence) === targetPeriod
+            );
+            if (alreadyInPeriod) return false;
           }
           // weekly (or no cadence): always carry
           return true;
@@ -286,17 +294,15 @@ export default function WeeklyPlanScreen() {
     })();
   }, [goalsLoading, weekKey, getValidAccessToken, refreshGoals]);
 
-  // Schedule notifications when goals or notification settings change
+  // Keep the weekly closeout reminder in sync with its settings. (Per-goal
+  // follow-ups are scheduled from the calendar-event flow, not here; the old bulk
+  // morning reminder has been retired.)
   useEffect(() => {
     if (Platform.OS === "web") return;
-    if (goalsLoading) return;
-    if (notificationsEnabled) {
-      scheduleDailyGoalReminder(goals, notificationTime).catch(() => {});
-    }
     if (closeoutReminderEnabled) {
       scheduleCloseoutReminder(closeoutReminderDay, closeoutReminderTime).catch(() => {});
     }
-  }, [goals, notificationsEnabled, notificationTime, closeoutReminderEnabled, closeoutReminderDay, closeoutReminderTime, goalsLoading]);
+  }, [closeoutReminderEnabled, closeoutReminderDay, closeoutReminderTime]);
 
   // Deduplicate recurring goals for display — pre-existing duplicate rows from
   // the old carry bug (same roleId+goalText in the same week) should show as one.

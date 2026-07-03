@@ -2,7 +2,7 @@
   "expo": {
     "name": "Fourth Gen Planner",
     "slug": "fourth-gen-planner",
-    "version": "1.2.20",
+    "version": "1.2.21",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "fourthgenplanner",
@@ -23,7 +23,11 @@
         "backgroundColor": "#080C22"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.fourthgenplanner.app"
+      "package": "com.fourthgenplanner.app",
+      "permissions": [
+        "android.permission.USE_EXACT_ALARM",
+        "android.permission.SCHEDULE_EXACT_ALARM"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",

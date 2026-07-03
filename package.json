@@ -1,13 +1,13 @@
 {
   "name": "fourth-generation-planning-tool",
-  "version": "1.2.20",
+  "version": "1.2.21",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "build:web": "expo export --platform web",
+    "build:web": "expo export --platform web && node scripts/patch-web-html.js",
     "test": "jest",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
@@ -31,6 +31,7 @@
     "expo-secure-store": "~15.0.8",
     "expo-status-bar": "~3.0.9",
     "expo-system-ui": "~6.0.9",
+    "expo-task-manager": "~14.0.9",
     "expo-web-browser": "~15.0.10",
     "react": "19.1.0",
     "react-dom": "19.1.0",
@@ -55,7 +56,8 @@
     "jest-expo": "latest",
     "react-test-renderer": "19.0.0",
     "sharp": "^0.33.5",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "wrangler": "^4.103.0"
   },
   "private": true
 }

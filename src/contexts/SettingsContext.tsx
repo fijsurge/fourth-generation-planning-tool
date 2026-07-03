@@ -4,6 +4,7 @@ import { getISOWeek, getISOWeekYear } from "date-fns";
 import { useAuth } from "../auth/AuthContext";
 import { getSettings, setSetting } from "../api/googleSheets";
 import { ThemeMode } from "../theme/colors";
+import { cacheQuietHours } from "../notifications/quietHoursCache";
 
 interface SettingsState {
   defaultAttendees: string;
@@ -20,6 +21,12 @@ interface SettingsState {
   setCloseoutReminderDay: (value: number) => Promise<void>;
   closeoutReminderTime: string; // HH:mm
   setCloseoutReminderTime: (value: string) => Promise<void>;
+  quietHoursEnabled: boolean;
+  setQuietHoursEnabled: (value: boolean) => Promise<void>;
+  quietHoursStart: string; // HH:mm
+  setQuietHoursStart: (value: string) => Promise<void>;
+  quietHoursEnd: string; // HH:mm
+  setQuietHoursEnd: (value: string) => Promise<void>;
   missionStatement: string;
   setMissionStatement: (value: string) => Promise<void>;
   shouldShowMissionStatement: boolean;
@@ -56,6 +63,9 @@ const SETTINGS_KEY_NOTIFICATION_TIME = "notificationTime";
 const SETTINGS_KEY_CLOSEOUT_REMINDER_ENABLED = "closeoutReminderEnabled";
 const SETTINGS_KEY_CLOSEOUT_REMINDER_DAY = "closeoutReminderDay";
 const SETTINGS_KEY_CLOSEOUT_REMINDER_TIME = "closeoutReminderTime";
+const SETTINGS_KEY_QUIET_HOURS_ENABLED = "quietHoursEnabled";
+const SETTINGS_KEY_QUIET_HOURS_START = "quietHoursStart";
+const SETTINGS_KEY_QUIET_HOURS_END = "quietHoursEnd";
 const SETTINGS_KEY_MISSION_STATEMENT = "missionStatement";
 const SETTINGS_KEY_ONBOARDING_COMPLETED_AT = "onboardingCompletedAt";
 const SETTINGS_KEY_ONBOARDING_VERSION = "onboardingVersion";
@@ -138,6 +148,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [closeoutReminderEnabled, setCloseoutReminderEnabledState] = useState(false);
   const [closeoutReminderDay, setCloseoutReminderDayState] = useState(1); // Sunday
   const [closeoutReminderTime, setCloseoutReminderTimeState] = useState("18:00");
+  const [quietHoursEnabled, setQuietHoursEnabledState] = useState(true);
+  const [quietHoursStart, setQuietHoursStartState] = useState("21:00");
+  const [quietHoursEnd, setQuietHoursEndState] = useState("07:00");
   const [missionStatement, setMissionStatementState] = useState("");
   const [dismissedWeek, setDismissedWeekState] = useState<string>(readDismissedWeek);
   const [skipUntil, setSkipUntilState] = useState<string>(readSkipUntil);
@@ -182,6 +195,12 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       if (closeoutDay?.value) setCloseoutReminderDayState(parseInt(closeoutDay.value, 10));
       const closeoutTime = entries.find((e) => e.key === SETTINGS_KEY_CLOSEOUT_REMINDER_TIME);
       if (closeoutTime?.value) setCloseoutReminderTimeState(closeoutTime.value);
+      const quietEnabled = entries.find((e) => e.key === SETTINGS_KEY_QUIET_HOURS_ENABLED);
+      if (quietEnabled?.value === "false") setQuietHoursEnabledState(false);
+      const quietStart = entries.find((e) => e.key === SETTINGS_KEY_QUIET_HOURS_START);
+      if (quietStart?.value) setQuietHoursStartState(quietStart.value);
+      const quietEnd = entries.find((e) => e.key === SETTINGS_KEY_QUIET_HOURS_END);
+      if (quietEnd?.value) setQuietHoursEndState(quietEnd.value);
       const missionEntry = entries.find((e) => e.key === SETTINGS_KEY_MISSION_STATEMENT);
       if (missionEntry?.value) setMissionStatementState(missionEntry.value);
       const onboardingCompletedEntry = entries.find((e) => e.key === SETTINGS_KEY_ONBOARDING_COMPLETED_AT);
@@ -215,6 +234,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       setCloseoutReminderEnabledState(false);
       setCloseoutReminderDayState(1);
       setCloseoutReminderTimeState("18:00");
+      setQuietHoursEnabledState(true);
+      setQuietHoursStartState("21:00");
+      setQuietHoursEndState("07:00");
       setMissionStatementState("");
       setOnboardingCompletedAtState(null);
       setOnboardingVersionState(0);
@@ -225,6 +247,12 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
     }
   }, [isLoggedIn, loadSettings]);
+
+  // Mirror quiet hours to a local cache so the headless background notification
+  // task can read them without auth/network.
+  useEffect(() => {
+    cacheQuietHours({ enabled: quietHoursEnabled, start: quietHoursStart, end: quietHoursEnd });
+  }, [quietHoursEnabled, quietHoursStart, quietHoursEnd]);
 
   const setDefaultAttendees = useCallback(
     async (value: string) => {
@@ -302,6 +330,39 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       try {
         const token = await getValidAccessToken();
         await setSetting(token, SETTINGS_KEY_CLOSEOUT_REMINDER_TIME, value);
+      } catch { /* silent fail */ }
+    },
+    [getValidAccessToken]
+  );
+
+  const setQuietHoursEnabled = useCallback(
+    async (value: boolean) => {
+      setQuietHoursEnabledState(value);
+      try {
+        const token = await getValidAccessToken();
+        await setSetting(token, SETTINGS_KEY_QUIET_HOURS_ENABLED, String(value));
+      } catch { /* silent fail */ }
+    },
+    [getValidAccessToken]
+  );
+
+  const setQuietHoursStart = useCallback(
+    async (value: string) => {
+      setQuietHoursStartState(value);
+      try {
+        const token = await getValidAccessToken();
+        await setSetting(token, SETTINGS_KEY_QUIET_HOURS_START, value);
+      } catch { /* silent fail */ }
+    },
+    [getValidAccessToken]
+  );
+
+  const setQuietHoursEnd = useCallback(
+    async (value: string) => {
+      setQuietHoursEndState(value);
+      try {
+        const token = await getValidAccessToken();
+        await setSetting(token, SETTINGS_KEY_QUIET_HOURS_END, value);
       } catch { /* silent fail */ }
     },
     [getValidAccessToken]
@@ -438,6 +499,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         closeoutReminderEnabled, setCloseoutReminderEnabled,
         closeoutReminderDay, setCloseoutReminderDay,
         closeoutReminderTime, setCloseoutReminderTime,
+        quietHoursEnabled, setQuietHoursEnabled,
+        quietHoursStart, setQuietHoursStart,
+        quietHoursEnd, setQuietHoursEnd,
         missionStatement, setMissionStatement,
         shouldShowMissionStatement, dismissMissionStatement, skipMissionStatement,
         onboardingCompletedAt, onboardingVersion,

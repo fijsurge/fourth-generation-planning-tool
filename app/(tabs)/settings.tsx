@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { View, Text, TextInput, Pressable, ScrollView, StyleSheet, ActivityIndicator, Switch, Platform } from "react-native";
+import { View, Text, TextInput, Pressable, ScrollView, StyleSheet, ActivityIndicator, Switch, Platform, Alert } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
@@ -10,21 +10,27 @@ import { RoleCard } from "../../src/components/RoleCard";
 import { useThemeColors } from "../../src/theme/useThemeColors";
 import { ThemeMode } from "../../src/theme/colors";
 import { spacing, borderRadius } from "../../src/theme/spacing";
-import { requestPermission, cancelAllScheduled } from "../../src/notifications/scheduler";
+import { requestPermission } from "../../src/notifications/scheduler";
+import { cancelAllGoalFollowups } from "../../src/notifications/goalNotifications";
+import { TimePickerField } from "../../src/components/DateTimePickerField";
 import { SpotlightCallout } from "../../src/components/onboarding/SpotlightCallout";
+import { getWeeklyGoals, deleteWeeklyGoal } from "../../src/api/googleSheets";
+import { findDuplicateRecurringGoals } from "../../src/utils/dedupeRecurringGoals";
 
 export default function SettingsScreen() {
   const colors = useThemeColors();
-  const { logout } = useAuth();
+  const { logout, getValidAccessToken } = useAuth();
   const { roles, isLoading } = useRoles();
   const {
     defaultAttendees, setDefaultAttendees,
     theme, setTheme,
     notificationsEnabled, setNotificationsEnabled,
-    notificationTime, setNotificationTime,
     closeoutReminderEnabled, setCloseoutReminderEnabled,
     closeoutReminderDay, setCloseoutReminderDay,
     closeoutReminderTime, setCloseoutReminderTime,
+    quietHoursEnabled, setQuietHoursEnabled,
+    quietHoursStart, setQuietHoursStart,
+    quietHoursEnd, setQuietHoursEnd,
     missionStatement, setMissionStatement,
     openOnboarding,
     resetAllSpotlights,
@@ -34,50 +40,80 @@ export default function SettingsScreen() {
   const [inactiveExpanded, setInactiveExpanded] = useState(false);
   const [attendeesInput, setAttendeesInput] = useState<string | null>(null);
   const [savingAttendees, setSavingAttendees] = useState(false);
-  const [notifTimeInput, setNotifTimeInput] = useState<string | null>(null);
-  const [savingNotifTime, setSavingNotifTime] = useState(false);
-  const [closeoutTimeInput, setCloseoutTimeInput] = useState<string | null>(null);
-  const [savingCloseoutTime, setSavingCloseoutTime] = useState(false);
   const [missionInput, setMissionInput] = useState<string | null>(null);
   const [savingMission, setSavingMission] = useState(false);
+  const [dedupingRecurring, setDedupingRecurring] = useState(false);
 
   const attendeesValue = attendeesInput !== null ? attendeesInput : defaultAttendees;
   const missionValue = missionInput !== null ? missionInput : missionStatement;
+
+  // react-native-web's Alert.alert is a no-op stub, so confirmation dialogs
+  // must fall back to window.confirm/alert on web or they silently do nothing.
+  const confirmAsync = (title: string, message: string): Promise<boolean> => {
+    if (Platform.OS === "web") {
+      return Promise.resolve(window.confirm(`${title}\n\n${message}`));
+    }
+    return new Promise((resolve) => {
+      Alert.alert(title, message, [
+        { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
+        { text: "Delete", style: "destructive", onPress: () => resolve(true) },
+      ]);
+    });
+  };
+
+  const notify = (title: string, message: string) => {
+    if (Platform.OS === "web") {
+      window.alert(`${title}\n\n${message}`);
+    } else {
+      Alert.alert(title, message);
+    }
+  };
+
+  const handleCleanUpDuplicateRecurringGoals = async () => {
+    setDedupingRecurring(true);
+    try {
+      const token = await getValidAccessToken();
+      const allGoals = await getWeeklyGoals(token);
+      const duplicateGroups = findDuplicateRecurringGoals(allGoals);
+      const toRemove = duplicateGroups.flatMap((g) => g.remove);
+
+      if (toRemove.length === 0) {
+        notify("No duplicates found", "Your recurring goals look clean.");
+        return;
+      }
+
+      const preview = duplicateGroups
+        .slice(0, 5)
+        .map((g) => `• "${g.keep.goalText}" — removing ${g.remove.length} duplicate${g.remove.length > 1 ? "s" : ""}`)
+        .join("\n");
+      const more = duplicateGroups.length > 5 ? `\n…and ${duplicateGroups.length - 5} more goal${duplicateGroups.length - 5 > 1 ? "s" : ""}` : "";
+
+      const confirmed = await confirmAsync(
+        "Remove duplicate recurring goals?",
+        `Found ${toRemove.length} duplicate row${toRemove.length > 1 ? "s" : ""} across ${duplicateGroups.length} goal${duplicateGroups.length > 1 ? "s" : ""}, caused by a bug that re-added monthly/quarterly/yearly goals every week instead of once per period. One copy is kept per period (preferring calendar-linked / furthest-along copies); the rest are deleted.\n\n${preview}${more}`
+      );
+      if (!confirmed) return;
+
+      for (const g of toRemove) {
+        await deleteWeeklyGoal(token, g.id);
+      }
+      notify("Done", `Removed ${toRemove.length} duplicate goal${toRemove.length > 1 ? "s" : ""}.`);
+    } catch (err: any) {
+      notify("Error", err.message ?? "Failed to remove duplicates.");
+    } finally {
+      setDedupingRecurring(false);
+    }
+  };
 
   const handleToggleNotifications = async (value: boolean) => {
     if (value) {
       const granted = await requestPermission();
       if (!granted) return;
     } else {
-      await cancelAllScheduled();
+      // Turning follow-ups off clears pending ones but leaves the closeout reminder.
+      await cancelAllGoalFollowups();
     }
     await setNotificationsEnabled(value);
-  };
-
-  const handleSaveNotifTime = async () => {
-    if (notifTimeInput === null) return;
-    setSavingNotifTime(true);
-    try {
-      await setNotificationTime(notifTimeInput.trim());
-      setNotifTimeInput(null);
-    } catch {
-      // keep local state so user can retry
-    } finally {
-      setSavingNotifTime(false);
-    }
-  };
-
-  const handleSaveCloseoutTime = async () => {
-    if (closeoutTimeInput === null) return;
-    setSavingCloseoutTime(true);
-    try {
-      await setCloseoutReminderTime(closeoutTimeInput.trim());
-      setCloseoutTimeInput(null);
-    } catch {
-      // keep local state so user can retry
-    } finally {
-      setSavingCloseoutTime(false);
-    }
   };
 
   const handleSaveMission = async () => {
@@ -485,11 +521,13 @@ export default function SettingsScreen() {
           <View style={styles.divider} />
           <Text style={styles.sectionTitle}>Notifications</Text>
 
-          {/* Daily goal reminder */}
+          {/* Goal follow-up reminders */}
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.sm }}>
-            <View>
-              <Text style={styles.fieldLabel}>Daily Goal Reminder</Text>
-              <Text style={styles.fieldHint}>Daily reminder for Q1 &amp; Q2 goals</Text>
+            <View style={{ flex: 1, marginRight: spacing.md }}>
+              <Text style={styles.fieldLabel}>Goal Follow-up Reminders</Text>
+              <Text style={styles.fieldHint}>
+                After a goal&apos;s scheduled time passes, ask if you finished it
+              </Text>
             </View>
             <Switch
               value={notificationsEnabled}
@@ -498,29 +536,29 @@ export default function SettingsScreen() {
             />
           </View>
           {notificationsEnabled && (
+            <Text style={[styles.fieldHint, { marginBottom: spacing.sm }]}>
+              Arrives the next day around the time the event was scheduled.
+            </Text>
+          )}
+
+          {/* Quiet hours */}
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: spacing.md, marginBottom: spacing.sm }}>
+            <View style={{ flex: 1, marginRight: spacing.md }}>
+              <Text style={styles.fieldLabel}>Quiet Hours</Text>
+              <Text style={styles.fieldHint}>No notifications during this window</Text>
+            </View>
+            <Switch
+              value={quietHoursEnabled}
+              onValueChange={setQuietHoursEnabled}
+              trackColor={{ true: colors.primary }}
+            />
+          </View>
+          {quietHoursEnabled && (
             <>
-              <Text style={styles.fieldLabel}>Reminder time (HH:mm)</Text>
-              <TextInput
-                style={styles.input}
-                value={notifTimeInput !== null ? notifTimeInput : notificationTime}
-                onChangeText={setNotifTimeInput}
-                placeholder="09:00"
-                placeholderTextColor={colors.textMuted}
-                keyboardType="numbers-and-punctuation"
-              />
-              {notifTimeInput !== null && notifTimeInput.trim() !== notificationTime && (
-                <Pressable
-                  onPress={handleSaveNotifTime}
-                  disabled={savingNotifTime}
-                  style={({ pressed }) => [styles.saveButton, pressed && { opacity: 0.8 }]}
-                >
-                  {savingNotifTime ? (
-                    <ActivityIndicator color={colors.onPrimary} size="small" />
-                  ) : (
-                    <Text style={styles.saveButtonText}>Save</Text>
-                  )}
-                </Pressable>
-              )}
+              <Text style={styles.fieldLabel}>From</Text>
+              <TimePickerField value={quietHoursStart} onChange={setQuietHoursStart} />
+              <Text style={[styles.fieldLabel, { marginTop: spacing.sm }]}>To</Text>
+              <TimePickerField value={quietHoursEnd} onChange={setQuietHoursEnd} />
             </>
           )}
 
@@ -566,32 +604,31 @@ export default function SettingsScreen() {
                   </Pressable>
                 ))}
               </View>
-              <Text style={styles.fieldLabel}>Time (HH:mm)</Text>
-              <TextInput
-                style={styles.input}
-                value={closeoutTimeInput !== null ? closeoutTimeInput : closeoutReminderTime}
-                onChangeText={setCloseoutTimeInput}
-                placeholder="18:00"
-                placeholderTextColor={colors.textMuted}
-                keyboardType="numbers-and-punctuation"
-              />
-              {closeoutTimeInput !== null && closeoutTimeInput.trim() !== closeoutReminderTime && (
-                <Pressable
-                  onPress={handleSaveCloseoutTime}
-                  disabled={savingCloseoutTime}
-                  style={({ pressed }) => [styles.saveButton, pressed && { opacity: 0.8 }]}
-                >
-                  {savingCloseoutTime ? (
-                    <ActivityIndicator color={colors.onPrimary} size="small" />
-                  ) : (
-                    <Text style={styles.saveButtonText}>Save</Text>
-                  )}
-                </Pressable>
-              )}
+              <Text style={styles.fieldLabel}>Time</Text>
+              <TimePickerField value={closeoutReminderTime} onChange={setCloseoutReminderTime} />
             </>
           )}
         </>
       )}
+
+      <View style={styles.divider} />
+
+      <Text style={styles.sectionTitle}>Maintenance</Text>
+      <Pressable
+        onPress={handleCleanUpDuplicateRecurringGoals}
+        disabled={dedupingRecurring}
+        style={({ pressed }) => [styles.signOutButton, (pressed || dedupingRecurring) && { opacity: 0.8 }]}
+      >
+        {dedupingRecurring ? (
+          <ActivityIndicator size="small" color={colors.text} />
+        ) : (
+          <Ionicons name="trash-outline" size={20} color={colors.text} />
+        )}
+        <Text style={[styles.signOutText, { color: colors.text }]}>Clean Up Duplicate Recurring Goals</Text>
+      </Pressable>
+      <Text style={styles.fieldHint}>
+        Scans for and removes duplicate rows created by a past bug where monthly/quarterly/yearly goals were added every week instead of once per period.
+      </Text>
 
       <View style={styles.divider} />
 

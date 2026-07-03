@@ -311,6 +311,138 @@ export function DatePickerField({ value, onChange }: DatePickerFieldProps) {
 }
 
 // ---------------------------------------------------------------------------
+// TimePickerField — time-only (HH:mm), e.g. settings reminder/quiet-hours times
+// ---------------------------------------------------------------------------
+interface TimePickerFieldProps {
+  value: string; // HH:mm
+  onChange: (value: string) => void;
+}
+
+function formatTimeDisplay(hhmm: string): string {
+  if (!hhmm) return "Select time";
+  const [h, m] = hhmm.split(":").map(Number);
+  if (isNaN(h) || isNaN(m)) return hhmm;
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function hmToDate(hhmm: string): Date {
+  const d = new Date();
+  const [h, m] = (hhmm || "").split(":").map(Number);
+  d.setHours(isNaN(h) ? 9 : h, isNaN(m) ? 0 : m, 0, 0);
+  return d;
+}
+
+function dateToHm(d: Date): string {
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+export function TimePickerField({ value, onChange }: TimePickerFieldProps) {
+  const colors = useThemeColors();
+  const { theme } = useSettings();
+  const [show, setShow] = useState(false);
+  const [iosTemp, setIosTemp] = useState(new Date());
+
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const currentDate = hmToDate(value);
+
+  // ---- Web --------------------------------------------------------------
+  if (Platform.OS === "web") {
+    const webStyle: React.CSSProperties = {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderStyle: "solid",
+      borderRadius: borderRadius.md,
+      padding: spacing.md,
+      fontSize: 16,
+      color: colors.text,
+      backgroundColor: colors.surface,
+      boxSizing: "border-box",
+      fontFamily: "inherit",
+      colorScheme: theme === "dark" ? "dark" : "light",
+    };
+    return (
+      <input
+        type="time"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        style={webStyle}
+      />
+    );
+  }
+
+  // ---- Android ----------------------------------------------------------
+  if (Platform.OS === "android") {
+    return (
+      <>
+        <Pressable
+          style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+          onPress={() => setShow(true)}
+        >
+          <View style={styles.buttonContent}>
+            <Ionicons name="time-outline" size={16} color={colors.textMuted} />
+            <Text style={styles.buttonText}>{formatTimeDisplay(value)}</Text>
+          </View>
+        </Pressable>
+        {show && (
+          <DateTimePicker
+            value={currentDate}
+            mode="time"
+            is24Hour={false}
+            onChange={(event, selected) => {
+              setShow(false);
+              if (event.type === "set" && selected) {
+                onChange(dateToHm(selected));
+              }
+            }}
+          />
+        )}
+      </>
+    );
+  }
+
+  // ---- iOS --------------------------------------------------------------
+  return (
+    <>
+      <Pressable
+        style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+        onPress={() => {
+          setIosTemp(currentDate);
+          setShow(true);
+        }}
+      >
+        <View style={styles.buttonContent}>
+          <Ionicons name="time-outline" size={16} color={colors.textMuted} />
+          <Text style={styles.buttonText}>{formatTimeDisplay(value)}</Text>
+        </View>
+      </Pressable>
+      <Modal visible={show} transparent animationType="slide">
+        <View style={styles.overlay}>
+          <View style={styles.sheet}>
+            <Pressable
+              style={styles.doneButton}
+              onPress={() => {
+                onChange(dateToHm(iosTemp));
+                setShow(false);
+              }}
+            >
+              <Text style={styles.doneText}>Done</Text>
+            </Pressable>
+            <DateTimePicker
+              value={iosTemp}
+              mode="time"
+              display="spinner"
+              onChange={(_, d) => d && setIosTemp(d)}
+            />
+          </View>
+        </View>
+      </Modal>
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Shared styles factory
 // ---------------------------------------------------------------------------
 function makeStyles(colors: ReturnType<typeof useThemeColors>) {

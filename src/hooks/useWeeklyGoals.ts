@@ -13,6 +13,7 @@ import {
 } from "../api/googleSheets";
 import { generateId } from "../utils/uuid";
 import { STATUS_CYCLE } from "../utils/constants";
+import { cancelGoalFollowup } from "../notifications/goalNotifications";
 
 export function useWeeklyGoals(weekStartDate: string) {
   const { getValidAccessToken } = useAuth();
@@ -132,6 +133,10 @@ export function useWeeklyGoals(weekStartDate: string) {
       try {
         const token = await getValidAccessToken();
         await apiUpdateGoal(token, updated);
+        // A completed or unlinked goal should no longer prompt a follow-up.
+        if (updated.status === "complete" || !updated.calendarEventId) {
+          await cancelGoalFollowup(updated.id).catch(() => {});
+        }
       } catch (err: any) {
         await loadGoals();
         setError(err.message);
@@ -164,6 +169,7 @@ export function useWeeklyGoals(weekStartDate: string) {
       try {
         const token = await getValidAccessToken();
         await apiDeleteGoal(token, goalId);
+        await cancelGoalFollowup(goalId).catch(() => {});
       } catch (err: any) {
         setGoals(previous);
         setError(err.message);
@@ -192,7 +198,18 @@ export function useWeeklyGoals(weekStartDate: string) {
     const goal = goals.find((g) => g.id === goalId);
     if (!goal) return;
     const now = new Date().toISOString();
-    const copy: WeeklyGoal = { ...goal, id: generateId(), weekStartDate: targetWeekDate, createdAt: now, updatedAt: now };
+    // A copy is a fresh goal in a new week: don't carry the source goal's
+    // calendar-event link (it belongs to the original) or its completion status.
+    const copy: WeeklyGoal = {
+      ...goal,
+      id: generateId(),
+      weekStartDate: targetWeekDate,
+      status: "not_started",
+      calendarEventId: undefined,
+      calendarSource: undefined,
+      createdAt: now,
+      updatedAt: now,
+    };
     try {
       const token = await getValidAccessToken();
       await apiAddGoal(token, copy);

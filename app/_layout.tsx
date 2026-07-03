@@ -9,6 +9,11 @@ import { CalendarEventsProvider } from "../src/contexts/CalendarEventsContext";
 import { SettingsProvider } from "../src/contexts/SettingsContext";
 import { useThemeColors } from "../src/theme/useThemeColors";
 import { useSettings } from "../src/contexts/SettingsContext";
+import { NotificationResponder } from "../src/notifications/NotificationResponder";
+import { FOLLOWUP_CHANNEL } from "../src/notifications/goalNotifications";
+// Side-effect import: defines the headless background notification task at module
+// scope so it's registered even when the app is launched cold to handle an action.
+import "../src/notifications/backgroundNotificationTask";
 
 function InnerLayout() {
   const colors = useThemeColors();
@@ -18,6 +23,10 @@ function InnerLayout() {
     if (Platform.OS === "android") {
       Notifications.setNotificationChannelAsync("q2-reminders", {
         name: "Q2 Reminders",
+        importance: Notifications.AndroidImportance.DEFAULT,
+      });
+      Notifications.setNotificationChannelAsync(FOLLOWUP_CHANNEL, {
+        name: "Goal follow-ups",
         importance: Notifications.AndroidImportance.DEFAULT,
       });
     }
@@ -52,6 +61,7 @@ function InnerLayout() {
 
   return (
     <>
+      <NotificationResponder />
       <StatusBar style={theme === "dark" ? "light" : "auto"} />
       <Stack
         screenOptions={{

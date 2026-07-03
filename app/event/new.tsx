@@ -30,6 +30,7 @@ import { useThemeColors } from "../../src/theme/useThemeColors";
 import { spacing, borderRadius } from "../../src/theme/spacing";
 import { useRoles } from "../../src/hooks/useRoles";
 import { ColorPicker } from "../../src/components/ColorPicker";
+import { scheduleGoalFollowup } from "../../src/notifications/goalNotifications";
 
 function toLocalDateTimeString(date: Date): string {
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -57,7 +58,13 @@ export default function NewEventScreen() {
 
   const { createEvent } = useCalendarEvents();
   const { getValidAccessToken } = useAuth();
-  const { defaultAttendees } = useSettings();
+  const {
+    defaultAttendees,
+    notificationsEnabled,
+    quietHoursEnabled,
+    quietHoursStart,
+    quietHoursEnd,
+  } = useSettings();
   const { roles } = useRoles();
 
   const initialDate = params.date ? new Date(params.date) : new Date();
@@ -204,6 +211,19 @@ export default function NewEventScreen() {
               calendarSource: "google",
               updatedAt: new Date().toISOString(),
             });
+            // Schedule a "did you finish?" follow-up mirroring this event's time
+            // the next day.
+            if (notificationsEnabled) {
+              await scheduleGoalFollowup({
+                goalId: goal.id,
+                goalText: goal.goalText,
+                weekStartDate: goal.weekStartDate,
+                calendarEventId: created.id,
+                eventStartISO: created.startTime,
+                allDay: created.allDay,
+                quiet: { enabled: quietHoursEnabled, start: quietHoursStart, end: quietHoursEnd },
+              }).catch(() => {});
+            }
           }
         } catch {
           // Goal update failed but event was created — not critical

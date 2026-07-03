@@ -229,6 +229,18 @@ export default function EditGoalScreen() {
       fontWeight: "600",
       color: colors.primary,
     },
+    unlinkButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xs,
+      justifyContent: "center",
+      paddingVertical: spacing.sm,
+      marginTop: spacing.xs,
+    },
+    unlinkButtonText: {
+      fontSize: 13,
+      color: colors.textMuted,
+    },
     button: {
       backgroundColor: colors.primary,
       padding: spacing.md,
@@ -368,6 +380,37 @@ export default function EditGoalScreen() {
       setSaving(false);
     } catch {
       setSaving(false);
+    }
+  };
+
+  const handleUnlinkEvent = async () => {
+    if (!goal) return;
+    const doUnlink = async () => {
+      setSaving(true);
+      try {
+        await updateGoal({
+          ...goal,
+          calendarEventId: undefined,
+          calendarSource: undefined,
+        });
+      } finally {
+        setSaving(false);
+      }
+    };
+
+    if (Platform.OS === "web") {
+      if (window.confirm("Unlink this calendar event from the goal? The event itself won't be deleted.")) {
+        doUnlink();
+      }
+    } else {
+      Alert.alert(
+        "Unlink Calendar Event",
+        "Unlink this calendar event from the goal? The event itself won't be deleted.",
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Unlink", style: "destructive", onPress: doUnlink },
+        ]
+      );
     }
   };
 
@@ -536,16 +579,26 @@ export default function EditGoalScreen() {
         )}
 
         {goal.calendarEventId ? (
-          <Pressable
-            onPress={() => router.push(`/event/${goal.calendarEventId}`)}
-            style={({ pressed }) => [
-              styles.calendarButton,
-              pressed && { opacity: 0.8 },
-            ]}
-          >
-            <Ionicons name="calendar" size={18} color={colors.primary} />
-            <Text style={styles.calendarButtonText}>View Calendar Event</Text>
-          </Pressable>
+          <>
+            <Pressable
+              onPress={() => router.push(`/event/${goal.calendarEventId}`)}
+              style={({ pressed }) => [
+                styles.calendarButton,
+                pressed && { opacity: 0.8 },
+              ]}
+            >
+              <Ionicons name="calendar" size={18} color={colors.primary} />
+              <Text style={styles.calendarButtonText}>View Calendar Event</Text>
+            </Pressable>
+            <Pressable
+              onPress={handleUnlinkEvent}
+              disabled={saving}
+              style={({ pressed }) => [styles.unlinkButton, pressed && { opacity: 0.8 }]}
+            >
+              <Ionicons name="unlink-outline" size={15} color={colors.textMuted} />
+              <Text style={styles.unlinkButtonText}>Unlink calendar event</Text>
+            </Pressable>
+          </>
         ) : (
           <Pressable
             onPress={() =>

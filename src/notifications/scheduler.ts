@@ -1,6 +1,5 @@
 import { Platform } from "react-native";
 import * as Notifications from "expo-notifications";
-import { WeeklyGoal } from "../models/WeeklyGoal";
 
 const NOTIF_DAILY_GOALS = "daily-goals-reminder";
 const NOTIF_CLOSEOUT = "closeout-reminder";
@@ -24,68 +23,20 @@ export async function requestPermission(): Promise<boolean> {
   return status === "granted";
 }
 
-export async function cancelAllScheduled(): Promise<void> {
-  if (Platform.OS === "web") return;
-  const scheduled = await Notifications.getAllScheduledNotificationsAsync();
-  for (const notif of scheduled) {
-    if (
-      notif.identifier === NOTIF_DAILY_GOALS ||
-      notif.identifier === NOTIF_CLOSEOUT ||
-      notif.identifier.startsWith(LEGACY_PREFIX)
-    ) {
-      await Notifications.cancelScheduledNotificationAsync(notif.identifier);
-    }
-  }
-}
-
 /**
- * Schedule a daily morning reminder showing Q1+Q2 incomplete goals.
- * Fires every day at the given HH:mm time.
+ * Cancel the retired bulk morning reminder (and any legacy variants). The daily
+ * Q1+Q2 list has been replaced by per-goal follow-ups; this clears any that were
+ * scheduled by an earlier app version.
  */
-export async function scheduleDailyGoalReminder(
-  goals: WeeklyGoal[],
-  reminderTime: string
-): Promise<void> {
+export async function cancelDailyGoalReminder(): Promise<void> {
   if (Platform.OS === "web") return;
-
-  const importantGoals = goals.filter(
-    (g) => (g.quadrant === 1 || g.quadrant === 2) && g.status !== "complete"
-  );
-
   await Notifications.cancelScheduledNotificationAsync(NOTIF_DAILY_GOALS).catch(() => {});
-  // Also cancel legacy notifications on upgrade
   const scheduled = await Notifications.getAllScheduledNotificationsAsync();
   for (const n of scheduled) {
     if (n.identifier.startsWith(LEGACY_PREFIX)) {
-      await Notifications.cancelScheduledNotificationAsync(n.identifier);
+      await Notifications.cancelScheduledNotificationAsync(n.identifier).catch(() => {});
     }
   }
-
-  if (importantGoals.length === 0) return;
-
-  const [hourStr, minuteStr] = reminderTime.split(":");
-  const hour = parseInt(hourStr, 10);
-  const minute = parseInt(minuteStr, 10);
-  if (isNaN(hour) || isNaN(minute)) return;
-
-  const body = importantGoals
-    .slice(0, 5)
-    .map((g) => `• ${g.goalText}`)
-    .join("\n");
-
-  await Notifications.scheduleNotificationAsync({
-    identifier: NOTIF_DAILY_GOALS,
-    content: {
-      title: "Your goals today",
-      body,
-    },
-    trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.DAILY,
-      hour,
-      minute,
-      repeats: true,
-    } as any,
-  });
 }
 
 /**
