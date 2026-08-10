@@ -38,7 +38,7 @@ export default function WeeklyPlanScreen() {
   const { getValidAccessToken } = useAuth();
   const {
     closeoutReminderEnabled, closeoutReminderDay, closeoutReminderTime,
-    closeoutOnboardingCompletedAt,
+    closeoutOnboardingCompletedAt, completeCloseoutOnboarding,
   } = useSettings();
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()));
   const weekKey = formatWeekKey(weekStart);
@@ -325,6 +325,11 @@ export default function WeeklyPlanScreen() {
     scroll: {
       flex: 1,
     },
+    scrollContent: {
+      // Clears the absolutely-positioned FAB (56 tall, bottom: spacing.lg)
+      // so it doesn't block the last goal's status button.
+      paddingBottom: 56 + spacing.lg + spacing.md,
+    },
     recurringToast: {
       flexDirection: "row",
       alignItems: "center",
@@ -433,7 +438,7 @@ export default function WeeklyPlanScreen() {
         </View>
       )}
 
-      <ScrollView style={styles.scroll} showsVerticalScrollIndicator>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator>
         {dedupedGoals.length > 0 && (
           <View style={{ paddingHorizontal: spacing.md }}>
             <SpotlightCallout
@@ -490,7 +495,14 @@ export default function WeeklyPlanScreen() {
           prevWeekStart={prevWeekStart}
           currentWeekStart={getWeekStart(new Date())}
           onClose={() => { setShowCloseout(false); refreshGoals(); }}
-          onComplete={() => { setShowCloseout(false); refreshGoals(); refreshPrevReflection(); }}
+          onComplete={() => {
+            setShowCloseout(false);
+            refreshGoals();
+            refreshPrevReflection();
+            if (!closeoutOnboardingCompletedAt) {
+              completeCloseoutOnboarding().catch(() => { /* silent */ });
+            }
+          }}
         />
       )}
     </View>
