@@ -1,7 +1,9 @@
-import { Tabs } from "expo-router";
+import { useEffect } from "react";
+import { Tabs, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { View } from "react-native";
 import { useThemeColors } from "../../src/theme/useThemeColors";
+import { useAuth } from "../../src/auth/AuthContext";
 import { MissionStatementModal } from "../../src/components/MissionStatementModal";
 import { WalkthroughModal } from "../../src/components/onboarding/WalkthroughModal";
 import { OnboardingBanner } from "../../src/components/onboarding/OnboardingBanner";
@@ -9,6 +11,17 @@ import { Logo } from "../../src/components/Logo";
 
 export default function TabLayout() {
   const colors = useThemeColors();
+  const { isLoading, isLoggedIn } = useAuth();
+
+  // The session can expire (and log the user out) while they're deep in the
+  // tabs — e.g. settings.tsx, weekly-plan.tsx — not just on the root "/"
+  // route. Without this, only reopening the app at "/" would ever notice
+  // isLoggedIn flip to false and redirect to /login.
+  useEffect(() => {
+    if (!isLoading && !isLoggedIn) {
+      router.replace("/login");
+    }
+  }, [isLoading, isLoggedIn]);
 
   return (
     <View style={{ flex: 1 }}>

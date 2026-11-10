@@ -39,6 +39,7 @@ export default function WeeklyPlanScreen() {
   const {
     closeoutReminderEnabled, closeoutReminderDay, closeoutReminderTime,
     closeoutOnboardingCompletedAt, completeCloseoutOnboarding,
+    isLoading: settingsLoading,
   } = useSettings();
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()));
   const weekKey = formatWeekKey(weekStart);
@@ -82,7 +83,11 @@ export default function WeeklyPlanScreen() {
       refreshGoals();
       refreshRoles();
 
-      if (!hasCheckedCloseout.current && isCurrentWeek) {
+      // Wait for settings to finish loading before deciding whether the
+      // onboarding intro has already been completed — otherwise this check
+      // can run against the default (unloaded) closeoutOnboardingCompletedAt
+      // and incorrectly show the intro again every time the app is reopened.
+      if (!hasCheckedCloseout.current && isCurrentWeek && !settingsLoading) {
         hasCheckedCloseout.current = true;
         const prevKey = formatWeekKey(prevWeekStart);
         (async () => {
@@ -109,7 +114,7 @@ export default function WeeklyPlanScreen() {
           }
         })();
       }
-    }, [refreshGoals, refreshRoles, getValidAccessToken, isCurrentWeek, prevWeekStart, closeoutReminderDay, closeoutReminderTime, closeoutOnboardingCompletedAt])
+    }, [refreshGoals, refreshRoles, getValidAccessToken, isCurrentWeek, prevWeekStart, closeoutReminderDay, closeoutReminderTime, closeoutOnboardingCompletedAt, settingsLoading])
   );
 
   const handlePrevWeek = () => setWeekStart((prev) => shiftWeek(prev, -1));
